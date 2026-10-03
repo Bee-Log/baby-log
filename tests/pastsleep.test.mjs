@@ -332,3 +332,13 @@ test('drawing: arcs and wedges are paths, and a zero-length arc is empty', () =>
   assert.equal(P.angleOf(720), 0);
   assert.equal(P.angleOf(900), 90);
 });
+
+test('a typed time never makes a sleep longer than 12 hours', () => {
+  const e = env(at(22, 5));
+  const s = P.init(e);                         // 9:35 pm to 10:05 pm
+  const early = P.setTyped(s, e, 'from', '08:15');
+  assert.equal(early.draft.end - early.draft.start, 60, 'over 12 hours: it becomes 1 hour from the typed start');
+  assert.equal(P.formatInput(early.draft.start), '08:15');
+  const late = P.setTyped(s, e, 'to', '23:55');
+  assert.ok(late.draft.end - late.draft.start <= 720);
+});

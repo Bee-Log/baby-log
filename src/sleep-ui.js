@@ -50,7 +50,7 @@
       line.className = 'sleep-row';
       var icon = document.createElement('span');
       icon.className = 'row-icon sleep';
-      icon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path></svg>'; // fixed markup
+      icon.innerHTML = root.BABYLOG_ICONS.sleep;
       var range = document.createElement('span');
       range.textContent = S.rangeLabel(row, now);
       var length = document.createElement('span');

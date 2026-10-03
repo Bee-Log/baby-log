@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="styles.css">
   <script src="config.js"></script>
   <script src="nav.js"></script>
+  <script src="icons.js"></script>
   <script src="records.js"></script>
   <script src="store.js"></script>
   <script src="feed.js"></script>
@@ -27,6 +28,11 @@
 
   <main>
     <section class="view" id="view-today" data-tab="today" aria-labelledby="h-today">
+      <div class="last-feed" id="last-feed">
+        <span class="last-feed-label">Last feed</span>
+        <span class="last-feed-big" id="lf-big">…</span>
+        <span class="last-feed-detail" id="lf-detail"></span>
+      </div>
       <div class="sleep-card" id="tc-card">
         <a class="sleep-main" href="#sleep" aria-label="Open the sleep page">
           <span class="sleep-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path></svg></span>
@@ -54,7 +60,7 @@
         <span class="muted">Tap a row to edit</span>
       </div>
       <ol class="timeline" id="today-list"></ol>
-      <p class="empty" id="today-empty" hidden>No feeds or nappies yet today.</p>
+      <p class="empty" id="today-empty" hidden>Nothing logged yet today.</p>
     </section>
     <section class="view" id="view-summary" data-tab="summary" aria-labelledby="h-summary" hidden>
       <h1 id="h-summary">Summary</h1>

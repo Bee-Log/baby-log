@@ -99,3 +99,26 @@ test('#sleep opens the Sleep screen', () => {
   assert.equal(nav.screenFromHash('#feed'), 'feed');
   assert.equal(nav.tabFromHash('#sleep'), 'today');
 });
+
+// ---- Feature 008: sleeps on the Today list ----
+test('Today rows for sleeps: a finished sleep shows when the baby woke up; a running one shows when it began', () => {
+  const win = R.dayWindow(at(14, 0));
+  const rows = plain(S.timelineRows([
+    sleep('a', at(12, 0), at(13, 40)),
+    sleep('b', at(13, 50), null),
+    sleep('c', at(11, 0), at(11, 30), { deleted: true }),
+    { id: 'f', type: 'feed', t: at(12, 0), end: null, d: {}, note: '', by: '', deviceId: 'p', updatedAt: 1 }
+  ], win));
+  assert.deepEqual(rows.map((r) => [r.kind, r.title, r.label, r.t]), [
+    ['sleep', 'Woke up', 'slept 1h 40m', at(13, 40)],
+    ['sleep', 'Fell asleep', 'asleep now', at(13, 50)]
+  ]);
+});
+
+test('Today rows for sleeps follow the 6 am to 6 am day by wake-up time', () => {
+  const win = R.dayWindow(at(14, 0));
+  const ids = (records) => plain(S.timelineRows(records, win).map((r) => r.ids[0]));
+  assert.deepEqual(ids([sleep('night', at(23, 0, 2), at(6, 30, 3))]), ['night'], 'began yesterday, woke after 6 am today: it is in today');
+  assert.deepEqual(ids([sleep('old', at(20, 0, 2), at(5, 50, 3))]), [], 'woke before 6 am: it belongs to yesterday');
+  assert.deepEqual(ids([sleep('next', at(5, 0, 4), at(7, 0, 4))]), [], 'tomorrow');
+});

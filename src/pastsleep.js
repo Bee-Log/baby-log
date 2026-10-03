@@ -215,9 +215,10 @@
     if (m == null) return state;
     var d = state.draft;
     var nd = which === 'from' ? { start: m, end: d.end } : { start: d.start, end: m };
-    if (nd.end <= nd.start) {
-      if (nd.end + DAY - nd.start <= MAX_LEN) nd.end += DAY;           // crossed 6 am, e.g. 4:00 to 7:00
-      else if (which === 'from') nd.end = nd.start + 60;
+    var len = nd.end - nd.start;
+    if (len <= 0 && len + DAY <= MAX_LEN) nd.end += DAY;                  // crossed 6 am, e.g. 4:00 to 7:00
+    else if (len <= 0 || len > MAX_LEN) {                                 // backwards or over 12 hours: keep the typed time, make it 1 hour
+      if (which === 'from') nd.end = nd.start + 60;
       else nd.start = nd.end - 60;
     }
     var first = partOf(nd.start), last = partOf(nd.end - 1), len = nd.end - nd.start;
