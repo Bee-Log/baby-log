@@ -14,6 +14,10 @@
   <script src="nav.js"></script>
   <script src="icons.js"></script>
   <script src="records.js"></script>
+  <script src="sync.js"></script>
+  <script src="csv.js"></script>
+  <script src="drive.js"></script>
+  <script src="google-auth.js"></script>
   <script src="profile.js"></script>
   <script src="store.js"></script>
   <script src="feed.js"></script>
@@ -24,6 +28,7 @@
   <script src="pastsleep-ui.js"></script>
   <script src="sleep-ui.js"></script>
   <script src="profile-ui.js"></script>
+  <script src="sync-ui.js"></script>
 </head>
 <body>
   <div id="test-banner" class="test-banner" hidden>TEST version. Data here is kept apart from the real app.</div>
@@ -76,7 +81,7 @@
       <h1 id="h-growth">Growth</h1>
       <p class="lead">Weight and length will show here.</p>
     </section>
-    <p class="status"><span id="status">Checking offline support…</span> <span id="version"></span></p>
+    <p class="status"><a href="#sync" id="sync-link" class="sync-link"></a> <span id="status">Checking offline support…</span> <span id="version"></span></p>
   </main>
 
 
@@ -309,6 +314,28 @@
     </div>
     <div class="screen-fill"></div>
     <button type="button" class="save-btn" id="pf-save" disabled>Save profile</button>
+  </section>
+
+  <section class="screen" id="screen-sync" aria-labelledby="h-sync" hidden>
+    <header class="screen-head">
+      <a class="round-btn" href="#today" aria-label="Back">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+      </a>
+      <h1 id="h-sync">Sync and data</h1>
+      <span class="round-spacer"></span>
+    </header>
+    <div class="sync-card" id="sync-card" data-state="off">
+      <h2 class="sync-state" id="sy-state"></h2>
+      <p class="sync-detail" id="sy-detail"></p>
+      <button type="button" class="sync-btn primary" id="sy-signin" hidden>Sign in with Google</button>
+      <button type="button" class="sync-btn" id="sy-now" hidden>Sync now</button>
+    </div>
+    <div class="sync-card">
+      <h2 class="sync-state">Your data</h2>
+      <p class="sync-detail">Download every entry from this phone. The files can be opened in a spreadsheet or kept as a backup.</p>
+      <button type="button" class="sync-btn" id="sy-csv">Download CSV (spreadsheet)</button>
+      <button type="button" class="sync-btn" id="sy-jsonl">Download JSONL (all entries)</button>
+    </div>
   </section>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden>

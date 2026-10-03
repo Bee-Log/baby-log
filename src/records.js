@@ -115,6 +115,13 @@
     return best;
   }
 
+  // The merge rule (ADR-001): when two versions of an entry meet, the one with the larger updatedAt wins.
+  // If updatedAt is equal, the one whose deviceId sorts higher wins, so every phone reaches the same result.
+  function isNewer(a, b) {
+    if (a.updatedAt !== b.updatedAt) return a.updatedAt > b.updatedAt;
+    return String(a.deviceId) > String(b.deviceId);
+  }
+
   // ---- Editing (feature 011) ----
   // An edit keeps the id and moves updatedAt forward, so the existing merge rule (newest updatedAt wins) carries it.
   // (There is no Undo for now. If it returns, it writes the earlier values back with an even newer updatedAt.)
@@ -177,7 +184,7 @@
 
   root.BABYLOG_RECORDS = {
     TYPES: TYPES, NAPPY_PAIR_MS: NAPPY_PAIR_MS,
-    makeRecord: makeRecord, tombstone: tombstone, dayWindow: dayWindow,
+    makeRecord: makeRecord, isNewer: isNewer, tombstone: tombstone, dayWindow: dayWindow,
     nappyRows: nappyRows, nappyLabel: nappyLabel, feedLabel: feedLabel, timelineRows: timelineRows, lastFeed: lastFeed, latestFeed: latestFeed, agoText: agoText,
     revise: revise, withFields: withFields, sameContent: sameContent, hhmm: hhmm, timeInDay: timeInDay,
     formatClock: formatClock, dateLabel: dateLabel, dayName: dayName

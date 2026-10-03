@@ -11,6 +11,7 @@ Generated from the header of each `features/*/SIGNOFF.md`. Do not edit by hand.
 
 ## Testing
 - 002 Set up the baby profile (updated 2026-10-03) - `features/002-set-up-the-baby-profile/`
+- 013 Sync between phones (updated 2026-10-03) - `features/013-sync-between-phones/`
 
 ## Done
 - 001 Install and open the app (updated 2026-10-03) - `features/001-install-and-open-the-app/`

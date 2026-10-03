@@ -52,8 +52,13 @@
     });
   }
 
+  // Sync wants to know when something changed on this phone, so it can send it soon.
+  var listeners = [];
+  function onChange(fn) { listeners.push(fn); }
+  function changed() { listeners.forEach(function (fn) { try { fn(); } catch (err) { console.error('[baby-log] change listener', err); } }); }
+
   function put(record) {
-    return run('records', 'readwrite', function (s) { s.put(record); }).then(function () { keep(); return record; });
+    return run('records', 'readwrite', function (s) { s.put(record); }).then(function () { keep(); changed(); return record; });
   }
 
   function getRecord(id) {
@@ -66,7 +71,7 @@
   // Save several records in ONE transaction: all of them or none (a "Wee + Poo" row is two records).
   function putMany(records) {
     return run('records', 'readwrite', function (s) { records.forEach(function (r) { s.put(r); }); })
-      .then(function () { keep(); return records; });
+      .then(function () { keep(); changed(); return records; });
   }
 
   // Save a record and clear a draft in ONE transaction: both happen or neither does.
@@ -77,11 +82,27 @@
         var tx = d.transaction(['records', 'meta'], 'readwrite');
         tx.objectStore('records').put(record);
         tx.objectStore('meta').delete(metaKey);
-        tx.oncomplete = function () { keep(); resolve(record); };
+        tx.oncomplete = function () { keep(); changed(); resolve(record); };
         tx.onerror = function () { reject(tx.error); };
         tx.onabort = function () { reject(tx.error || new Error('Save was cancelled')); };
       });
     });
+  }
+
+  // Entries that came from another phone (sync). Each one is kept only if it is newer than ours by the merge rule
+  // (records.js isNewer), all in ONE transaction. Resolves with how many were applied. This does not call onChange:
+  // received entries are not sent back out.
+  function mergeIn(incoming) {
+    var R = root.BABYLOG_RECORDS;
+    var applied = 0;
+    return run('records', 'readwrite', function (s) {
+      incoming.forEach(function (rec) {
+        var req = s.get(rec.id);
+        req.onsuccess = function () {
+          if (!req.result || R.isNewer(rec, req.result)) { s.put(rec); applied++; }
+        };
+      });
+    }).then(function () { return applied; });
   }
 
   function all() {
@@ -131,5 +152,5 @@
     navigator.storage.persist().catch(function () { /* the browser decides; data still saves */ });
   }
 
-  root.BABYLOG_STORE = { dbNameFor: dbNameFor, put: put, putMany: putMany, getRecord: getRecord, putClearingMeta: putClearingMeta, all: all, deviceId: deviceId, getMeta: getMeta, setMeta: setMeta, removeMeta: removeMeta };
+  root.BABYLOG_STORE = { dbNameFor: dbNameFor, put: put, putMany: putMany, mergeIn: mergeIn, onChange: onChange, getRecord: getRecord, putClearingMeta: putClearingMeta, all: all, deviceId: deviceId, getMeta: getMeta, setMeta: setMeta, removeMeta: removeMeta };
 })(typeof self !== 'undefined' ? self : this);
