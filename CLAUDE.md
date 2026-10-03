@@ -38,6 +38,7 @@ To build, the owner says "build feature 001" or names the signoff. Find it in `f
 - The phone is the main store (IndexedDB). It must work fully offline.
 - Sync uses the hidden app data folder in Google Drive. Merge by record id; the newest `updatedAt` wins; deletes are tombstones.
 - Data is plain JSON with a CSV export, so it can move to another backend later.
+- Data protection (owner decision, 2026-10-03): TEST, LIVE and every other GitHub Pages site of this account share one browser origin (`oudam-meas.github.io`), so they share storage. For now we keep that and protect real data in code (see "Shared origin" in app-rules). Moving LIVE to its own domain stays open for later.
 - Full rules and the record format: `.claude/skills/build-feature/references/app-rules.md`.
 
 ## Commands

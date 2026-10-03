@@ -2,7 +2,7 @@
 id: 005
 name: Log a nappy
 slug: log-a-nappy
-status: Ready
+status: Building
 updated: 2026-10-03
 ---
 
