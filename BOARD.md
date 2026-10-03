@@ -14,11 +14,12 @@ Generated from the header of each `features/*/SIGNOFF.md`. Do not edit by hand.
 - none
 
 ## Testing
-- 006 Log a breast feed (updated 2026-10-03) - `features/006-log-a-breast-feed/`
-- 007 Log a bottle feed (updated 2026-10-03) - `features/007-log-a-bottle-feed/`
-- 011 Edit an entry (updated 2026-10-03) - `features/011-edit-an-entry/`
-- 012 Breast minutes per side (updated 2026-10-03) - `features/012-breast-minutes-per-side/`
+- none
 
 ## Done
 - 001 Install and open the app (updated 2026-10-03) - `features/001-install-and-open-the-app/`
 - 005 Log a nappy (updated 2026-10-03) - `features/005-log-a-nappy/`
+- 006 Log a breast feed (updated 2026-10-03) - `features/006-log-a-breast-feed/`
+- 007 Log a bottle feed (updated 2026-10-03) - `features/007-log-a-bottle-feed/`
+- 011 Edit an entry (updated 2026-10-03) - `features/011-edit-an-entry/`
+- 012 Breast minutes per side (updated 2026-10-03) - `features/012-breast-minutes-per-side/`

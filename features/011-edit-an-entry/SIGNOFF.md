@@ -2,7 +2,7 @@
 id: 011
 name: Edit an entry
 slug: edit-an-entry
-status: Testing
+status: Done
 updated: 2026-10-03
 ---
 
@@ -94,3 +94,4 @@ None. This feature has no Claude Design screen. It reuses the Feed screen (`feat
 - 2026-10-03 (owner): the edit form must be the same as the logging form. Done in the second version.
 - 2026-10-03 (owner): **Expressed** overflowed its button; a stray line under Fed at; the Undo button covered other buttons. Fixed: narrower bottle on small phones, one line only between two visible rows, Undo removed (Delete asks for a second tap), messages sit at the top of full screens.
 - 2026-10-03 (owner): **Fed at** and **Note** are now the card for both Breast and Bottle, when logging and when editing.
+- 2026-10-03 (owner): released to LIVE on the owner's instruction ("Release them"). The owner had tried it on TEST; the partner's test was not waited for.

@@ -2,7 +2,7 @@
 id: 012
 name: Breast minutes per side
 slug: breast-minutes-per-side
-status: Testing
+status: Done
 updated: 2026-10-03
 ---
 
@@ -78,3 +78,4 @@ None. No Claude Design screen yet.
 
 ## Feedback
 (Filled in when someone tests it. Leave empty at sign-off.)
+- 2026-10-03 (owner): released to LIVE on the owner's instruction ("Release them"). The owner had tried it on TEST; the partner's test was not waited for.
