@@ -1,0 +1,93 @@
+name: Deploy Pages
+
+# One GitHub Pages site holds both addresses:
+#   LIVE  https://oudam-meas.github.io/baby-log/        built from the commit recorded by "Release LIVE"
+#   TEST  https://oudam-meas.github.io/baby-log/test/   built from `main`
+# Every merge to main runs this. It rebuilds both, so LIVE stays on its recorded commit.
+# The LIVE commit is the newest deployment record in the `live-release` environment.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+  deployments: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main (TEST)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main-src
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Test
+        working-directory: main-src
+        run: npm test
+
+      - name: Build TEST from main
+        working-directory: main-src
+        run: node scripts/build.mjs --env test --out "$GITHUB_WORKSPACE/_site/test" --version "test-$(git rev-parse --short HEAD)"
+
+      - name: Find the LIVE commit
+        id: live
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SHA=$(gh api "repos/${{ github.repository }}/deployments?environment=live-release&per_page=1" --jq '.[0].sha // empty')
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "LIVE commit: ${SHA:-none yet}"
+
+      - name: Check out the LIVE commit
+        if: steps.live.outputs.sha != ''
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.live.outputs.sha }}
+          path: live-src
+
+      - name: Build LIVE
+        if: steps.live.outputs.sha != ''
+        working-directory: live-src
+        run: node scripts/build.mjs --env live --out "$GITHUB_WORKSPACE/_site/live-tmp" --version "live-$(git rev-parse --short HEAD)"
+
+      - name: Assemble site
+        run: |
+          if [ -d _site/live-tmp ]; then
+            cp -a _site/live-tmp/. _site/ && rm -rf _site/live-tmp
+          else
+            printf '%s\n' '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' \
+              '<title>Baby Log</title>' \
+              '<p style="font:17px system-ui;padding:16px">Baby Log has no live release yet. The test version is at <a href="test/">test/</a>.</p>' \
+              > _site/index.html
+          fi
+          touch _site/.nojekyll
+          ls -R _site | head -50
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
