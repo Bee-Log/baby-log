@@ -65,10 +65,14 @@
     return row.wee && row.poo ? 'Wee + Poo' : row.wee ? 'Wee' : 'Poo';
   }
 
-  // "Left 14 min", "Both 22 min", "Bottle 90 ml". Missing details are left out.
+  // "Left 14 min", "Left 8 · Right 12 min", "Bottle 90 ml". Missing details are left out.
   function feedLabel(rec) {
     var d = rec.d || {};
     if (d.kind === 'Bottle') return 'Bottle' + (d.ml != null ? ' ' + d.ml + ' ml' : '');
+    // Both sides with time: "Left 8 · Right 12 min". Otherwise "Left 14 min" (also for entries saved before minutes per side).
+    if (typeof d.leftMin === 'number' && typeof d.rightMin === 'number' && d.leftMin > 0 && d.rightMin > 0) {
+      return 'Left ' + d.leftMin + ' · Right ' + d.rightMin + ' min';
+    }
     return (d.side || 'Breast') + (d.min != null ? ' ' + d.min + ' min' : '');
   }
 
@@ -106,10 +110,10 @@
   }
 
   // The entry's details with some fields replaced. Fields the app does not know about are kept.
-  function withFields(d, fields) {
+  function withFields(d, fields, more) {
     var out = {};
     for (var k in (d || {})) out[k] = d[k];
-    for (var f in fields) out[f] = fields[f];
+    [fields, more].forEach(function (set) { for (var f in (set || {})) out[f] = set[f]; });
     return out;
   }
 

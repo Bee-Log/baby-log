@@ -84,55 +84,95 @@ test('bottle: change the amount, milk, time and note; it works offline', async (
   await context.close();
 });
 
-test('breast: the Left / Right buttons are choices, the minutes are typed', async () => {
-  const { context, page, errors } = await start([rec('s1', 'feed', at(11), { kind: 'Breast', side: 'Left', min: 14 }, { note: 'a' })]);
-  assert.deepEqual(await todayRows(page), ['Feed · Left 14 min']);
+test('breast: Left and Right minutes are edited separately; the total is their sum', async () => {
+  const { context, page, errors } = await start([rec('s1', 'feed', at(11), { kind: 'Breast', side: 'Both', min: 20, leftMin: 8, rightMin: 12 }, { note: 'a' })]);
+  assert.deepEqual(await todayRows(page), ['Feed · Left 8 · Right 12 min']);
   await openFeed(page);
   assert.equal(await pressed(page, '#mode-breast'), 'true');
   assert.equal(await page.isVisible('#breast-timer-block'), false, 'no timer for a saved feed');
-  assert.equal(await page.isVisible('#breast-manual'), true);
-  assert.equal(await pressed(page, '#btn-left'), 'true');
-  assert.equal(await pressed(page, '#btn-right'), 'false');
-  assert.equal(await page.textContent('#btn-left-sub'), 'Selected');
-  assert.equal(await page.textContent('#btn-right-sub'), 'Tap to select');
-  assert.equal(await page.inputValue('#breast-min'), '14');
+  assert.equal(await page.isVisible('#btn-left'), false, 'no Start / Pause buttons either');
+  assert.equal(await page.inputValue('#left-min'), '8');
+  assert.equal(await page.inputValue('#right-min'), '12');
+  assert.equal(await page.textContent('#breast-total'), '20 min');
+  assert.equal(await page.isVisible('#split-hint'), false, 'nothing is guessed: both minutes were saved');
   assert.equal(await page.inputValue('#breast-time'), '11:00');
   assert.equal(await page.inputValue('#breast-note'), 'a');
 
-  await page.click('#btn-left');                       // the only chosen side cannot be switched off
-  assert.equal(await pressed(page, '#btn-left'), 'true');
-  await page.click('#btn-right');                      // both chosen
-  assert.equal(await pressed(page, '#btn-right'), 'true');
-  await page.click('#breast-min-plus');
-  await page.click('#breast-min-plus');
-  await page.click('#breast-min-minus');
-  assert.equal(await page.inputValue('#breast-min'), '15');
+  await page.click('#left-plus');
+  await page.click('#left-plus');
+  await page.click('#left-minus');
+  assert.equal(await page.inputValue('#left-min'), '9');
+  await page.fill('#right-min', '15');                 // typed, then Save straight away
   await page.fill('#breast-note', '  fed well  ');
   await page.fill('#breast-time', '10:50');
   await page.click('#feed-save');
   await waitToast(page, 'Changes saved');
-  assert.deepEqual(await todayRows(page), ['Feed · Both 15 min']);
+  assert.deepEqual(await todayRows(page), ['Feed · Left 9 · Right 15 min']);
   const saved = await byId(page, 's1');
-  assert.deepEqual([saved.t, saved.d, saved.note], [at(10, 50), { kind: 'Breast', side: 'Both', min: 15 }, 'fed well']);
+  assert.deepEqual([saved.t, saved.d, saved.note], [at(10, 50), { kind: 'Breast', side: 'Both', min: 24, leftMin: 9, rightMin: 15 }, 'fed well']);
 
-  await openFeed(page);                                // right only
-  await page.click('#btn-right');                      // Right off -> Left only
-  assert.equal(await pressed(page, '#btn-left'), 'true');
-  await page.click('#btn-left');                       // refused: it is the only one
-  await page.click('#btn-right');                      // both
-  await page.click('#btn-left');                       // Left off -> Right only
-  assert.deepEqual([await pressed(page, '#btn-left'), await pressed(page, '#btn-right')], ['false', 'true']);
-  await page.fill('#breast-min', '300000');
+  await openFeed(page);                                // Right to 0: the side follows the minutes
+  await page.fill('#right-min', '0');
   await page.click('#feed-save');
   await waitToast(page, 'Changes saved');
-  assert.deepEqual((await byId(page, 's1')).d, { kind: 'Breast', side: 'Right', min: 300 }, 'minutes stay in range');
+  assert.deepEqual((await byId(page, 's1')).d, { kind: 'Breast', side: 'Left', min: 9, leftMin: 9, rightMin: 0 });
+  assert.deepEqual(await todayRows(page), ['Feed · Left 9 min']);
+
+  await openFeed(page);                                // both 0: the earlier side stays
+  await page.fill('#left-min', '0');
+  await page.click('#feed-save');
+  await waitToast(page, 'Changes saved');
+  assert.deepEqual((await byId(page, 's1')).d, { kind: 'Breast', side: 'Left', min: 0, leftMin: 0, rightMin: 0 });
+
+  await openFeed(page);                                // minutes stay in range
+  await page.fill('#left-min', '300000');
+  await page.fill('#right-min', '-4');
+  await page.click('#feed-save');
+  await waitToast(page, 'Changes saved');
+  assert.deepEqual((await byId(page, 's1')).d, { kind: 'Breast', side: 'Left', min: 300, leftMin: 300, rightMin: 0 });
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('an old breast feed (only a total): the split is a guess, and nothing is added unless the minutes change', async () => {
+  const old = { kind: 'Breast', side: 'Both', min: 15 };
+  const { context, page, errors } = await start([rec('o1', 'feed', at(11), old), rec('o2', 'feed', at(12), { kind: 'Breast', side: 'Right', min: 9 })]);
+  assert.deepEqual(await todayRows(page), ['Feed · Right 9 min', 'Feed · Both 15 min'], 'old entries look as before');
+
+  await openFeed(page, 1);                             // the Both 15 feed
+  assert.equal(await page.inputValue('#left-min'), '8');
+  assert.equal(await page.inputValue('#right-min'), '7');
+  assert.equal(await page.isVisible('#split-hint'), true, 'it says the split is a guess');
+  const before = await byId(page, 'o1');
+  await page.click('#feed-save');                      // nothing changed
+  await page.waitForFunction(() => location.hash === '#today');
+  assert.deepEqual(await byId(page, 'o1'), before, 'the guess is not written');
+
+  await openFeed(page, 1);                             // change only the note
+  await page.fill('#breast-note', 'ok');
+  await page.click('#feed-save');
+  await waitToast(page, 'Changes saved');
+  const noted = await byId(page, 'o1');
+  assert.deepEqual(noted.d, old, 'still an old-format entry: no guessed minutes were added');
+  assert.equal(noted.note, 'ok');
+
+  await openFeed(page, 1);                             // change a side: the split becomes real
+  await page.click('#left-plus');
+  assert.equal(await page.isVisible('#split-hint'), false, 'the hint goes once the parent chooses');
+  await page.click('#feed-save');
+  await waitToast(page, 'Changes saved');
+  assert.deepEqual((await byId(page, 'o1')).d, { kind: 'Breast', side: 'Both', min: 16, leftMin: 9, rightMin: 7 });
+
+  await openFeed(page, 0);                             // an old Right-only feed is not a guess
+  assert.deepEqual([await page.inputValue('#left-min'), await page.inputValue('#right-min')], ['0', '9']);
+  assert.equal(await page.isVisible('#split-hint'), false);
   assert.deepEqual(errors, []);
   await context.close();
 });
 
 test('switch Breast <-> Bottle while editing: the entry becomes the other kind', async () => {
   const { context, page, errors } = await start([
-    rec('s1', 'feed', at(11), { kind: 'Breast', side: 'Left', min: 14 }, { note: 'keep me' }),
+    rec('s1', 'feed', at(11), { kind: 'Breast', side: 'Left', min: 14, leftMin: 14, rightMin: 0 }, { note: 'keep me' }),
     rec('b1', 'feed', at(12), { kind: 'Bottle', milk: 'Breast milk', ml: 70 })
   ]);
   // Newest first: b1 (12:00) then s1 (11:00).
@@ -152,14 +192,14 @@ test('switch Breast <-> Bottle while editing: the entry becomes the other kind',
 
   await openFeed(page, 0);                             // the 12:00 bottle becomes a breast feed
   await page.click('#mode-breast');
-  assert.equal(await page.isVisible('#breast-manual'), true);
+  assert.equal(await page.isVisible('#left-min'), true);
   assert.equal(await page.inputValue('#breast-time'), '12:00');
-  await page.click('#btn-right');
-  await page.click('#btn-left');                       // Right only
-  await page.fill('#breast-min', '12');
+  assert.deepEqual([await page.inputValue('#left-min'), await page.inputValue('#right-min')], ['10', '0'], 'starts from 10 minutes on the left');
+  await page.fill('#left-min', '0');
+  await page.fill('#right-min', '12');
   await page.click('#feed-save');
   await waitToast(page, 'Changes saved');
-  assert.deepEqual((await byId(page, 'b1')).d, { kind: 'Breast', side: 'Right', min: 12 });
+  assert.deepEqual((await byId(page, 'b1')).d, { kind: 'Breast', side: 'Right', min: 12, leftMin: 0, rightMin: 12 });
   assert.deepEqual(errors, []);
   await context.close();
 });

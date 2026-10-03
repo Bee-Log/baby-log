@@ -45,25 +45,35 @@ test('the Feed button opens the Feed screen without the tab bar; the close butto
   await context.close();
 });
 
-test('breast feed: start, switch sides, pause, add a note, save; it shows on Today', async () => {
+test('breast feed: two compact rows; start, switch sides, pause, add a note, save; it shows on Today', async () => {
   const { context, page, errors } = await phone(browser);
   await install(page, url());
   await page.click('a.quick-btn.feed');
   await ready(page);
+  assert.equal(await page.isVisible('#row-left'), true);
+  assert.equal(await page.textContent('#btn-left'), 'Start');
+  assert.equal(await page.textContent('#btn-right'), 'Start');
+  const rowHeight = (await page.locator('#row-left').boundingBox()).height;
+  assert.ok(rowHeight <= 80, `a side row is compact (${rowHeight}px)`);
 
   await page.click('#btn-left');
   assert.equal(await page.getAttribute('#btn-left', 'aria-pressed'), 'true');
-  assert.equal(await page.textContent('#btn-left-sub'), 'Tap to pause');
-  assert.equal(await page.textContent('#btn-right-sub'), 'Tap to switch');
+  assert.equal(await page.textContent('#btn-left'), 'Pause');
+  assert.equal(await page.textContent('#btn-right'), 'Switch');
+  assert.equal(await page.locator('#row-left').evaluate((e) => e.classList.contains('active')), true, 'the running row is highlighted');
   assert.equal(await page.isDisabled('#feed-save'), false);
   await page.waitForTimeout(2200);
-  assert.match(await page.textContent('#breast-timer'), /^00:0[2-4]$/, 'the timer counts');
+  assert.match(await page.textContent('#breast-timer'), /^00:0[2-4]$/, 'the total counts');
+  assert.match(await page.textContent('#left-time'), /^00:0[2-4]$/, 'and so does the side');
+  assert.equal(await page.textContent('#right-time'), '00:00');
 
-  await page.click('#btn-right');
+  await page.click('#btn-right');                       // switch
   assert.equal(await page.getAttribute('#btn-right', 'aria-pressed'), 'true');
   assert.equal(await page.getAttribute('#btn-left', 'aria-pressed'), 'false');
-  await page.click('#btn-right'); // pause
-  assert.equal(await page.textContent('#btn-right-sub'), 'Tap to start');
+  assert.equal(await page.textContent('#btn-left'), 'Switch');
+  await page.click('#btn-right');                       // pause
+  assert.equal(await page.textContent('#btn-right'), 'Start');
+  assert.equal(await page.locator('#row-right').evaluate((e) => e.classList.contains('active')), false);
   const frozen = await page.textContent('#breast-timer');
   await page.waitForTimeout(1500);
   assert.equal(await page.textContent('#breast-timer'), frozen, 'a paused timer stands still');
@@ -74,10 +84,42 @@ test('breast feed: start, switch sides, pause, add a note, save; it shows on Tod
   assert.deepEqual(await todayRows(page), ['Feed · Both 0 min']);
   const [r] = await storedRecords(page);
   assert.equal(r.type, 'feed');
-  assert.deepEqual(r.d, { kind: 'Breast', side: 'Both', min: 0 });
+  assert.deepEqual(r.d, { kind: 'Breast', side: 'Both', min: 0, leftMin: 0, rightMin: 0 });
   assert.equal(r.note, 'Sleepy, fed well');
   assert.equal(r.end, null);
   assert.ok(Math.abs(r.t - Date.now()) < 60000);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('both sides timed: the minutes of each side are saved, and the total is their sum', async () => {
+  const { context, page, errors } = await phone(browser);
+  await install(page, url());
+  // A timer that started 20 minutes ago: Left for 8 minutes, then Right for the last 12 (still running).
+  await page.evaluate(() => new Promise((resolve, reject) => {
+    const now = Date.now(), min = 60000;
+    const req = indexedDB.open('test-baby-log');
+    req.onsuccess = () => {
+      const db = req.result, tx = db.transaction('meta', 'readwrite');
+      tx.objectStore('meta').put({ startedAt: now - 20 * min, segments: [
+        { side: 'Left', from: now - 20 * min, to: now - 12 * min },
+        { side: 'Right', from: now - 12 * min, to: null }] }, 'breastTimer');
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => reject(tx.error);
+    };
+  }));
+  await page.reload();
+  await page.click('a.quick-btn.feed');
+  await ready(page);
+  await page.waitForFunction(() => /^20:0\d$/.test(document.getElementById('breast-timer').textContent));
+  assert.equal(await page.textContent('#left-time'), '08:00');
+  assert.match(await page.textContent('#right-time'), /^12:0\d$/);
+  assert.equal(await page.textContent('#btn-right'), 'Pause');
+  await page.click('#feed-save');
+  await afterSave(page);
+  const [r] = await storedRecords(page);
+  assert.deepEqual(r.d, { kind: 'Breast', side: 'Both', min: 20, leftMin: 8, rightMin: 12 });
+  assert.deepEqual(await todayRows(page), ['Feed · Left 8 · Right 12 min']);
   assert.deepEqual(errors, []);
   await context.close();
 });
@@ -110,7 +152,7 @@ test('a running timer survives closing the app, and keeps the right time', async
   await page.click('#feed-save');
   await afterSave(page);
   const [r] = await storedRecords(page);
-  assert.deepEqual(r.d, { kind: 'Breast', side: 'Left', min: 14 });
+  assert.deepEqual(r.d, { kind: 'Breast', side: 'Left', min: 14, leftMin: 14, rightMin: 0 });
   // The draft timer is gone: a new Feed screen starts fresh.
   await page.click('a.quick-btn.feed');
   await ready(page);
@@ -242,13 +284,29 @@ test('the card under the form has Fed at and Note, with a line between them and 
   await context.close();
 });
 
-test('the bottle controls fit on a narrow phone (Expressed does not overflow its button)', async () => {
+test('the feed controls fit on a narrow phone: Left / Right rows and Expressed do not overflow', async () => {
   for (const width of [320, 360, 390]) {
     const context = await browser.newContext({ viewport: { width, height: 740 } });
     const page = await context.newPage();
     await install(page, url());
     await page.click('a.quick-btn.feed');
     await ready(page);
+    const rowsFit = () => page.$$eval('#panel-breast .side-row', (rows) => rows.filter((r) => r.scrollWidth > r.clientWidth).map((r) => r.id));
+    assert.deepEqual(await rowsFit(), [], `${width}px wide: a Left / Right row overflows while logging`);
+    await page.click('#screen-feed a[aria-label="Close"]');
+    await page.evaluate(() => new Promise((resolve) => {
+      const req = indexedDB.open('test-baby-log');
+      req.onsuccess = () => { const db = req.result, tx = db.transaction('records', 'readwrite');
+        tx.objectStore('records').put({ id: 'w', type: 'feed', t: Date.now() - 60000, end: null, d: { kind: 'Breast', side: 'Both', min: 133, leftMin: 66, rightMin: 67 }, note: '', by: '', deviceId: 'x', updatedAt: 1 });
+        tx.oncomplete = () => { db.close(); resolve(); }; };
+    }));
+    await page.reload();
+    await page.waitForSelector('#today-list .row-link');
+    await page.locator('#today-list .row-link').first().click();
+    await ready(page);
+    assert.deepEqual(await rowsFit(), [], `${width}px wide: a Left / Right row overflows while editing (two-digit minutes)`);
+    const editFit = await page.$$eval('#panel-breast .side-edit', (els) => els.map((e) => { const r = e.getBoundingClientRect(), p = e.parentElement.getBoundingClientRect(); return r.right <= p.right + 0.5 && r.left >= p.left; }));
+    assert.deepEqual(editFit, [true, true], `${width}px wide: the minutes controls run outside their row`);
     await page.click('#mode-bottle');
     const overflowing = await page.$$eval('#panel-bottle .chip, #panel-bottle .step-btn', (els) =>
       els.filter((e) => e.scrollWidth > e.clientWidth).map((e) => e.textContent));

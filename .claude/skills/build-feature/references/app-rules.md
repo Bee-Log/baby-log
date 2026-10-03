@@ -26,6 +26,10 @@ updatedAt   ms time of the last change
 deleted     true if the entry was removed (a "tombstone"), otherwise absent
 ```
 
+Feed details inside `d` (features 006, 007, 012):
+- Breast: `kind: 'Breast'`, `side: 'Left' | 'Right' | 'Both'`, `min` (total whole minutes), and optional `leftMin` and `rightMin` (whole minutes per side). When the per-side fields are present, `min = leftMin + rightMin`. Entries saved before feature 012 have only `side` and `min`.
+- Bottle: `kind: 'Bottle'`, `milk: 'Formula' | 'Breast milk'`, `ml` (0 to 240).
+
 - Never overwrite history silently. To remove an entry, set `deleted: true` and update `updatedAt`.
 - Keep a CSV export. One row per entry, with readable columns. The first version of the columns is in the earlier prototype's export; keep those names.
 - Do not store anything that would lock the data into one backend. The same JSON must be easy to move to another database later.

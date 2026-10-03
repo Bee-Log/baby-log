@@ -107,13 +107,21 @@ body.on-screen main, body.on-screen .tabbar { display: none; }
 /* Breast timer */
 .timer-block { display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 8px; }
 .timer { font-family: var(--display); font-size: 72px; font-weight: 700; line-height: 1; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
-.side-btns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 22px 0; }
-.side-btn {
-  aspect-ratio: 1; border-radius: 999px; border: 2px solid var(--accent); background: var(--surface); color: var(--accent);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font: inherit; font-size: 15px; cursor: pointer;
+/* Left and Right: two compact rows (feature 012), the same for logging and for editing. */
+.side-rows { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+.side-row { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 8px 12px; background: var(--surface); border: 2px solid var(--line); border-radius: 16px; }
+.side-row.active { border-color: var(--accent); background: #e3ecf8; }
+.side-name { font-family: var(--display); font-size: 22px; font-weight: 700; min-width: 54px; }
+.side-time { flex: 1; font-size: 20px; font-variant-numeric: tabular-nums; }
+.side-action {
+  min-height: 44px; min-width: 92px; padding: 0 14px; border-radius: 12px; border: 2px solid var(--accent);
+  background: var(--surface); color: var(--accent); font: inherit; font-weight: 700; cursor: pointer;
 }
-.side-btn.active { background: var(--accent); color: #fff; }
-.side-name { font-family: var(--display); font-size: 34px; font-weight: 700; }
+.side-row.active .side-action { background: var(--accent); color: #fff; }
+.side-edit { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.side-edit .step-btn { width: 44px; min-height: 44px; padding: 0; font-size: 22px; }
+.side-edit input { width: 48px; min-width: 0; text-align: center; font: inherit; font-size: 20px; font-weight: 700; color: var(--ink); border: none; border-bottom: 2px solid var(--accent); background: transparent; padding: 2px 0; }
+.side-edit .unit { font-size: 14px; }
 
 /* Bottle */
 .bottle-grid { display: grid; grid-template-columns: minmax(96px, min(150px, 38vw)) minmax(0, 1fr); gap: 16px; align-items: center; margin-bottom: 18px; }
