@@ -25,6 +25,8 @@
   --muted: #5b6168;
   --line: #e4ded5;
   --accent: #2f5da8;
+  --nappy-bg: #fbe9dc;
+  --nappy-ink: #8e3f0e;
   --test: #c75c28;
   --body: 'Atkinson Hyperlegible', system-ui, sans-serif;
   --display: 'Bricolage Grotesque', system-ui, sans-serif;
@@ -51,6 +53,41 @@ main {
 h1 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height: 1.15; margin: 16px 0 8px; }
 .lead { margin: 0 0 16px; }
 .status { color: var(--muted); font-size: 13px; margin-top: 32px; }
+
+/* Today: quick log buttons and the timeline (Main.dc.html). */
+.quick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 8px; }
+.quick-btn {
+  min-height: 92px; border-radius: 20px; border: none;
+  background: var(--nappy-bg); color: var(--nappy-ink);
+  font: inherit; font-weight: 700; font-size: 16px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+.quick-btn:active { transform: scale(0.98); }
+.quick-btn:focus-visible, .toast button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.list-title { font-size: 20px; margin: 24px 0 4px; }
+.timeline { list-style: none; margin: 0; padding: 0; }
+.row { display: grid; grid-template-columns: 72px 36px minmax(0, 1fr); align-items: center; min-height: 52px; border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: none; }
+.row-time { font-size: 15px; color: var(--muted); }
+.row-icon { width: 28px; height: 28px; border-radius: 14px; display: flex; align-items: center; justify-content: center; }
+.row-icon.nappy { background: var(--nappy-bg); color: #b5561a; }
+.row-what { font-size: 16px; }
+.empty { color: var(--muted); margin: 8px 0; }
+
+/* Short message above the tab bar, with Undo. */
+.toast {
+  position: fixed; left: 16px; right: 16px; z-index: 6;
+  bottom: calc(var(--tabbar-h) + 12px + env(safe-area-inset-bottom));
+  max-width: 528px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--ink); color: #fff; border-radius: 16px; padding: 8px 8px 8px 18px; font-weight: 700;
+}
+.toast[hidden] { display: none; }
+.toast button {
+  min-height: 44px; padding: 0 16px; border-radius: 12px; font: inherit; font-weight: 700; cursor: pointer;
+  background: transparent; color: #fff; border: 1.5px solid rgba(255, 255, 255, 0.5);
+}
 
 /* Bottom navigation: three equal tabs. The current tab is dark and bold. */
 .tabbar {
