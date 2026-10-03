@@ -16,6 +16,8 @@ var SHELL = [
   'store.js',
   'feed.js',
   'feed-ui.js',
+  'sleep.js',
+  'sleep-ui.js',
   'edit-ui.js',
   'styles.css',
   'manifest.webmanifest',
