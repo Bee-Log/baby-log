@@ -19,7 +19,7 @@ prototype/baby-log.html first prototype, for reference only
 DEPLOY.md               how test and live are published, rollback, links
 scripts/build.mjs       builds src/ into dist/test and dist/live (no dependencies)
 tests/                  node:test checks, run with `npm test`
-.github/workflows/      ci (pull requests), deploy (main -> TEST), release-live (manual -> LIVE)
+.github/workflows/      ci (pull requests), deploy (main -> TEST), release-live (manual -> LIVE, records a `live-release` deployment)
 .claude/skills/         feature-signoff, build-feature, feature-ready
 ```
 

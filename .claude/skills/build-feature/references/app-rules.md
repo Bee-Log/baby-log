@@ -47,6 +47,6 @@ A test build must never touch the real data. Use a different storage name prefix
 
 ## Two addresses: test and live
 - `main` publishes the TEST address automatically.
-- The LIVE address changes only when a feature is marked Done (see `feature-ready`). Use a `live` branch or a tagged release for this.
+- The LIVE address changes only when a feature is marked Done (see `feature-ready`). The **Release LIVE** workflow does this; see `DEPLOY.md`.
 - Keep the steps in `DEPLOY.md` at the repository root: how each address is published, how to roll back, and the two links. Create it in the first build if it is missing.
 - Rolling back live must be one simple step.
