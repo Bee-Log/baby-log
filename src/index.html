@@ -12,14 +12,27 @@
   <link rel="stylesheet" href="styles.css">
   <script src="config.js"></script>
   <script src="nav.js"></script>
+  <script src="records.js"></script>
+  <script src="store.js"></script>
 </head>
 <body>
   <div id="test-banner" class="test-banner" hidden>TEST version. Data here is kept apart from the real app.</div>
 
   <main>
     <section class="view" id="view-today" data-tab="today" aria-labelledby="h-today">
-      <h1 id="h-today">Today</h1>
-      <p class="lead">Feeds, sleep and nappies will show here.</p>
+      <div class="quick">
+        <button type="button" class="quick-btn" data-log="pee">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s-6 7-6 11a6 6 0 0 0 12 0c0-4-6-11-6-11z"></path></svg>
+          Wee
+        </button>
+        <button type="button" class="quick-btn" data-log="poop">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="7"></circle><path d="M9 13h6"></path></svg>
+          Poo
+        </button>
+      </div>
+      <h1 id="h-today" class="list-title">Today</h1>
+      <ol class="timeline" id="today-list"></ol>
+      <p class="empty" id="today-empty" hidden>Nothing logged yet today.</p>
     </section>
     <section class="view" id="view-summary" data-tab="summary" aria-labelledby="h-summary" hidden>
       <h1 id="h-summary">Summary</h1>
@@ -31,6 +44,11 @@
     </section>
     <p class="status"><span id="status">Checking offline support…</span> <span id="version"></span></p>
   </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden>
+    <span id="toast-text"></span>
+    <button type="button" id="toast-undo">Undo</button>
+  </div>
 
   <nav class="tabbar" aria-label="Main">
     <a href="#today" data-tab="today">

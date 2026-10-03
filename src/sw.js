@@ -12,6 +12,8 @@ var SHELL = [
   'app.js',
   'config.js',
   'nav.js',
+  'records.js',
+  'store.js',
   'styles.css',
   'manifest.webmanifest',
   'fonts/atkinson-hyperlegible-400.woff2',

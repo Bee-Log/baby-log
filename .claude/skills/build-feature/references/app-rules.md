@@ -40,6 +40,13 @@ deleted     true if the entry was removed (a "tombstone"), otherwise absent
 ## Test data stays separate
 A test build must never touch the real data. Use a different storage name prefix (for example `test-`) and a different Drive folder name for test builds. Show a clear "TEST" label in the app when running as a test.
 
+## Shared origin: protect real data in code
+TEST (`/baby-log/test/`), LIVE (`/baby-log/`) and any other GitHub Pages site of this account run on one origin, so they can see each other's storage. The owner chose to protect data in code for now:
+- All storage goes through `src/store.js`. Its database name is fixed from the build: `test-baby-log` for TEST, `baby-log` for LIVE. It refuses any other name.
+- Never list, open or delete other databases (`indexedDB.databases()`, `indexedDB.deleteDatabase`). Tests check this.
+- Ask the browser to keep the data (`navigator.storage.persist()`), so it is not cleared when the phone is low on space.
+- Do not publish other GitHub Pages sites on this account while it holds real data, or move LIVE to its own domain first.
+
 ## Security and hosting
 - Only a client ID may appear in the code. No secrets.
 - Static hosting only. No servers.
