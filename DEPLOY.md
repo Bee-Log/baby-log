@@ -57,6 +57,21 @@ then open the app again (twice). A fresh install hides update bugs.
   live and test side by side, and an update from an older version. Locally it needs Playwright; in a Claude Code cloud
   session use `NODE_PATH=/opt/node-tools/node_modules npm run test:browser`.
 
+## Turn on sync (owner, once)
+Sync (ADR-001, feature 013) is built but switched off. It stays off while `googleClientId` in `src/config.js` says `PLACEHOLDER`.
+
+1. Create the shared Google account. Keep its password and 2-step code in 1Password.
+2. In Google Cloud, create a project and an OAuth client of type **Web application**.
+   - Authorised JavaScript origin: `https://oudam-meas.github.io`
+   - Scope: `https://www.googleapis.com/auth/drive.appdata`
+   - While the consent screen is in "Testing", add the shared account as a test user.
+3. Put the **client ID** in `googleClientId` in `src/config.js`. The client ID is public. Never use or commit the client secret.
+4. Merge the change. Open the TEST app, go to **Sync and data**, and tap **Sign in with Google** on two phones. Check that an entry on one phone shows on the other.
+5. If the sign-in stops working after about 7 days, the project is still in "Testing" mode. Publish the OAuth app.
+6. When TEST works, run **Release LIVE**.
+
+TEST uses the Drive folder `baby-log-test` and LIVE uses `baby-log`. Both are inside the hidden app-data folder, so they never mix.
+
 ## One-time setup (owner)
 - Repository **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 - Recommended: **Settings → Branches** → protect `main` (require a pull request and the **CI** check).
