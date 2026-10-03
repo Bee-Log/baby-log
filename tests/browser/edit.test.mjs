@@ -1,4 +1,5 @@
 // Feature 011 in a real browser: tap a row on Today, fix or delete the entry, and undo.
+// A feed is edited on the Feed screen itself (same Breast / Bottle switch, same controls); a nappy has a small Edit screen.
 // The clock is fixed at 2:00 pm on 3 Oct 2026, so the tests behave the same at any time of day.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -22,11 +23,34 @@ async function start(seedRecords = []) {
   await p.page.waitForSelector('#today-list .row, #today-empty:not([hidden])');
   return p;
 }
-const ready = (page) => page.waitForSelector('#screen-edit[data-ready]');
-const openRow = async (page, n = 0) => { await page.locator('#today-list .row-link').nth(n).click(); await ready(page); };
+const openFeed = async (page, n = 0) => { await page.locator('#today-list .row-link').nth(n).click(); await page.waitForSelector('#screen-feed[data-ready]'); };
+const openNappy = async (page, n = 0) => { await page.locator('#today-list .row-link').nth(n).click(); await page.waitForSelector('#screen-edit[data-ready]'); };
 const byId = async (page, id) => (await readRecords(page)).find((r) => r.id === id);
-const toast = (page) => page.textContent('#toast-text');
 const waitToast = (page, text) => page.waitForFunction((t) => document.getElementById('toast-text').textContent === t, text);
+const pressed = (page, id) => page.getAttribute(id, 'aria-pressed');
+
+test('editing a feed opens the Feed screen itself: same switch, same controls', async () => {
+  const { context, page, errors } = await start([rec('b1', 'feed', at(13), { kind: 'Bottle', milk: 'Formula', ml: 90 })]);
+  await openFeed(page);
+  assert.equal(await page.textContent('#h-feed'), 'Edit feed');
+  assert.equal(await page.isVisible('.seg'), true, 'the Breast / Bottle switch is there');
+  assert.equal(await pressed(page, '#mode-bottle'), 'true', 'opens on the kind it was saved as');
+  assert.equal(await page.isVisible('#bt-svg'), true, 'the same bottle');
+  assert.equal(await page.textContent('#feed-save'), 'Save changes');
+  assert.equal(await page.isVisible('#feed-delete'), true);
+  assert.equal(await page.isVisible('#row-last-bottle'), false, 'the "last bottle" row is for logging only');
+  assert.equal(await page.isVisible('.tabbar'), false);
+  // Logging a new feed looks the same, without Delete.
+  await page.click('#screen-feed a[aria-label="Close"]');
+  await page.waitForSelector('.tabbar', { state: 'visible' });
+  await page.click('a.quick-btn.feed');
+  await page.waitForSelector('#screen-feed[data-ready]');
+  assert.equal(await page.textContent('#h-feed'), 'Feed');
+  assert.equal(await page.isVisible('#feed-delete'), false);
+  assert.equal(await page.isVisible('.seg'), true);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
 
 test('bottle: change the amount, milk and time; Undo puts it back; it works offline', async () => {
   const original = rec('b1', 'feed', at(13), { kind: 'Bottle', milk: 'Formula', ml: 90, extra: 'kept' });
@@ -34,19 +58,15 @@ test('bottle: change the amount, milk and time; Undo puts it back; it works offl
   assert.deepEqual(await todayRows(page), ['Feed · Bottle 90 ml']);
   await context.setOffline(true);
 
-  await openRow(page);
-  assert.equal(await page.textContent('#h-edit'), 'Edit feed');
-  assert.equal(await page.textContent('#edit-time-label'), 'Fed at');
-  assert.equal(await page.inputValue('#edit-time'), '13:00');
-  assert.equal(await page.inputValue('#edit-ml'), '90');
-  assert.equal(await page.getAttribute('#edit-milk-formula', 'aria-pressed'), 'true');
-  assert.equal(await page.isVisible('#edit-breast'), false);
-  assert.equal(await page.isVisible('.tabbar'), false);
+  await openFeed(page);
+  assert.equal(await page.inputValue('#bottle-ml'), '90');
+  assert.equal(await pressed(page, '#milk-formula'), 'true');
+  assert.equal(await page.inputValue('#bottle-time'), '13:00');
 
-  await page.fill('#edit-ml', '120');           // typed, then Save straight away
-  await page.click('#edit-milk-expressed');
-  await page.fill('#edit-time', '12:40');
-  await page.click('#edit-save');
+  await page.fill('#bottle-ml', '120');           // typed, then Save straight away
+  await page.click('#milk-expressed');
+  await page.fill('#bottle-time', '12:40');
+  await page.click('#feed-save');
   await waitToast(page, 'Changes saved');
   await page.waitForFunction(() => location.hash === '#today');
   assert.deepEqual(await todayRows(page), ['Feed · Bottle 120 ml']);
@@ -69,28 +89,82 @@ test('bottle: change the amount, milk and time; Undo puts it back; it works offl
   await context.close();
 });
 
-test('breast: change the side, minutes, note and time', async () => {
+test('breast: the Left / Right buttons are choices, the minutes are typed', async () => {
   const { context, page, errors } = await start([rec('s1', 'feed', at(11), { kind: 'Breast', side: 'Left', min: 14 }, { note: 'a' })]);
   assert.deepEqual(await todayRows(page), ['Feed · Left 14 min']);
-  await openRow(page);
-  assert.equal(await page.textContent('#edit-time-label'), 'Started at');
-  assert.equal(await page.isVisible('#edit-bottle'), false);
-  assert.equal(await page.getAttribute('#edit-side-Left', 'aria-pressed'), 'true');
-  assert.equal(await page.inputValue('#edit-min'), '14');
-  assert.equal(await page.inputValue('#edit-note'), 'a');
+  await openFeed(page);
+  assert.equal(await pressed(page, '#mode-breast'), 'true');
+  assert.equal(await page.isVisible('#breast-timer-block'), false, 'no timer for a saved feed');
+  assert.equal(await page.isVisible('#breast-manual'), true);
+  assert.equal(await pressed(page, '#btn-left'), 'true');
+  assert.equal(await pressed(page, '#btn-right'), 'false');
+  assert.equal(await page.textContent('#btn-left-sub'), 'Selected');
+  assert.equal(await page.textContent('#btn-right-sub'), 'Tap to select');
+  assert.equal(await page.inputValue('#breast-min'), '14');
+  assert.equal(await page.inputValue('#breast-time'), '11:00');
+  assert.equal(await page.inputValue('#breast-note'), 'a');
 
-  await page.click('#edit-side-Both');
-  await page.click('#edit-min-plus');
-  await page.click('#edit-min-plus');
-  await page.click('#edit-min-minus');
-  assert.equal(await page.inputValue('#edit-min'), '15');
-  await page.fill('#edit-note', '  fed well  ');
-  await page.fill('#edit-time', '10:50');
-  await page.click('#edit-save');
+  await page.click('#btn-left');                       // the only chosen side cannot be switched off
+  assert.equal(await pressed(page, '#btn-left'), 'true');
+  await page.click('#btn-right');                      // both chosen
+  assert.equal(await pressed(page, '#btn-right'), 'true');
+  await page.click('#breast-min-plus');
+  await page.click('#breast-min-plus');
+  await page.click('#breast-min-minus');
+  assert.equal(await page.inputValue('#breast-min'), '15');
+  await page.fill('#breast-note', '  fed well  ');
+  await page.fill('#breast-time', '10:50');
+  await page.click('#feed-save');
   await waitToast(page, 'Changes saved');
   assert.deepEqual(await todayRows(page), ['Feed · Both 15 min']);
   const saved = await byId(page, 's1');
   assert.deepEqual([saved.t, saved.d, saved.note], [at(10, 50), { kind: 'Breast', side: 'Both', min: 15 }, 'fed well']);
+
+  await openFeed(page);                                // right only
+  await page.click('#btn-right');                      // Right off -> Left only
+  assert.equal(await pressed(page, '#btn-left'), 'true');
+  await page.click('#btn-left');                       // refused: it is the only one
+  await page.click('#btn-right');                      // both
+  await page.click('#btn-left');                       // Left off -> Right only
+  assert.deepEqual([await pressed(page, '#btn-left'), await pressed(page, '#btn-right')], ['false', 'true']);
+  await page.fill('#breast-min', '300000');
+  await page.click('#feed-save');
+  await waitToast(page, 'Changes saved');
+  assert.deepEqual((await byId(page, 's1')).d, { kind: 'Breast', side: 'Right', min: 300 }, 'minutes stay in range');
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('switch Breast <-> Bottle while editing: the entry becomes the other kind', async () => {
+  const { context, page, errors } = await start([
+    rec('s1', 'feed', at(11), { kind: 'Breast', side: 'Left', min: 14 }, { note: 'keep me' }),
+    rec('b1', 'feed', at(12), { kind: 'Bottle', milk: 'Breast milk', ml: 70 })
+  ]);
+  // Newest first: b1 (12:00) then s1 (11:00).
+  await openFeed(page, 1);                             // the breast feed
+  await page.click('#mode-bottle');
+  assert.equal(await page.isVisible('#panel-bottle'), true);
+  assert.equal(await page.inputValue('#bottle-time'), '11:00', 'the time carries over');
+  assert.equal(await page.inputValue('#bottle-ml'), '70', 'starts from the last bottle');
+  await page.fill('#bottle-ml', '100');
+  await page.click('#feed-save');
+  await waitToast(page, 'Changes saved');
+  assert.deepEqual(await todayRows(page), ['Feed · Bottle 70 ml', 'Feed · Bottle 100 ml']);
+  const nowBottle = await byId(page, 's1');
+  assert.deepEqual(nowBottle.d, { kind: 'Bottle', milk: 'Breast milk', ml: 100 }, 'no side or minutes left over');
+  assert.equal(nowBottle.note, 'keep me', 'the note is not lost');
+  assert.equal(nowBottle.id, 's1', 'same entry');
+
+  await openFeed(page, 0);                             // the 12:00 bottle becomes a breast feed
+  await page.click('#mode-breast');
+  assert.equal(await page.isVisible('#breast-manual'), true);
+  assert.equal(await page.inputValue('#breast-time'), '12:00');
+  await page.click('#btn-right');
+  await page.click('#btn-left');                       // Right only
+  await page.fill('#breast-min', '12');
+  await page.click('#feed-save');
+  await waitToast(page, 'Changes saved');
+  assert.deepEqual((await byId(page, 'b1')).d, { kind: 'Breast', side: 'Right', min: 12 });
   assert.deepEqual(errors, []);
   await context.close();
 });
@@ -98,18 +172,16 @@ test('breast: change the side, minutes, note and time', async () => {
 test('a Wee + Poo row is two entries: a time change moves both, Delete removes both, Undo brings both back', async () => {
   const { context, page, errors } = await start([rec('w1', 'pee', at(13, 0)), rec('p1', 'poop', at(13, 1))]);
   assert.deepEqual(await todayRows(page), ['Nappy · Wee + Poo']);
-  await openRow(page);
+  await openNappy(page);
   assert.equal(await page.textContent('#h-edit'), 'Edit nappy');
   assert.equal(await page.textContent('#edit-nappy'), 'Wee + Poo');
-  assert.equal(await page.isVisible('#edit-breast'), false);
-  assert.equal(await page.isVisible('#edit-bottle'), false);
 
   await page.fill('#edit-time', '12:30');
   await page.click('#edit-save');
   await waitToast(page, 'Changes saved');
   assert.deepEqual([(await byId(page, 'w1')).t, (await byId(page, 'p1')).t], [at(12, 30), at(12, 31)], 'moved together, order kept');
 
-  await openRow(page);
+  await openNappy(page);
   await page.click('#edit-delete');
   await waitToast(page, 'Deleted');
   assert.deepEqual(await todayRows(page), []);
@@ -127,8 +199,8 @@ test('a Wee + Poo row is two entries: a time change moves both, Delete removes b
 
 test('delete a feed, then Undo', async () => {
   const { context, page, errors } = await start([rec('b1', 'feed', at(13), { kind: 'Bottle', milk: 'Formula', ml: 60 })]);
-  await openRow(page);
-  await page.click('#edit-delete');
+  await openFeed(page);
+  await page.click('#feed-delete');
   await waitToast(page, 'Deleted');
   await page.waitForFunction(() => location.hash === '#today');
   assert.deepEqual(await todayRows(page), []);
@@ -145,14 +217,14 @@ test('delete a feed, then Undo', async () => {
 test('a time that has not happened yet is refused, and nothing changes', async () => {
   const { context, page, errors } = await start([rec('b1', 'feed', at(13, 59), { kind: 'Bottle', milk: 'Formula', ml: 90 })]);
   const before = await byId(page, 'b1');
-  await openRow(page);
-  await page.fill('#edit-time', '16:00');
-  await page.click('#edit-save');
+  await openFeed(page);
+  await page.fill('#bottle-time', '16:00');
+  await page.click('#feed-save');
   await waitToast(page, 'That time has not happened yet.');
   assert.match(await page.evaluate(() => location.hash), /^#edit\//, 'stays on the Edit screen');
   assert.deepEqual(await byId(page, 'b1'), before);
-  await page.fill('#edit-time', '14:03'); // up to 5 minutes ahead is allowed
-  await page.click('#edit-save');
+  await page.fill('#bottle-time', '14:03'); // up to 5 minutes ahead is allowed
+  await page.click('#feed-save');
   await waitToast(page, 'Changes saved');
   assert.equal((await byId(page, 'b1')).t, at(14, 3));
   assert.deepEqual(errors, []);
@@ -162,13 +234,13 @@ test('a time that has not happened yet is refused, and nothing changes', async (
 test('Save with no change leaves the entry alone; Close saves nothing', async () => {
   const { context, page, errors } = await start([rec('b1', 'feed', at(13), { kind: 'Bottle', milk: 'Formula', ml: 90 })]);
   const before = await byId(page, 'b1');
-  await openRow(page);
-  await page.click('#edit-save');
+  await openFeed(page);
+  await page.click('#feed-save');
   await page.waitForFunction(() => location.hash === '#today');
   assert.deepEqual(await byId(page, 'b1'), before, 'not even updatedAt moved');
-  await openRow(page);
-  await page.fill('#edit-ml', '200');
-  await page.click('#screen-edit a[aria-label="Close"]');
+  await openFeed(page);
+  await page.fill('#bottle-ml', '200');
+  await page.click('#screen-feed a[aria-label="Close"]');
   await page.waitForFunction(() => location.hash === '#today');
   assert.deepEqual(await byId(page, 'b1'), before);
   assert.deepEqual(errors, []);
@@ -181,23 +253,24 @@ test('an entry that is gone is explained, not a blank screen', async () => {
   await waitToast(page, 'That entry is not there any more.');
   await page.waitForFunction(() => location.hash === '#today');
   assert.equal(await page.isVisible('#screen-edit'), false);
+  assert.equal(await page.isVisible('#screen-feed'), false);
   assert.deepEqual(errors, []);
   await context.close();
 });
 
-test('an update waits while the Edit screen is open', async () => {
+test('an update waits while a feed is being edited', async () => {
   site.test = 'test-v1';
   const { context, page, errors } = await start([rec('b1', 'feed', at(13), { kind: 'Bottle', milk: 'Formula', ml: 90 })]);
-  await openRow(page);
-  await page.fill('#edit-ml', '110');
+  await openFeed(page);
+  await page.fill('#bottle-ml', '110');
   await page.evaluate(() => { window.__sameLoad = true; });
   site.test = 'test-v2';
   await page.evaluate(() => navigator.serviceWorker.getRegistration().then((r) => r.update()));
   await page.waitForFunction(() => caches.keys().then((k) => k.includes('test-baby-log-shell-test-v2')));
   await page.waitForTimeout(1200);
   assert.equal(await page.evaluate(() => window.__sameLoad === true), true, 'not reloaded');
-  assert.equal(await page.inputValue('#edit-ml'), '110');
-  await page.click('#screen-edit a[aria-label="Close"]');
+  assert.equal(await page.inputValue('#bottle-ml'), '110');
+  await page.click('#screen-feed a[aria-label="Close"]');
   const s = await state(page, { until: (x) => x.pageVersion === 'test-v2', timeoutMs: 12000 });
   assert.equal(s.pageVersion, 'test-v2');
   assert.deepEqual(errors, []);

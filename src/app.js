@@ -23,6 +23,22 @@
   // ---- Routes: three tabs, and full screens (the Feed screen) without the tab bar ----
   var FEED_UI = self.BABYLOG_FEED_UI;
   var EDIT_UI = self.BABYLOG_EDIT_UI;
+  // #edit/<ids>: a feed is edited on the Feed screen, a nappy on its own small Edit screen.
+  function openEdit(arg, hashAtStart) {
+    FEED_UI.hide();
+    EDIT_UI.hide();
+    var first = String(arg).split('+')[0];
+    try { first = decodeURIComponent(first); } catch (err) { /* a broken link just finds nothing */ }
+    store.getRecord(first).then(function (rec) {
+      if (location.hash !== hashAtStart) return; // the parent already moved on
+      if (rec && rec.type === 'feed') FEED_UI.show({ editId: rec.id });
+      else EDIT_UI.show(arg);
+    }).catch(function (err) {
+      console.error('[baby-log] edit lookup', err);
+      toast('Could not read saved entries. Close the app and open it again.');
+    });
+  }
+
   function route() {
     var screen = nav.screenFromHash(location.hash);
     document.body.classList.toggle('on-screen', !!screen);
@@ -30,7 +46,7 @@
       var hidden = document.querySelectorAll('.view');
       for (var h = 0; h < hidden.length; h++) hidden[h].hidden = true;
       if (screen === 'feed') { EDIT_UI.hide(); FEED_UI.show(); }
-      else { FEED_UI.hide(); EDIT_UI.show(nav.argFromHash(location.hash)); }
+      else openEdit(nav.argFromHash(location.hash), location.hash);
       window.scrollTo(0, 0);
       return;
     }
@@ -115,6 +131,19 @@
     quick[q].addEventListener('click', function (e) { log(e.currentTarget.getAttribute('data-log')); });
   }
 
+  // Save changed entries and offer Undo for 6 seconds. `before` are the entries as stored and `after` their new
+  // versions (same ids): an edit, or tombstones for a delete. Undo writes the earlier values back with an
+  // updatedAt newer than what is stored now, so it wins everywhere. Used by the Feed screen and the nappy Edit screen.
+  function commitEdit(message, before, after) {
+    return store.putMany(after).then(function () {
+      toast(message, function () {
+        var back = before.map(function (b, i) { return R.restore(b, after[i], Date.now(), after[i].deviceId); });
+        return store.putMany(back).then(renderToday).then(function () { return message === 'Deleted' ? 'Restored' : 'Change undone'; });
+      });
+      location.hash = '#today';
+    });
+  }
+
   // ---- Toast with an optional Undo, for 6 seconds ----
   var toastEl = document.getElementById('toast');
   var toastUndo = document.getElementById('toast-undo');
@@ -144,7 +173,7 @@
     }).then(function () { setBusy(false); });
   });
 
-  var shared = { toast: toast, renderToday: renderToday, setBusy: setBusy };
+  var shared = { toast: toast, renderToday: renderToday, setBusy: setBusy, commitEdit: commitEdit };
   FEED_UI.init(shared);
   EDIT_UI.init(shared);
   route();
