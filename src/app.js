@@ -26,6 +26,7 @@
   var SLEEP_UI = self.BABYLOG_SLEEP_UI;
   var PROFILE_UI = self.BABYLOG_PROFILE_UI;
   var SYNC_UI = self.BABYLOG_SYNC_UI;
+  var SUMMARY_UI = self.BABYLOG_SUMMARY_UI;
   // #edit/<ids>: a feed is edited on the Feed screen, a nappy on its own small Edit screen.
   function openEdit(arg, hashAtStart) {
     FEED_UI.hide();
@@ -71,6 +72,7 @@
       else links[j].removeAttribute('aria-current');
     }
     if (tab === 'today') renderToday();
+    if (tab === 'summary') SUMMARY_UI.show();
     window.scrollTo(0, 0);
   }
   window.addEventListener('hashchange', route);
@@ -181,6 +183,7 @@
   SLEEP_UI.init(shared);
   PROFILE_UI.init(shared);
   SYNC_UI.init(shared);
+  SUMMARY_UI.init(shared);
   route();
 
   // ---- Offline support ----

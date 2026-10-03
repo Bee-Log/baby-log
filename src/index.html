@@ -14,6 +14,7 @@
   <script src="nav.js"></script>
   <script src="icons.js"></script>
   <script src="records.js"></script>
+  <script src="summary.js"></script>
   <script src="sync.js"></script>
   <script src="csv.js"></script>
   <script src="drive.js"></script>
@@ -29,6 +30,7 @@
   <script src="sleep-ui.js"></script>
   <script src="profile-ui.js"></script>
   <script src="sync-ui.js"></script>
+  <script src="summary-ui.js"></script>
 </head>
 <body>
   <div id="test-banner" class="test-banner" hidden>TEST version. Data here is kept apart from the real app.</div>
@@ -74,8 +76,25 @@
       <p class="empty" id="today-empty" hidden>Nothing logged yet today.</p>
     </section>
     <section class="view" id="view-summary" data-tab="summary" aria-labelledby="h-summary" hidden>
-      <h1 id="h-summary">Summary</h1>
-      <p class="lead">Daily totals will show here.</p>
+      <div class="sum-head">
+        <button type="button" class="round-btn" id="sum-prev" aria-label="Previous day"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg></button>
+        <div class="sum-title">
+          <h1 id="h-summary">Today</h1>
+          <div class="sum-date" id="sum-date"></div>
+        </div>
+        <button type="button" class="round-btn" id="sum-next" aria-label="Next day"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button>
+      </div>
+      <div class="sum-grid">
+        <div class="sum-tile"><div class="sum-label feeds">Feeds</div><div class="sum-big" id="sum-feeds">0</div><div class="sum-sub" id="sum-feeds-sub"></div></div>
+        <div class="sum-tile"><div class="sum-label nappies">Nappies</div><div class="sum-big" id="sum-nappies">0</div><div class="sum-sub" id="sum-nappies-sub"></div></div>
+        <div class="sum-tile"><div class="sum-label sleep">Sleep</div><div class="sum-big" id="sum-sleep">0m</div><div class="sum-sub" id="sum-sleep-sub"></div></div>
+        <div class="sum-tile"><div class="sum-label">Avg. gap</div><div class="sum-big" id="sum-gap">—</div><div class="sum-sub" id="sum-gap-sub"></div></div>
+      </div>
+      <div class="sum-chart">
+        <div class="sum-chart-head"><h2>Feeds · last 7 days</h2><span class="sum-sub">per day</span></div>
+        <div class="sum-bars" id="sum-bars" role="img" aria-label="Feeds per day for the last 7 days"></div>
+        <div class="sum-days" id="sum-days"></div>
+      </div>
     </section>
     <section class="view" id="view-growth" data-tab="growth" aria-labelledby="h-growth" hidden>
       <h1 id="h-growth">Growth</h1>

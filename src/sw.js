@@ -28,6 +28,8 @@ var SHELL = [
   'drive.js',
   'google-auth.js',
   'sync-ui.js',
+  'summary.js',
+  'summary-ui.js',
   'edit-ui.js',
   'styles.css',
   'manifest.webmanifest',
