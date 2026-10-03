@@ -2,7 +2,7 @@
 id: 001
 name: Install and open the app
 slug: install-and-open-the-app
-status: Testing
+status: Done
 updated: 2026-10-03
 ---
 
@@ -69,4 +69,4 @@ none
 **Fix after merge (2026-10-03).** On TEST, the first update mixed the new page with the old scripts, so the tabs did not work. The cause was the offline cache storing files from the browser's 10-minute HTTP cache. Now the offline cache always downloads fresh files, update checks skip the HTTP cache, and pages come from the same cache version as their scripts. When a new version takes over, the page reloads once. A phone that already has the mixed version heals after two reloads.
 
 ## Feedback
-(Filled in when someone tests it. Leave empty at sign-off.)
+- 2026-10-03: Tested OK (after the offline update fix in pull request 5).
