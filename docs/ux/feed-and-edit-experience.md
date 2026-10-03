@@ -18,15 +18,15 @@ A parent uses this at night, with one hand. If editing is a different form from 
 ### Feed screen (logging a new feed)
 - Top: a **Breast | Bottle** switch.
 - A small line under the switch with the last feed of that kind ("Last bottle: 90 ml · 11:50 am").
-- **Breast:** a big timer, two big round buttons **Left** and **Right**, a card with **Note**, and **Stop and save**.
-  - Tap a side to start. Tap the same side to pause. Tap the other side to switch.
+- **Breast:** a big total timer, then **two compact rows**, **Left** and **Right**, then a card with **Note**, and **Stop and save**.
+  - Each row shows that side's time and one button: **Start** (nothing is running), **Pause** (this side is running) or **Switch** (the other side is running). The running row is highlighted.
   - The timer keeps running if the app is closed.
 - **Bottle:** a bottle drawing (drag it up and down), an amount (type, or −10 / +10), **Formula | Expressed**, a card with **Fed at** and **Note**, and **Save**.
 
 ### Editing a feed
 - Tap a feed row on Today. The **same Feed screen** opens with the saved values.
 - The same **Breast | Bottle** switch is there. A parent can switch the kind to fix a wrong feed.
-- **Breast:** instead of the timer, the minutes are typed (−1 / +1). **Started at** is in the card.
+- **Breast:** the same two rows, but each row has its own minutes: **−**, a number that can be typed, **min**, **+**. The total is shown at the top as text. **Started at** is in the card. Nobody chooses Left, Right or Both: it is worked out from the minutes.
 - **Bottle:** exactly the bottle controls used for logging.
 - At the bottom: **Save changes** and **Delete this entry**.
 - **Delete asks for a second tap** ("Tap again to delete"), because there is no Undo.
@@ -49,43 +49,30 @@ A parent uses this at night, with one hand. If editing is a different form from 
 | 2 | The word **Expressed** ran outside its button on a small phone. | The bottle is a little smaller on narrow phones. The buttons have room. A test checks 320, 360 and 390 px wide. |
 | 3 | A stray line under **Fed at** when editing. | A line now shows only between two visible rows. **Fed at** and **Note** are in the card for both logging and editing, for both kinds. |
 | 4 | The **Undo** button covered other buttons. | **Undo is removed for now.** Messages no longer have buttons. Delete asks for a second tap instead. |
-| 5 | In breast edit you could select both Left and Right "somehow, sometimes". | Not fixed yet. See "Open design question" below. |
-| 6 | The round Left / Right buttons use too much space. | Not fixed yet. See below. |
+| 5 | In breast edit you could select both Left and Right "somehow, sometimes". | Gone. The Left and Right rows each have their own minutes (feature 012). |
+| 6 | The round Left / Right buttons use too much space. | Replaced by two compact rows, about 64 px tall each. The whole breast form now fits on one screen with the Save button. |
 
-## Open design question: the breast controls
-Today the breast form uses two **big round buttons**. The owner says they use too much space, and a round shape limits what a button can show. The owner also wants to **edit Left and Right separately**.
-
-Today we save only the side (Left, Right or Both) and the total minutes. So we cannot yet show or edit the minutes for each side.
-
-### Proposal (needs the owner's OK on two new optional data fields)
-Two compact rows, one per side. The same two rows are used for logging and editing.
+## Decided: the breast controls (feature 012)
+The owner approved the proposal. Two compact rows, one per side, the same for logging and editing.
 
 ```
 Logging (the timer is running on Right)        Editing (minutes are typed)
 
-  Total  12:40                                   Total  15 min
+  Total  20:00                                   Total  20 min
 
   +------------------------------------+        +------------------------------------+
-  | Left    08:32              [ Start ]|        | Left        [ - ]   8 min   [ + ]  |
+  | Left    08:00            [ Switch ] |        | Left        [ - ]   8 min   [ + ]  |
   +------------------------------------+        +------------------------------------+
-  | Right   04:08   (running)  [ Pause ]|       | Right       [ - ]   7 min   [ + ]  |
+  | Right   12:00            [ Pause  ] |        | Right       [ - ]  12 min   [ + ]  |
   +------------------------------------+        +------------------------------------+
 ```
 
-- Each row is about 64 px tall, so both fit above the card without scrolling.
-- Logging: tapping a row's button starts, pauses or switches, as today. The running row is highlighted.
-- Editing: each row has its own minutes. A side with 0 minutes was not used.
-- "Left", "Right" or "Both" is worked out from the minutes. Nobody chooses it, so the "select both sometimes" confusion goes away.
 - The total is the two minutes added together.
-
-### Other options the designer can choose
-- **A.** The proposal above (two rows, each with its own minutes).
-- **B.** A single row of two half-width buttons ("Left | Right") with one total. Smaller still, but no minutes per side.
-- **C.** Keep round buttons, but smaller, and add the minutes per side under each.
+- A feed saved before this change has only a total. When it is edited, the minutes are split by a guess (all on its side, or half each for "Both"), and a note says so. Nothing is written until the parent changes a number.
+- The designer can still change the look. Other options that were considered: one row of two half-width buttons with a single total (smaller, but no minutes per side), or smaller round buttons with the minutes under each.
 
 ## Data note for the designer
-A feed is saved as: kind (`Breast` or `Bottle`), the time, a note, and for breast the side and the total minutes; for bottle the amount (0 to 240 ml) and the milk (`Formula` or `Breast milk`).
-Minutes per side would be two new optional numbers. They need the owner's approval before they are saved.
+A feed is saved as: kind (`Breast` or `Bottle`), the time, a note; for breast the side (`Left`, `Right` or `Both`), the minutes of each side and the total; for bottle the amount (0 to 240 ml) and the milk (`Formula` or `Breast milk`).
 
 ## Not decided yet
 - Whether Undo comes back, and if so, how it looks without covering anything.

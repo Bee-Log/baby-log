@@ -11,7 +11,7 @@
   var ctx = null;               // { toast, renderToday, setBusy, commitEdit } from app.js
   var editing = null;           // the saved feed being edited, or null when logging a new one
   var timer = null;             // breast timer state (feed.js), or null
-  var form = { mode: 'breast', ml: F.DEFAULT_ML, milk: 'Formula', fedAt: '', note: '', sides: { Left: true, Right: false }, min: 0 };
+  var form = { mode: 'breast', ml: F.DEFAULT_ML, milk: 'Formula', fedAt: '', note: '', left: 10, right: 0, minTouched: false, splitGuessed: false, fallbackSide: 'Left' };
   var lastText = { breast: '', bottle: '' };   // "Last bottle: 90 ml · 11:50 am", shown under the switch when logging
   var MAX_MIN = 300;
   var tick = null;
@@ -59,21 +59,18 @@
   }
 
   // ---- Breast ----
-  // Editing a saved feed: the two side buttons are choices (both chosen means Both), the minutes are typed.
+  // Editing a saved feed: each side row has its own minutes (− / typed / +). The total is their sum, shown at the top.
   function renderBreastEdit() {
-    ['Left', 'Right'].forEach(function (side) {
-      var on = form.sides[side];
-      var btn = $('btn-' + side.toLowerCase());
-      btn.classList.toggle('active', on);
-      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-      $('btn-' + side.toLowerCase() + '-sub').textContent = on ? 'Selected' : 'Tap to select';
-    });
-    if (document.activeElement !== $('breast-min')) $('breast-min').value = form.min;
+    if (document.activeElement !== $('left-min')) $('left-min').value = form.left;
+    if (document.activeElement !== $('right-min')) $('right-min').value = form.right;
+    $('breast-total').textContent = (form.left + form.right) + ' min';
+    $('split-hint').hidden = !(form.splitGuessed && !form.minTouched);
     $('breast-time').value = form.fedAt;
     $('feed-save').textContent = 'Save changes';
     $('feed-save').disabled = false;
   }
 
+  // Logging: each side row shows its running time and one button (Start / Pause / Switch).
   function renderBreast() {
     if (editing) { renderBreastEdit(); return; }
     var now = Date.now();
@@ -81,13 +78,14 @@
     var running = F.runningSide(timer);
     $('breast-started').textContent = timer ? 'Started ' + R.formatClock(timer.startedAt) : 'Not started yet';
     $('breast-timer').textContent = F.formatTimer(t.total);
-    $('breast-sides').textContent = 'Left ' + F.formatTimer(t.Left) + ' · Right ' + F.formatTimer(t.Right);
     ['Left', 'Right'].forEach(function (side) {
-      var btn = $('btn-' + side.toLowerCase());
+      var key = side.toLowerCase();
       var on = running === side;
-      btn.classList.toggle('active', on);
+      $('row-' + key).classList.toggle('active', on);
+      $(key + '-time').textContent = F.formatTimer(t[side]);
+      var btn = $('btn-' + key);
       btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-      $('btn-' + side.toLowerCase() + '-sub').textContent = on ? 'Tap to pause' : running ? 'Tap to switch' : 'Tap to start';
+      btn.textContent = on ? 'Pause' : running ? 'Switch' : 'Start';
     });
     $('feed-save').disabled = !timer;
   }
@@ -100,19 +98,21 @@
   function stopTick() { if (tick) { clearInterval(tick); tick = null; } }
 
   function tapSide(side) {
-    if (editing) {
-      var other = side === 'Left' ? 'Right' : 'Left';
-      if (form.sides[side] && !form.sides[other]) return; // at least one side stays chosen
-      form.sides[side] = !form.sides[side];
-      renderBreastEdit();
-      return;
-    }
     timer = F.tap(timer, side, Date.now());
     renderBreast();
     store.setMeta(TIMER_KEY, timer).catch(function (err) {
       console.error('[baby-log] timer save', err);
       ctx.toast('The timer could not be saved on this phone.');
     });
+  }
+
+  // Edit-form minutes for one side. Typing, − and + all end up here.
+  function setSideMin(side, value) {
+    var n = clampMin(value);
+    if (n == null) return;
+    form[side.toLowerCase()] = n;
+    form.minTouched = true;
+    renderBreastEdit();
   }
 
   // ---- Bottle ----
@@ -165,8 +165,12 @@
   // Logging shows the timer; editing shows typed minutes, the started time and a Delete button.
   function applyVariant() {
     var e = !!editing;
-    $('breast-timer-block').hidden = e;
-    $('breast-manual').hidden = !e;
+    var logOnly = document.querySelectorAll('.only-log'), editOnly = document.querySelectorAll('.only-edit');
+    for (var i = 0; i < logOnly.length; i++) logOnly[i].hidden = e;
+    for (var j = 0; j < editOnly.length; j++) editOnly[j].hidden = !e;
+    $('split-hint').hidden = true; // shown by renderBreastEdit when it applies
+    $('row-left').classList.remove('active');
+    $('row-right').classList.remove('active');
     $('row-started').hidden = !e;
     $('last-line').hidden = e;
     $('feed-delete').hidden = !e;
@@ -187,10 +191,13 @@
     var base = sameKind ? editing.d : {};            // switching Breast <-> Bottle starts the details afresh
     var changes = { t: t, note: form.note.trim() };
     if (breast) {
-      var min = clampMin($('breast-min').value);     // read what is typed right now
-      if (min != null) form.min = min;
-      var side = form.sides.Left && form.sides.Right ? 'Both' : form.sides.Right ? 'Right' : 'Left';
-      changes.d = R.withFields(base, { kind: 'Breast', side: side, min: form.min });
+      // Read what is typed right now, so a tap on Save straight after typing cannot miss it.
+      var typedLeft = clampMin($('left-min').value), typedRight = clampMin($('right-min').value);
+      if (typedLeft != null && typedLeft !== form.left) { form.left = typedLeft; form.minTouched = true; }
+      if (typedRight != null && typedRight !== form.right) { form.right = typedRight; form.minTouched = true; }
+      // An old entry (only a total) is left as it is unless the minutes were touched; a new breast form always saves them.
+      if (form.minTouched || !sameKind) changes.d = R.withFields(base, F.breastDetails(form.left, form.right, form.fallbackSide), { kind: 'Breast' });
+      else changes.d = R.withFields(base, { kind: 'Breast' });
     } else {
       var ml = F.clampMl($('bottle-ml').value);
       if (ml != null) form.ml = ml;
@@ -288,8 +295,8 @@
       form.ml = bottle.ml != null && F.clampMl(bottle.ml) != null ? F.clampMl(bottle.ml) : F.DEFAULT_ML;
       form.milk = F.MILK.indexOf(bottle.milk) > -1 ? bottle.milk : 'Formula';
       form.fedAt = F.inputTime(Date.now());
-      form.sides = { Left: true, Right: false };
-      form.min = 10;
+      form.left = 10; form.right = 0;                  // for a new breast form, and for a bottle switched to breast
+      form.minTouched = false; form.splitGuessed = false; form.fallbackSide = 'Left';
       lastText.breast = lastBreast ? 'Last breast feed: ' + (breast.side || 'Breast') + ' · ' + R.formatClock(lastBreast.t) : 'No breast feed yet';
       lastText.bottle = lastBottle ? 'Last bottle: ' + (bottle.ml != null ? bottle.ml + ' ml · ' : '') + R.formatClock(lastBottle.t) : 'No bottle yet';
       var mode;
@@ -303,8 +310,9 @@
           if (F.MILK.indexOf(d.milk) > -1) form.milk = d.milk;
           mode = 'bottle';
         } else {
-          form.sides = { Left: d.side !== 'Right', Right: d.side === 'Right' || d.side === 'Both' };
-          if (d.min != null && clampMin(d.min) != null) form.min = clampMin(d.min);
+          var split = F.splitFromDetails(d);
+          form.left = split.left; form.right = split.right; form.splitGuessed = split.guessed;
+          form.fallbackSide = d.side;
           mode = 'breast';
         }
       } else {
@@ -358,9 +366,12 @@
     $('bottle-time').addEventListener('click', function (e) {
       if (typeof e.currentTarget.showPicker === 'function') { try { e.currentTarget.showPicker(); } catch (err) { /* already open or not allowed */ } }
     });
-    $('breast-min').addEventListener('change', function (e) { var n = clampMin(e.target.value); if (n != null) { form.min = n; renderBreastEdit(); } });
-    $('breast-min-minus').addEventListener('click', function () { form.min = Math.max(0, form.min - 1); renderBreastEdit(); });
-    $('breast-min-plus').addEventListener('click', function () { form.min = Math.min(MAX_MIN, form.min + 1); renderBreastEdit(); });
+    ['Left', 'Right'].forEach(function (side) {
+      var key = side.toLowerCase();
+      $(key + '-min').addEventListener('change', function (e) { setSideMin(side, e.target.value); });
+      $(key + '-minus').addEventListener('click', function () { setSideMin(side, form[key] - 1); });
+      $(key + '-plus').addEventListener('click', function () { setSideMin(side, form[key] + 1); });
+    });
     $('breast-time').addEventListener('change', function (e) { if (e.target.value) { form.fedAt = e.target.value; renderBreastEdit(); } });
     $('breast-time').addEventListener('click', function (e) {
       if (typeof e.currentTarget.showPicker === 'function') { try { e.currentTarget.showPicker(); } catch (err) { /* already open or not allowed */ } }

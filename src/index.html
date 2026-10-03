@@ -73,24 +73,41 @@
     <p class="muted last-line" id="last-line"></p>
 
     <div id="panel-breast">
-      <div class="timer-block" id="breast-timer-block">
+      <div class="timer-block only-log" id="breast-timer-block">
         <div class="muted" id="breast-started">Not started yet</div>
         <div class="timer" id="breast-timer" aria-live="off">00:00</div>
-        <div id="breast-sides">Left 00:00 · Right 00:00</div>
       </div>
-      <div id="breast-manual" class="edit-group" hidden>
-        <label class="amount">Minutes in total
-          <span class="amount-row"><input id="breast-min" type="number" inputmode="numeric" min="0" max="300" step="1" value="0"><span class="unit">min</span></span>
-        </label>
-        <div class="pair">
-          <button type="button" class="step-btn" id="breast-min-minus" aria-label="1 minute less">−1</button>
-          <button type="button" class="step-btn" id="breast-min-plus" aria-label="1 minute more">+1</button>
+      <div class="timer-block only-edit" id="breast-total-block" hidden>
+        <div class="muted">Total</div>
+        <div class="timer" id="breast-total">0 min</div>
+      </div>
+
+      <div class="side-rows">
+        <div class="side-row" id="row-left">
+          <span class="side-name">Left</span>
+          <span class="side-time only-log" id="left-time">00:00</span>
+          <button type="button" class="side-action only-log" id="btn-left" aria-pressed="false">Start</button>
+          <span class="side-edit only-edit" hidden>
+            <button type="button" class="step-btn" id="left-minus" aria-label="Left, 1 minute less">−</button>
+            <input id="left-min" type="number" inputmode="numeric" min="0" max="300" step="1" value="0" aria-label="Left minutes">
+            <span class="unit">min</span>
+            <button type="button" class="step-btn" id="left-plus" aria-label="Left, 1 minute more">+</button>
+          </span>
+        </div>
+        <div class="side-row" id="row-right">
+          <span class="side-name">Right</span>
+          <span class="side-time only-log" id="right-time">00:00</span>
+          <button type="button" class="side-action only-log" id="btn-right" aria-pressed="false">Start</button>
+          <span class="side-edit only-edit" hidden>
+            <button type="button" class="step-btn" id="right-minus" aria-label="Right, 1 minute less">−</button>
+            <input id="right-min" type="number" inputmode="numeric" min="0" max="300" step="1" value="0" aria-label="Right minutes">
+            <span class="unit">min</span>
+            <button type="button" class="step-btn" id="right-plus" aria-label="Right, 1 minute more">+</button>
+          </span>
         </div>
       </div>
-      <div class="side-btns">
-        <button type="button" class="side-btn" id="btn-left" aria-pressed="false"><span class="side-name">Left</span><span id="btn-left-sub">Tap to start</span></button>
-        <button type="button" class="side-btn" id="btn-right" aria-pressed="false"><span class="side-name">Right</span><span id="btn-right-sub">Tap to start</span></button>
-      </div>
+      <p class="muted only-edit" id="split-hint" hidden>This feed was saved with only a total, so the split between Left and Right is a guess. Change it if you know.</p>
+
       <div class="card">
         <div class="card-row" id="row-started" hidden><label for="breast-time">Started at</label><input id="breast-time" type="time" step="60"></div>
         <div class="card-row"><label for="breast-note">Note</label><input id="breast-note" type="text" placeholder="Optional" maxlength="200"></div>

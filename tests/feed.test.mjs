@@ -68,23 +68,54 @@ test('timer formatting', () => {
   assert.equal(F.formatTimer(-5), '00:00');
 });
 
-test('saved breast feed: side and minutes follow the sides that were timed', () => {
+test('saved breast feed: minutes per side, the total is their sum, the side follows the time used', () => {
   const left = F.stop(F.tap(null, 'Left', T0), T0 + 14 * MIN);
-  assert.deepEqual(plain(F.breastFields(left, T0 + 99 * MIN)), { t: T0, d: { kind: 'Breast', side: 'Left', min: 14 } }, 'stop closes the running side');
+  assert.deepEqual(plain(F.breastFields(left, T0 + 99 * MIN)), { t: T0, d: { kind: 'Breast', side: 'Left', min: 14, leftMin: 14, rightMin: 0 } }, 'stop closes the running side');
 
   const right = F.stop(F.tap(null, 'Right', T0), T0 + 9 * MIN + 40 * SEC);
-  assert.deepEqual(plain(F.breastFields(right, T0)).d, { kind: 'Breast', side: 'Right', min: 10 }, 'rounded to the nearest minute');
+  assert.deepEqual(plain(F.breastFields(right, T0)).d, { kind: 'Breast', side: 'Right', min: 10, leftMin: 0, rightMin: 10 }, 'rounded to the nearest minute');
 
   const both = F.stop(F.tap(F.tap(null, 'Left', T0), 'Right', T0 + 8 * MIN), T0 + 20 * MIN);
-  assert.deepEqual(plain(F.breastFields(both, T0)).d, { kind: 'Breast', side: 'Both', min: 20 });
+  assert.deepEqual(plain(F.breastFields(both, T0)).d, { kind: 'Breast', side: 'Both', min: 20, leftMin: 8, rightMin: 12 });
 
   const instant = F.stop(F.tap(null, 'Right', T0), T0);
-  assert.deepEqual(plain(F.breastFields(instant, T0)).d, { kind: 'Breast', side: 'Right', min: 0 }, 'a started side is not lost');
+  assert.deepEqual(plain(F.breastFields(instant, T0)).d, { kind: 'Breast', side: 'Right', min: 0, leftMin: 0, rightMin: 0 }, 'a started side is not lost');
+
+  // Rounding each side keeps the total equal to the sum: 4m24s + 4m24s is 4 + 4 = 8, not 9.
+  const halves = F.stop(F.tap(F.tap(null, 'Left', T0), 'Right', T0 + 4 * MIN + 24 * SEC), T0 + 8 * MIN + 48 * SEC);
+  const d = plain(F.breastFields(halves, T0)).d;
+  assert.equal(d.min, d.leftMin + d.rightMin);
+  assert.deepEqual([d.leftMin, d.rightMin, d.min], [4, 4, 8]);
+});
+
+test('typed minutes (editing): the side is worked out, the total is the sum', () => {
+  assert.deepEqual(plain(F.breastDetails(8, 12, 'Left')), { side: 'Both', min: 20, leftMin: 8, rightMin: 12 });
+  assert.deepEqual(plain(F.breastDetails(0, 12, 'Left')), { side: 'Right', min: 12, leftMin: 0, rightMin: 12 });
+  assert.deepEqual(plain(F.breastDetails(7, 0, 'Right')), { side: 'Left', min: 7, leftMin: 7, rightMin: 0 });
+  assert.deepEqual(plain(F.breastDetails(0, 0, 'Right')), { side: 'Right', min: 0, leftMin: 0, rightMin: 0 }, 'both 0: the earlier side stays');
+  assert.equal(F.breastDetails(0, 0, undefined).side, 'Left');
+  assert.equal(F.breastDetails(0, 0, 'Sideways').side, 'Left', 'a bad earlier side is ignored');
+  assert.deepEqual(plain(F.breastDetails(-3, '5', 'Left')), { side: 'Right', min: 5, leftMin: 0, rightMin: 5 }, 'no negative minutes, text is read');
+  assert.deepEqual(plain(F.breastDetails('x', NaN, 'Left')), { side: 'Left', min: 0, leftMin: 0, rightMin: 0 });
+});
+
+test('editing an entry: minutes per side from what was saved, and a guess only for an old Both entry', () => {
+  assert.deepEqual(plain(F.splitFromDetails({ kind: 'Breast', side: 'Both', min: 20, leftMin: 8, rightMin: 12 })), { left: 8, right: 12, guessed: false });
+  // Entries saved before minutes per side:
+  assert.deepEqual(plain(F.splitFromDetails({ kind: 'Breast', side: 'Left', min: 14 })), { left: 14, right: 0, guessed: false });
+  assert.deepEqual(plain(F.splitFromDetails({ kind: 'Breast', side: 'Right', min: 9 })), { left: 0, right: 9, guessed: false });
+  assert.deepEqual(plain(F.splitFromDetails({ kind: 'Breast', side: 'Both', min: 15 })), { left: 8, right: 7, guessed: true }, 'half each, and say it is a guess');
+  assert.deepEqual(plain(F.splitFromDetails({ kind: 'Breast', side: 'Both', min: 0 })), { left: 0, right: 0, guessed: false });
+  for (const odd of [undefined, null, {}, { kind: 'Breast' }, { leftMin: 'x', rightMin: 4, min: 4, side: 'Right' }]) {
+    const r = plain(F.splitFromDetails(odd));
+    assert.ok(r.left >= 0 && r.right >= 0, JSON.stringify(odd));
+  }
 });
 
 test('saving a running timer counts it up to the moment of saving', () => {
   const s = F.tap(null, 'Left', T0);
   assert.equal(F.breastFields(F.stop(s, T0 + 6 * MIN), T0 + 6 * MIN).d.min, 6);
+  assert.equal(F.breastFields(F.stop(s, T0 + 6 * MIN), T0 + 6 * MIN).d.leftMin, 6);
   assert.equal(F.stop(null, T0), null);
 });
 
@@ -130,7 +161,10 @@ test('the time field starts at the current time, rounded down to 5 minutes', () 
 const rec = (id, type, t, d = {}, extra = {}) => ({ id, type, t, d, ...extra });
 test('feed labels', () => {
   assert.equal(R.feedLabel(rec('a', 'feed', 1, { kind: 'Breast', side: 'Left', min: 14 })), 'Left 14 min');
-  assert.equal(R.feedLabel(rec('a', 'feed', 1, { kind: 'Breast', side: 'Both', min: 22 })), 'Both 22 min');
+  assert.equal(R.feedLabel(rec('a', 'feed', 1, { kind: 'Breast', side: 'Both', min: 22 })), 'Both 22 min', 'entries saved before minutes per side');
+  assert.equal(R.feedLabel(rec('a', 'feed', 1, { kind: 'Breast', side: 'Both', min: 20, leftMin: 8, rightMin: 12 })), 'Left 8 · Right 12 min');
+  assert.equal(R.feedLabel(rec('a', 'feed', 1, { kind: 'Breast', side: 'Left', min: 14, leftMin: 14, rightMin: 0 })), 'Left 14 min', 'one side: the simple label');
+  assert.equal(R.feedLabel(rec('a', 'feed', 1, { kind: 'Breast', side: 'Right', min: 9, leftMin: 0, rightMin: 9 })), 'Right 9 min');
   assert.equal(R.feedLabel(rec('a', 'feed', 1, { kind: 'Bottle', milk: 'Formula', ml: 90 })), 'Bottle 90 ml');
   assert.equal(R.feedLabel(rec('a', 'feed', 1, { kind: 'Bottle' })), 'Bottle', 'old or partial data does not break the list');
   assert.equal(R.feedLabel(rec('a', 'feed', 1, { kind: 'Breast' })), 'Breast');

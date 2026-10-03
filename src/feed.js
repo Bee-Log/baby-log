@@ -45,12 +45,36 @@
     return out;
   }
 
-  // The fields a saved breast feed needs (app-rules.md: d.kind, d.side, d.min).
+  // The fields a saved breast feed needs (app-rules.md: d.kind, d.side, d.min, and from feature 012 d.leftMin, d.rightMin).
+  // Minutes are whole minutes per side, rounded from the timed seconds. d.min is always their sum.
   function breastFields(state, now) {
     if (!state || !state.segments.length) return null;
     var t = totals(state, now);
+    // The side comes from the time that was really used (even a few seconds), the minutes are rounded.
     var side = t.Left > 0 && t.Right > 0 ? 'Both' : t.Right > 0 ? 'Right' : t.Left > 0 ? 'Left' : state.segments[0].side;
-    return { t: state.startedAt, d: { kind: 'Breast', side: side, min: Math.round(t.total / 60000) } };
+    var l = Math.round(t.Left / 60000), r = Math.round(t.Right / 60000);
+    return { t: state.startedAt, d: { kind: 'Breast', side: side, min: l + r, leftMin: l, rightMin: r } };
+  }
+
+  // The same fields from typed minutes (editing). Side is worked out from the minutes; if both are 0 the earlier side stays.
+  function breastDetails(leftMin, rightMin, fallbackSide) {
+    var l = Math.max(0, Math.round(Number(leftMin)) || 0), r = Math.max(0, Math.round(Number(rightMin)) || 0);
+    var side = l > 0 && r > 0 ? 'Both' : r > 0 ? 'Right' : l > 0 ? 'Left' : (['Left', 'Right', 'Both'].indexOf(fallbackSide) > -1 ? fallbackSide : 'Left');
+    return { side: side, min: l + r, leftMin: l, rightMin: r };
+  }
+
+  // Minutes per side for the edit form. An entry saved before feature 012 has only d.side and d.min:
+  // one side gets all the minutes, and Both is split evenly, which is a guess (guessed: true).
+  function splitFromDetails(d) {
+    d = d || {};
+    var clamp = function (n) { return Math.max(0, Math.round(n)); };
+    if (typeof d.leftMin === 'number' && typeof d.rightMin === 'number' && isFinite(d.leftMin) && isFinite(d.rightMin)) {
+      return { left: clamp(d.leftMin), right: clamp(d.rightMin), guessed: false };
+    }
+    var min = typeof d.min === 'number' && isFinite(d.min) ? clamp(d.min) : 0;
+    if (d.side === 'Right') return { left: 0, right: min, guessed: false };
+    if (d.side === 'Both') return { left: Math.ceil(min / 2), right: Math.floor(min / 2), guessed: min > 0 };
+    return { left: min, right: 0, guessed: false };
   }
 
   function pad2(n) { return (n < 10 ? '0' : '') + n; }
@@ -98,7 +122,7 @@
 
   root.BABYLOG_FEED = {
     MAX_ML: MAX_ML, ML_STEP: ML_STEP, DEFAULT_ML: DEFAULT_ML, MILK: MILK,
-    runningSide: runningSide, tap: tap, stop: stop, totals: totals, breastFields: breastFields, formatTimer: formatTimer,
+    runningSide: runningSide, tap: tap, stop: stop, totals: totals, breastFields: breastFields, breastDetails: breastDetails, splitFromDetails: splitFromDetails, formatTimer: formatTimer,
     clampMl: clampMl, yOfMl: yOfMl, mlOfY: mlOfY, timeOnOrBefore: timeOnOrBefore, inputTime: inputTime
   };
 })(typeof self !== 'undefined' ? self : this);
