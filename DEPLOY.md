@@ -37,6 +37,19 @@ Run **Release LIVE** with `ref` set to `previous`.
 ## Rollback TEST
 TEST follows `main`. To undo a bad merge, revert it with a new pull request (GitHub has a **Revert** button on merged pull requests). Merging the revert republishes TEST.
 
+## How an update reaches a phone
+The app keeps a full copy of itself on the phone (the service worker cache, `src/sw.js`), so it opens offline.
+
+1. The phone opens the app from its copy. Page and scripts always come from the same version.
+2. In the background, it checks `sw.js` and `config.js` for a new version (skipping the browser's HTTP cache).
+3. If there is one, it downloads every file fresh, then takes over. The page reloads once by itself.
+
+So after a release, the new version shows on the next open, or the one after. Phones that had the version before
+pull request 5 needed two opens once. If a phone ever shows a mixed version, closing and opening the app twice fixes it.
+
+When you change any of this, test an update, not only a fresh install: open the old build, publish the new one,
+then open the app again (twice). A fresh install hides update bugs.
+
 ## Checks
 - **CI** (`.github/workflows/ci.yml`) runs `npm test` and `npm run build` on every pull request. Merge only when it passes.
 - Local: `npm test`, then `npm run build` (writes `dist/test` and `dist/live`).

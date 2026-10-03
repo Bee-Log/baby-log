@@ -33,6 +33,8 @@
   }
   // A new version takes over in the background (sw.js skips waiting). Reload once so the page
   // and its scripts come from the same version. Not on the very first visit (no previous controller).
+  // Known limit: this reload would drop a half-filled form. Before the first logging screen ships,
+  // change it to wait until no entry is being edited (or show an "Update ready" button).
   var hadController = !!navigator.serviceWorker.controller;
   var reloading = false;
   navigator.serviceWorker.addEventListener('controllerchange', function () {
