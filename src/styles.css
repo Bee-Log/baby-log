@@ -34,6 +34,7 @@
   color-scheme: light;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; } /* a class that sets display must never beat the hidden attribute */
 html, body { margin: 0; }
 body {
   min-height: 100vh;
@@ -129,10 +130,7 @@ body.on-screen main, body.on-screen .tabbar { display: none; }
 
 /* Edit screen */
 .edit-group { display: flex; flex-direction: column; gap: 14px; }
-.edit-group[hidden], .edit-kind[hidden] { display: none; } /* the class sets display, which would beat the hidden attribute */
 .edit-kind { margin: 0; font-size: 20px; font-weight: 700; font-family: var(--display); }
-.field-label { font-size: 13px; font-weight: 700; color: #3c4248; margin-bottom: 6px; }
-.trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .delete-btn { min-height: 56px; border-radius: 18px; border: 2px solid #9a3f0b; background: transparent; color: #9a3f0b; font: inherit; font-weight: 700; font-size: 17px; cursor: pointer; }
 .delete-btn:disabled { border-color: #c9c5be; color: #a7abb0; cursor: not-allowed; }
 

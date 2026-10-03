@@ -71,17 +71,27 @@
     </div>
 
     <div id="panel-breast">
-      <div class="timer-block">
+      <div class="timer-block" id="breast-timer-block">
         <div class="muted" id="breast-started">Not started yet</div>
         <div class="timer" id="breast-timer" aria-live="off">00:00</div>
         <div id="breast-sides">Left 00:00 · Right 00:00</div>
+      </div>
+      <div id="breast-manual" class="edit-group" hidden>
+        <label class="amount">Minutes in total
+          <span class="amount-row"><input id="breast-min" type="number" inputmode="numeric" min="0" max="300" step="1" value="0"><span class="unit">min</span></span>
+        </label>
+        <div class="pair">
+          <button type="button" class="step-btn" id="breast-min-minus" aria-label="1 minute less">−1</button>
+          <button type="button" class="step-btn" id="breast-min-plus" aria-label="1 minute more">+1</button>
+        </div>
       </div>
       <div class="side-btns">
         <button type="button" class="side-btn" id="btn-left" aria-pressed="false"><span class="side-name">Left</span><span id="btn-left-sub">Tap to start</span></button>
         <button type="button" class="side-btn" id="btn-right" aria-pressed="false"><span class="side-name">Right</span><span id="btn-right-sub">Tap to start</span></button>
       </div>
       <div class="card">
-        <div class="card-row"><span>Last time</span><span id="breast-last"></span></div>
+        <div class="card-row" id="row-last-time"><span>Last time</span><span id="breast-last"></span></div>
+        <div class="card-row" id="row-started" hidden><label for="breast-time">Started at</label><input id="breast-time" type="time" step="60"></div>
         <div class="card-row"><label for="breast-note">Note</label><input id="breast-note" type="text" placeholder="Optional" maxlength="200"></div>
       </div>
     </div>
@@ -119,12 +129,13 @@
       </div>
       <div class="card">
         <div class="card-row"><label for="bottle-time">Fed at</label><input id="bottle-time" type="time" step="300"></div>
-        <div class="card-row"><span>Last bottle</span><span id="bottle-last"></span></div>
+        <div class="card-row" id="row-last-bottle"><span>Last bottle</span><span id="bottle-last"></span></div>
       </div>
     </div>
 
     <div class="screen-fill"></div>
     <button type="button" class="save-btn" id="feed-save" disabled>Stop and save</button>
+    <button type="button" class="delete-btn" id="feed-delete" hidden>Delete this entry</button>
   </section>
 
   <section class="screen" id="screen-edit" aria-labelledby="h-edit" hidden>
@@ -132,50 +143,14 @@
       <a class="round-btn" href="#today" aria-label="Close">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
       </a>
-      <h1 id="h-edit">Edit</h1>
+      <h1 id="h-edit">Edit nappy</h1>
       <span class="round-spacer"></span>
     </header>
 
     <div class="card">
-      <div class="card-row"><label for="edit-time" id="edit-time-label">Time</label><input id="edit-time" type="time" step="60"></div>
+      <div class="card-row"><label for="edit-time">Time</label><input id="edit-time" type="time" step="60"></div>
     </div>
     <p id="edit-nappy" class="edit-kind" hidden></p>
-
-    <div id="edit-breast" class="edit-group" hidden>
-      <div>
-        <div class="field-label" id="edit-side-label">Side</div>
-        <div class="trio" role="group" aria-labelledby="edit-side-label">
-          <button type="button" class="chip" id="edit-side-Left" aria-pressed="false">Left</button>
-          <button type="button" class="chip" id="edit-side-Right" aria-pressed="false">Right</button>
-          <button type="button" class="chip" id="edit-side-Both" aria-pressed="false">Both</button>
-        </div>
-      </div>
-      <label class="amount">Minutes in total
-        <span class="amount-row"><input id="edit-min" type="number" inputmode="numeric" min="0" max="300" step="1" value="0"><span class="unit">min</span></span>
-      </label>
-      <div class="pair">
-        <button type="button" class="step-btn" id="edit-min-minus" aria-label="1 minute less">−1</button>
-        <button type="button" class="step-btn" id="edit-min-plus" aria-label="1 minute more">+1</button>
-      </div>
-    </div>
-
-    <div id="edit-bottle" class="edit-group" hidden>
-      <label class="amount">Amount
-        <span class="amount-row"><input id="edit-ml" type="number" inputmode="numeric" min="0" max="240" step="10" value="0"><span class="unit">ml</span></span>
-      </label>
-      <div class="pair">
-        <button type="button" class="step-btn" id="edit-ml-minus" aria-label="10 ml less">−10</button>
-        <button type="button" class="step-btn" id="edit-ml-plus" aria-label="10 ml more">+10</button>
-      </div>
-      <div class="pair" role="group" aria-label="Milk">
-        <button type="button" class="chip" id="edit-milk-formula" aria-pressed="true">Formula</button>
-        <button type="button" class="chip" id="edit-milk-expressed" aria-pressed="false">Expressed</button>
-      </div>
-    </div>
-
-    <div class="card" id="edit-note-row" hidden>
-      <div class="card-row"><label for="edit-note">Note</label><input id="edit-note" type="text" placeholder="Optional" maxlength="200"></div>
-    </div>
 
     <div class="screen-fill"></div>
     <button type="button" class="save-btn" id="edit-save" disabled>Save changes</button>

@@ -115,6 +115,19 @@
     return out;
   }
 
+  // The entry's details with some fields replaced. Fields the app does not know about are kept.
+  function withFields(d, fields) {
+    var out = {};
+    for (var k in (d || {})) out[k] = d[k];
+    for (var f in fields) out[f] = fields[f];
+    return out;
+  }
+
+  // True if two versions of an entry show the same thing (time, details, note).
+  function sameContent(a, b) {
+    return JSON.stringify([a.t, a.d || {}, a.note || '']) === JSON.stringify([b.t, b.d || {}, b.note || '']);
+  }
+
   function pad2(n) { return (n < 10 ? '0' : '') + n; }
   // 24-hour hh:mm, as a time field wants it.
   function hhmm(t) { var d = new Date(t); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
@@ -138,7 +151,7 @@
     TYPES: TYPES, NAPPY_PAIR_MS: NAPPY_PAIR_MS,
     makeRecord: makeRecord, tombstone: tombstone, dayWindow: dayWindow,
     nappyRows: nappyRows, nappyLabel: nappyLabel, feedLabel: feedLabel, timelineRows: timelineRows, lastFeed: lastFeed,
-    revise: revise, restore: restore, hhmm: hhmm, timeInDay: timeInDay,
+    revise: revise, restore: restore, withFields: withFields, sameContent: sameContent, hhmm: hhmm, timeInDay: timeInDay,
     formatClock: formatClock
   };
 })(typeof self !== 'undefined' ? self : this);
