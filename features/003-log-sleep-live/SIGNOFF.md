@@ -56,7 +56,7 @@ Tap Start sleep and Wake up as it happens, and see the logged sleeps.
 - **The sleep is one record.** Start sleep saves it with `end: null`. Wake up puts the end time on the **same record** and moves `updatedAt` forward (the existing merge rule). The sleep survives closing the app and restarting the phone.
 - Only sleeps are stored. "Awake" is the gap since the last wake-up.
 
-**Data: one new field, needs the owner's approval before merging.** The signoff asks for `d.source: 'live'` on a sleep record (feature 004 will use `'manual'`). It is the only data-format change. Everything else is the existing record format. The CSV export (not built yet) would need a `sleep_source` column.
+**Data: one new field, approved by the owner (2026-10-03).** The signoff asks for `d.source: 'live'` on a sleep record (feature 004 will use `'manual'`). It is the only data-format change. Everything else is the existing record format. The CSV export (not built yet) would need a `sleep_source` column.
 
 **Files changed.** `src/sleep.js` (new: start, wake, lengths, rows), `src/sleep-ui.js` (new: the card and the page), `src/nav.js` (`#sleep`), `src/app.js`, `src/index.html`, `src/styles.css`, `src/sw.js` (new files in the offline list), `tests/sleep.test.mjs` and `tests/browser/sleep.test.mjs` (new).
 
