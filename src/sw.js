@@ -11,8 +11,12 @@ var SHELL = [
   'offline.html',
   'app.js',
   'config.js',
+  'nav.js',
   'styles.css',
   'manifest.webmanifest',
+  'fonts/atkinson-hyperlegible-400.woff2',
+  'fonts/atkinson-hyperlegible-700.woff2',
+  'fonts/bricolage-grotesque-700.woff2',
   'icons/__ICON_PREFIX__icon-192.png',
   'icons/__ICON_PREFIX__icon-512.png'
 ];

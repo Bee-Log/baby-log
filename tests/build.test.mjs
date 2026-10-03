@@ -42,7 +42,7 @@ test('only the test build shows the TEST label and uses test- storage', () => {
 test('no secrets in src/', () => {
   const walk = (d) => readdirSync(d).flatMap((n) => (statSync(join(d, n)).isDirectory() ? walk(join(d, n)) : [join(d, n)]));
   for (const f of walk(new URL('../src', import.meta.url).pathname)) {
-    if (f.endsWith('.png')) continue;
+    if (f.endsWith('.png') || f.endsWith('.woff2')) continue;
     assert.doesNotMatch(readFileSync(f, 'utf8'), /client_secret|GOCSPX-|AIza[0-9A-Za-z_-]{20}/, f);
   }
 });

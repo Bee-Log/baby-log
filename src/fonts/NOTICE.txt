@@ -1,0 +1,10 @@
+Fonts in this folder (latin subset, woff2, from Google Fonts).
+Both are licensed under the SIL Open Font License, Version 1.1:
+https://openfontlicense.org/open-font-license-official-text/
+
+- Atkinson Hyperlegible (400, 700)
+  Copyright 2020 Braille Institute of America, Inc.
+- Bricolage Grotesque (700)
+  Copyright 2022 The Bricolage Grotesque Project Authors (https://github.com/ateliertriay/bricolage)
+
+They are stored here, not loaded from Google, so the app looks the same with no internet.
