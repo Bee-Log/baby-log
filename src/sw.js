@@ -23,7 +23,11 @@ var SHELL = [
 
 self.addEventListener('install', function (event) {
   event.waitUntil(
-    caches.open(CACHE).then(function (cache) { return cache.addAll(SHELL); })
+    // cache: 'reload' skips the browser's HTTP cache (GitHub Pages allows 10 minutes),
+    // so a new version never stores the previous version's files.
+    caches.open(CACHE).then(function (cache) {
+      return cache.addAll(SHELL.map(function (url) { return new Request(url, { cache: 'reload' }); }));
+    })
       .then(function () { return self.skipWaiting(); })
   );
 });
@@ -54,12 +58,11 @@ self.addEventListener('fetch', function (event) {
   }
 
   if (req.mode === 'navigate') {
-    // Pages: network first, then the cached page, then the offline page.
+    // Pages: cache first, so the page and its scripts always come from the same version.
+    // A new version installs in the background; app.js reloads the page once when it takes over.
     event.respondWith(
-      fetch(req).catch(function () {
-        return caches.match(req, { ignoreSearch: true }).then(function (hit) {
-          return hit || caches.match('offline.html');
-        });
+      fromCache(req, { ignoreSearch: true }).then(function (hit) {
+        return hit || fetch(req).catch(function () { return fromCache('offline.html'); });
       })
     );
     return;
@@ -67,6 +70,11 @@ self.addEventListener('fetch', function (event) {
 
   // Other files: cache first, then network.
   event.respondWith(
-    caches.match(req).then(function (hit) { return hit || fetch(req); })
+    fromCache(req).then(function (hit) { return hit || fetch(req); })
   );
 });
+
+// Look only in this version's cache. Test and live share one origin, and old caches may still exist.
+function fromCache(req, opts) {
+  return caches.open(CACHE).then(function (cache) { return cache.match(req, opts); });
+}

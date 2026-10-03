@@ -31,8 +31,18 @@
     status.textContent = 'This browser cannot work offline.';
     return;
   }
+  // A new version takes over in the background (sw.js skips waiting). Reload once so the page
+  // and its scripts come from the same version. Not on the very first visit (no previous controller).
+  var hadController = !!navigator.serviceWorker.controller;
+  var reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', function () {
+    if (!hadController || reloading) return;
+    reloading = true;
+    location.reload();
+  });
   // Scope './' keeps the test and live service workers apart (/baby-log/test/ vs /baby-log/).
-  navigator.serviceWorker.register('sw.js', { scope: './' }).then(function () {
+  // updateViaCache 'none': update checks skip the HTTP cache for sw.js and config.js, so a new version is seen at once.
+  navigator.serviceWorker.register('sw.js', { scope: './', updateViaCache: 'none' }).then(function () {
     return navigator.serviceWorker.ready;
   }).then(function () {
     status.textContent = 'Ready to work offline.';
