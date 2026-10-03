@@ -1,0 +1,61 @@
+name: Release LIVE
+
+# Manual only. Records which commit LIVE should run, then republishes Pages.
+#   Release:  ref = main (the default)
+#   Rollback: ref = previous   (the release before the current one)
+#   Any:      ref = a commit SHA from Settings -> Environments -> live-release
+# Nothing is pushed to git. The record is a GitHub deployment in the `live-release` environment.
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "main to release, previous to roll back, or a commit SHA"
+        required: true
+        default: main
+
+permissions:
+  contents: read
+  deployments: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: release-live
+  cancel-in-progress: false
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Record the LIVE commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REF: ${{ inputs.ref }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [ "$REF" = "previous" ]; then
+            SHA=$(gh api "repos/$REPO/deployments?environment=live-release&per_page=2" --jq '.[1].sha // empty')
+            [ -n "$SHA" ] || { echo "There is no previous LIVE release."; exit 1; }
+          else
+            SHA=$(git rev-parse --verify "origin/$REF^{commit}" 2>/dev/null || git rev-parse --verify "$REF^{commit}")
+          fi
+          ID=$(jq -n --arg ref "$SHA" --arg d "LIVE release ($REF)" \
+                 '{ref:$ref, environment:"live-release", description:$d, auto_merge:false, required_contexts:[]}' \
+               | gh api -X POST "repos/$REPO/deployments" --input - --jq '.id')
+          gh api -X POST "repos/$REPO/deployments/$ID/statuses" -f state=success \
+             -f environment_url="https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/" >/dev/null
+          echo "### LIVE is now $SHA (from \"$REF\")" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    needs: record
+    uses: ./.github/workflows/deploy.yml
+    permissions:
+      contents: read
+      deployments: read
+      pages: write
+      id-token: write

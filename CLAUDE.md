@@ -17,6 +17,9 @@ BOARD.md                generated list of features by status (never edit by hand
 scripts/make_board.py   rebuilds BOARD.md from the SIGNOFF.md headers
 prototype/baby-log.html first prototype, for reference only
 DEPLOY.md               how test and live are published, rollback, links
+scripts/build.mjs       builds src/ into dist/test and dist/live (no dependencies)
+tests/                  node:test checks, run with `npm test`
+.github/workflows/      ci (pull requests), deploy (main -> TEST), release-live (manual -> LIVE, records a `live-release` deployment)
 .claude/skills/         feature-signoff, build-feature, feature-ready
 ```
 
@@ -36,6 +39,11 @@ To build, the owner says "build feature 001" or names the signoff. Find it in `f
 - Sync uses the hidden app data folder in Google Drive. Merge by record id; the newest `updatedAt` wins; deletes are tombstones.
 - Data is plain JSON with a CSV export, so it can move to another backend later.
 - Full rules and the record format: `.claude/skills/build-feature/references/app-rules.md`.
+
+## Commands
+- `npm test` runs the tests. `npm run build` builds both flavours. CI runs both on every pull request.
+- TEST: https://oudam-meas.github.io/baby-log/test/ . LIVE: https://oudam-meas.github.io/baby-log/ . Details in `DEPLOY.md`.
+- Text files in `src/` may use build tokens such as `__APP_ENV__`; `scripts/build.mjs` fills them in and fails on unknown ones.
 
 ## Git rules
 - Never push directly to `main`. Use a branch and a pull request.
