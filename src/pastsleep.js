@@ -48,14 +48,16 @@
     var days = Math.round((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(base.y, base.m, base.d)) / 86400000);
     return days * DAY + d.getHours() * 60 + d.getMinutes();
   }
-  // Clock time of day -> minutes where times before 6 am belong to the end of the sleep day.
-  function toDayMinutes(h, m) { var t = h * 60 + m; return t < DAY_START ? t + DAY : t; }
-  function fromInput(value) {                                   // "14:30" -> 870
-    var p = String(value).split(':');
-    var h = parseInt(p[0], 10), m = parseInt(p[1], 10);
-    return isNaN(h) || isNaN(m) ? null : toDayMinutes(h, m);
+  // The value for a date-and-time field: "2026-10-03T18:50".
+  function toInputValue(base, m) {
+    var d = new Date(toTime(base, m));
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + 'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
   }
-  function formatInput(m) { var t = mod(m, DAY); return pad2(Math.floor(t / 60)) + ':' + pad2(t % 60); }
+  // The day the latest occurrence of a part of the day started on: "Today", "Yesterday", "Mon 28 Sep".
+  function partDay(now, part) {
+    var from = DAY_START + part * PART;
+    return root.BABYLOG_RECORDS.dayName(toTime(baseFor(now, from), from), now);
+  }
   function formatClock(m) {
     var t = mod(m, DAY), h = Math.floor(t / 60);
     return (h % 12 === 0 ? 12 : h % 12) + ':' + pad2(t % 60) + (h < 12 ? ' am' : ' pm');
@@ -175,11 +177,23 @@
   function settle(state, draft) {
     var pa = absPart(draft.start), pb = absPart(draft.end - 1);
     var days = Math.floor(pa / 4), parts = [];
-    for (var i = pa; i <= pb; i++) parts.push(mod(i, 4));
+    for (var i = pa; i <= Math.min(pb, pa + 1); i++) parts.push(mod(i, 4));      // the ring shows 12 hours: two parts at most
     return copy(state, {
       parts: parts, base: days ? shiftBase(state.base, days) : state.base,
       draft: { start: draft.start - days * DAY, end: draft.end - days * DAY }, note: null
     });
+  }
+
+  // Dragging stays inside the last 24 hours: nothing earlier than 24 hours ago, nothing later than now.
+  // A sleep typed in from an older date is not pulled back: it can be nudged, but not moved further out.
+  function bound(state, env, draft, which) {
+    var now = nowMinute(state, env), cur = state.draft;
+    var earliest = Math.min(Math.ceil((now - DAY) / STEP_MIN) * STEP_MIN, cur.start);
+    var latest = Math.max(Math.floor((now + FUTURE_SLACK) / STEP_MIN) * STEP_MIN, cur.end);
+    if (which === 'start') return { start: Math.max(draft.start, earliest), end: draft.end };
+    if (which === 'end') return { start: draft.start, end: Math.min(draft.end, latest) };
+    var len = draft.end - draft.start, start = Math.min(Math.max(draft.start, earliest), latest - len);
+    return { start: start, end: start + len };
   }
 
   function setEnd(state, env, which, minutes) {
@@ -187,7 +201,7 @@
     var v = snap(minutes), draft;
     if (which === 'start') draft = { start: clamp(snapToEdge(v, 'end', logged), d.end - MAX_LEN, d.end - STEP_MIN), end: d.end };
     else draft = { start: d.start, end: clamp(snapToEdge(v, 'start', logged), d.start + STEP_MIN, d.start + MAX_LEN) };
-    return settle(state, fitDraft(draft, which));
+    return settle(state, fitDraft(bound(state, env, draft, which), which));
   }
 
   // Where the whole sleep would sit if its start were here (keeps its length, snaps to logged edges).
@@ -197,7 +211,7 @@
     var s = snap(start);
     var after = snapToEdge(s, 'end', logged);
     s = after !== s ? after : snapToEdge(s + len, 'start', logged) - len;
-    return fitDraft({ start: s, end: s + len }, 'move');
+    return fitDraft(bound(state, env, { start: s, end: s + len }, 'move'), 'move');
   }
   function moveTo(state, env, start) { return settle(state, placeAt(state, env, start)); }
 
@@ -209,27 +223,21 @@
   function subtractStep(state, env) { return setLength(state, env, state.draft.end - state.draft.start - state.step); }
   function resetLength(state, env) { return setLength(state, env, RESET_LEN); }
 
-  // Typed times. The parts follow when the times span at most two neighbouring parts.
+  // Typed date and time ("2026-10-03T18:50", what a date-and-time field gives). Any day is allowed,
+  // so a sleep older than 24 hours is added this way. The ring follows. If the sleep would end up
+  // backwards or over 12 hours, the other end is set to 1 hour from the typed one.
   function setTyped(state, env, which, value) {
-    var m = fromInput(value);
-    if (m == null) return state;
+    var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(String(value));
+    if (!m) return state;
+    var minute = toMinute(state.base, new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]).getTime());
     var d = state.draft;
-    var nd = which === 'from' ? { start: m, end: d.end } : { start: d.start, end: m };
+    var nd = which === 'from' ? { start: minute, end: d.end } : { start: d.start, end: minute };
     var len = nd.end - nd.start;
-    if (len <= 0 && len + DAY <= MAX_LEN) nd.end += DAY;                  // crossed 6 am, e.g. 4:00 to 7:00
-    else if (len <= 0 || len > MAX_LEN) {                                 // backwards or over 12 hours: keep the typed time, make it 1 hour
+    if (len <= 0 || len > MAX_LEN) {
       if (which === 'from') nd.end = nd.start + 60;
       else nd.start = nd.end - 60;
     }
-    var first = partOf(nd.start), last = partOf(nd.end - 1), len = nd.end - nd.start;
-    var parts = state.parts;
-    if (first === last && len <= PART) parts = [first];
-    else if (nextPart(first) === last && len <= 2 * PART) parts = [first, last];
-    var range = rangeOfParts(parts);
-    while (nd.start < range.from) { nd.start += DAY; nd.end += DAY; }
-    while (nd.start >= range.to) { nd.start -= DAY; nd.end -= DAY; }
-    var base = parts === state.parts ? state.base : baseFor(env.now, range.from);
-    return copy(state, { parts: parts, base: base, draft: nd, note: null });
+    return settle(state, nd);
   }
 
   // The real times of the draft, ready to save.
@@ -301,7 +309,7 @@
     subtractStep: subtractStep, resetLength: resetLength, setTyped: setTyped, draftTimes: draftTimes, afterAdd: afterAdd,
     grab: grab, drag: drag, problem: problem, isFuture: isFuture, isOverlapping: isOverlapping, loggedOf: loggedOf, nowMinute: nowMinute,
     rangeOf: rangeOf, rangeOfParts: rangeOfParts, partOf: partOf, nextPart: nextPart,
-    baseFor: baseFor, toTime: toTime, toMinute: toMinute, fromInput: fromInput, formatInput: formatInput, formatClock: formatClock, formatLength: formatLength,
+    baseFor: baseFor, toTime: toTime, toInputValue: toInputValue, partDay: partDay, toMinute: toMinute, formatClock: formatClock, formatLength: formatLength,
     angleOf: angleOf, pointAt: pointAt, arcPath: arcPath, wedgePath: wedgePath
   };
 })(typeof self !== 'undefined' ? self : this);

@@ -154,6 +154,22 @@
     return new Date(start.getFullYear(), start.getMonth(), date, +m[1], +m[2]).getTime();
   }
 
+  var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  // "Thu 1 Oct"
+  function dateLabel(t) {
+    var d = new Date(t);
+    return DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()];
+  }
+
+  // "Today" or "Yesterday" by the calendar (midnight to midnight), else the date.
+  function dayName(t, now) {
+    var d = new Date(t), n = new Date(now);
+    var days = Math.round((Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()) - Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000);
+    return days === 0 ? 'Today' : days === 1 ? 'Yesterday' : dateLabel(t);
+  }
+
   function formatClock(t) {
     var d = new Date(t), h = d.getHours(), m = d.getMinutes();
     return (h % 12 === 0 ? 12 : h % 12) + ':' + (m < 10 ? '0' : '') + m + (h < 12 ? ' am' : ' pm');
@@ -164,6 +180,6 @@
     makeRecord: makeRecord, tombstone: tombstone, dayWindow: dayWindow,
     nappyRows: nappyRows, nappyLabel: nappyLabel, feedLabel: feedLabel, timelineRows: timelineRows, lastFeed: lastFeed, latestFeed: latestFeed, agoText: agoText,
     revise: revise, withFields: withFields, sameContent: sameContent, hhmm: hhmm, timeInDay: timeInDay,
-    formatClock: formatClock
+    formatClock: formatClock, dateLabel: dateLabel, dayName: dayName
   };
 })(typeof self !== 'undefined' ? self : this);

@@ -215,12 +215,13 @@ body.on-screen .toast { bottom: auto; top: calc(12px + env(safe-area-inset-top))
 .ps-minus { border: none; background: #efeaf8; color: #2b2550; font-weight: 700; }
 .ps-reset { min-width: 44px; min-height: 44px; border-radius: 22px; border: none; background: transparent; color: var(--muted); display: flex; align-items: center; justify-content: center; }
 .ps-parts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
-.ps-part { min-height: 60px; padding: 0; border-radius: 14px; border: 2px solid var(--line); background: var(--surface); color: #3c4248; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
+.ps-part { min-height: 72px; padding: 0; border-radius: 14px; border: 2px solid var(--line); background: var(--surface); color: #3c4248; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
 .ps-part span { font-size: 12px; }
+.ps-day { font-size: 11px; opacity: 0.8; }
 .ps-part[aria-pressed="true"] { background: #2b2550; border-color: #2b2550; color: #fff; }
 .ps-clock-wrap { display: flex; justify-content: center; }
 .ps-clock-wrap svg { max-width: 100%; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; }
-.ps-times { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.ps-times { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
 .ps-times label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 700; color: #3c4248; }
 .ps-times input { min-height: 48px; border: 1px solid var(--line); border-radius: 12px; padding: 0 12px; font: inherit; font-size: 18px; font-weight: 700; color: var(--ink); background: #fbfaf7; cursor: pointer; }
 .ps-hint { font-size: 14px; font-weight: 700; color: #2e7a57; }

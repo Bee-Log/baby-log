@@ -3,8 +3,6 @@
 // Only sleeps are stored. Awake time is the gap between sleeps.
 (function (root) {
   var R = root.BABYLOG_RECORDS;
-  var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   function live(records) {
     return records.filter(function (r) { return !r.deleted && r.type === 'sleep'; });
@@ -64,8 +62,7 @@
     var w = R.dayWindow(now);
     var times = R.formatClock(row.t) + ' – ' + R.formatClock(row.end);
     if (row.t >= w.from && row.t < w.to) return times;
-    var d = new Date(row.t);
-    return DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()] + ', ' + times;
+    return R.dateLabel(row.t) + ', ' + times;
   }
 
   // Today's rows for sleeps, in the same shape as the feed and nappy rows (records.js).

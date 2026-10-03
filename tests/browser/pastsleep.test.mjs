@@ -39,8 +39,8 @@ test('opens on the 30 minutes that ended now; the step buttons change the length
   const { context, page, errors } = await start();
   assert.equal(await text(page, '#ps-len'), '30m');
   assert.equal(await text(page, '#ps-range'), '1:30 pm – 2:00 pm');
-  assert.equal(await page.inputValue('#ps-from'), '13:30');
-  assert.equal(await page.inputValue('#ps-to'), '14:00');
+  assert.equal(await page.inputValue('#ps-from'), '2026-10-03T13:30');
+  assert.equal(await page.inputValue('#ps-to'), '2026-10-03T14:00');
   assert.equal(await page.isDisabled('#ps-add'), false);
   assert.equal(await text(page, '#ps-add'), 'Add sleep · 30m');
   assert.equal(await page.getAttribute('.ps-part[data-part="1"]', 'aria-pressed'), 'true', 'the afternoon is picked');
@@ -72,12 +72,12 @@ test('typed times move the ring; a sleep before the logged one cannot overlap it
   assert.equal(await page.isDisabled('#ps-add'), true);
   assert.equal(await page.getAttribute('#ps-draft', 'stroke'), '#b5561a', 'the arc turns orange');
 
-  await page.fill('#ps-from', '13:40');
+  await page.fill('#ps-from', '2026-10-03T13:40');
   assert.equal(await hint(page), '', 'starting where the other sleep ended is fine');
   assert.equal(await page.isDisabled('#ps-add'), false);
   assert.equal(await text(page, '#ps-len'), '20m');
-  await page.fill('#ps-from', '11:00');
-  await page.fill('#ps-to', '12:15');
+  await page.fill('#ps-from', '2026-10-03T11:00');
+  await page.fill('#ps-to', '2026-10-03T12:15');
   assert.equal(await text(page, '#ps-range'), '11:00 am – 12:15 pm');
   assert.equal(await page.getAttribute('.ps-part[data-part="0"]', 'aria-pressed'), 'true', 'the parts follow the times');
   assert.equal(await page.getAttribute('.ps-part[data-part="1"]', 'aria-pressed'), 'true');
@@ -92,10 +92,10 @@ test('typed times move the ring; a sleep before the logged one cannot overlap it
 
 test('a sleep that has not happened yet cannot be added', async () => {
   const { context, page, errors } = await start();
-  await page.fill('#ps-to', '17:00');
+  await page.fill('#ps-to', '2026-10-03T17:00');
   assert.equal(await hint(page), 'That time has not happened yet.');
   assert.equal(await page.isDisabled('#ps-add'), true);
-  await page.fill('#ps-to', '14:00');
+  await page.fill('#ps-to', '2026-10-03T14:00');
   assert.equal(await page.isDisabled('#ps-add'), false);
   assert.deepEqual(errors, []);
   await context.close();
@@ -104,13 +104,13 @@ test('a sleep that has not happened yet cannot be added', async () => {
 test('last night and after midnight land on the right day', async () => {
   const { context, page, errors } = await start();
   await page.click('.ps-part[data-part="2"]'); // 6 pm to 12 am: this afternoon it means last evening
-  await page.fill('#ps-from', '21:00');
-  await page.fill('#ps-to', '22:30');
+  await page.fill('#ps-from', '2026-10-02T21:00');
+  await page.fill('#ps-to', '2026-10-02T22:30');
   await page.click('#ps-add');
   await page.waitForFunction(() => document.querySelectorAll('#sleep-list .row').length === 1);
   await page.click('.ps-part[data-part="3"]'); // 12 am to 6 am: the one that began today
-  await page.fill('#ps-from', '01:00');
-  await page.fill('#ps-to', '02:00');
+  await page.fill('#ps-from', '2026-10-03T01:00');
+  await page.fill('#ps-to', '2026-10-03T02:00');
   await page.click('#ps-add');
   await page.waitForFunction(() => document.querySelectorAll('#sleep-list .row').length === 2);
   const all = (await sleeps(page)).sort((a, b) => a.t - b.t);
@@ -128,8 +128,8 @@ test('dragging the start dot changes the start; dragging the arc moves the whole
   await page.mouse.down();
   await page.mouse.move(to.x, to.y, { steps: 6 });
   await page.mouse.up();
-  assert.equal(await page.inputValue('#ps-from'), '13:00');
-  assert.equal(await page.inputValue('#ps-to'), '14:00', 'the end stays');
+  assert.equal(await page.inputValue('#ps-from'), '2026-10-03T13:00');
+  assert.equal(await page.inputValue('#ps-to'), '2026-10-03T14:00', 'the end stays');
   assert.equal(await text(page, '#ps-len'), '1h 00m');
 
   // The middle of the arc is at 1:30 pm (45 degrees); move it back by 30 minutes.
@@ -139,8 +139,8 @@ test('dragging the start dot changes the start; dragging the arc moves the whole
   await page.mouse.down();
   await page.mouse.move(back.x, back.y, { steps: 6 });
   await page.mouse.up();
-  assert.equal(await page.inputValue('#ps-from'), '12:30');
-  assert.equal(await page.inputValue('#ps-to'), '13:30');
+  assert.equal(await page.inputValue('#ps-from'), '2026-10-03T12:30');
+  assert.equal(await page.inputValue('#ps-to'), '2026-10-03T13:30');
   assert.deepEqual(errors, []);
   await context.close();
 });
@@ -155,19 +155,54 @@ test('dragging the arc over the 12 border carries on into the morning part', asy
     const p = await ringPoint(page, deg, 118);
     await page.mouse.move(p.x, p.y, { steps: 3 });
     if (deg === 0) {
-      assert.equal(await page.inputValue('#ps-from'), '11:45', 'the sleep is over the border');
-      assert.equal(await page.inputValue('#ps-to'), '12:15');
+      assert.equal(await page.inputValue('#ps-from'), '2026-10-03T11:45', 'the sleep is over the border');
+      assert.equal(await page.inputValue('#ps-to'), '2026-10-03T12:15');
       assert.equal(await page.getAttribute('.ps-part[data-part="0"]', 'aria-pressed'), 'true', 'the morning joins');
       assert.equal(await page.getAttribute('.ps-part[data-part="1"]', 'aria-pressed'), 'true');
     }
   }
   await page.mouse.up();
-  assert.equal(await page.inputValue('#ps-from'), '11:05', 'and it keeps going');
+  assert.equal(await page.inputValue('#ps-from'), '2026-10-03T11:05', 'and it keeps going');
   assert.equal(await page.getAttribute('.ps-part[data-part="1"]', 'aria-pressed'), 'false', 'the afternoon leaves again');
   await page.click('#ps-add');
   await page.waitForFunction(() => document.querySelectorAll('#sleep-list .row').length === 1);
   const [r] = await sleeps(page);
   assert.deepEqual([r.t, r.end], [at(11, 5), at(11, 35)]);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('each part says Today or Yesterday; an older sleep is added by typing its date', async () => {
+  const { context, page, errors } = await start();
+  const days = await page.$$eval('.ps-part .ps-day', (els) => els.map((e) => e.textContent));
+  assert.deepEqual(days, ['Today', 'Today', 'Yesterday', 'Today'], 'at 2 pm, the evening part is last night');
+
+  await page.fill('#ps-from', '2026-09-28T18:50');
+  await page.fill('#ps-to', '2026-09-28T20:20');
+  assert.equal(await text(page, '#ps-len'), '1h 30m');
+  assert.equal(await hint(page), '');
+  await page.click('#ps-add');
+  await page.waitForFunction(() => document.querySelectorAll('#sleep-list .row').length === 1);
+  const [r] = await sleeps(page);
+  assert.deepEqual([r.t, r.end], [new Date(2026, 8, 28, 18, 50).getTime(), new Date(2026, 8, 28, 20, 20).getTime()]);
+  assert.match(await text(page, '#sleep-list .row'), /^Mon 28 Sep, 6:50 pm – 8:20 pm/);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('dragging stays inside the last 24 hours', async () => {
+  const { context, page, errors } = await start();
+  // Take the whole sleep (1:30 to 2:00 pm, middle at 52.5 degrees) round the clock, counter-clockwise, about 40 hours.
+  const from = await ringPoint(page, 52.5, 118);
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  for (let deg = 52; deg > -1200; deg -= 20) {
+    const p = await ringPoint(page, deg, 118);
+    await page.mouse.move(p.x, p.y);
+  }
+  await page.mouse.up();
+  assert.equal(await page.inputValue('#ps-from'), '2026-10-02T14:00', 'it stops 24 hours ago');
+  assert.equal(await page.inputValue('#ps-to'), '2026-10-02T14:30');
   assert.deepEqual(errors, []);
   await context.close();
 });
