@@ -2,7 +2,7 @@
 id: 005
 name: Log a nappy
 slug: log-a-nappy
-status: Testing
+status: Done
 updated: 2026-10-03
 ---
 
@@ -73,4 +73,4 @@ Record a wee or a poo with one tap.
 - Clearing the browser data, or uninstalling the app, deletes the entries on that phone until sync exists.
 
 ## Feedback
-(Filled in when someone tests it. Leave empty at sign-off.)
+- 2026-10-03: Tested OK on the TEST address (Wee, Poo, Undo, offline, entries kept after closing the app).
