@@ -20,8 +20,19 @@
     if (!busy && reloadWhenIdle) location.reload();
   }
 
-  // ---- Tabs ----
-  function showTab() {
+  // ---- Routes: three tabs, and full screens (the Feed screen) without the tab bar ----
+  var FEED_UI = self.BABYLOG_FEED_UI;
+  function route() {
+    var screen = nav.screenFromHash(location.hash);
+    document.body.classList.toggle('on-screen', !!screen);
+    if (screen === 'feed') {
+      var hidden = document.querySelectorAll('.view');
+      for (var h = 0; h < hidden.length; h++) hidden[h].hidden = true;
+      FEED_UI.show();
+      window.scrollTo(0, 0);
+      return;
+    }
+    FEED_UI.hide();
     var tab = nav.tabFromHash(location.hash);
     var views = document.querySelectorAll('.view');
     for (var i = 0; i < views.length; i++) views[i].hidden = views[i].getAttribute('data-tab') !== tab;
@@ -33,15 +44,19 @@
     if (tab === 'today') renderToday();
     window.scrollTo(0, 0);
   }
-  window.addEventListener('hashchange', showTab);
+  window.addEventListener('hashchange', route);
 
-  // ---- Today: nappies (feature 005) ----
-  var DROP = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s-6 7-6 11a6 6 0 0 0 12 0c0-4-6-11-6-11z"></path></svg>';
+  // ---- Today: nappies (005) and feeds (006, 007) ----
+  var ICONS = {
+    nappy: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s-6 7-6 11a6 6 0 0 0 12 0c0-4-6-11-6-11z"></path></svg>',
+    feed: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2h6"></path><path d="M10 2v3L8 8v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V8l-2-3V2"></path></svg>'
+  };
+  var NAMES = { nappy: 'Nappy', feed: 'Feed' };
 
   function renderToday() {
     return store.all().then(function (records) {
       var w = R.dayWindow(Date.now());
-      var rows = R.nappyRows(records.filter(function (r) { return r.t >= w.from && r.t < w.to; }));
+      var rows = R.timelineRows(records.filter(function (r) { return r.t >= w.from && r.t < w.to; }));
       var list = document.getElementById('today-list');
       list.textContent = '';
       rows.forEach(function (row) {
@@ -51,14 +66,14 @@
         time.className = 'row-time';
         time.textContent = R.formatClock(row.t);
         var icon = document.createElement('span');
-        icon.className = 'row-icon nappy';
-        icon.innerHTML = DROP; // fixed markup, no user data
+        icon.className = 'row-icon ' + row.kind;
+        icon.innerHTML = ICONS[row.kind]; // fixed markup, no user data
         var what = document.createElement('span');
         what.className = 'row-what';
         var strong = document.createElement('strong');
-        strong.textContent = 'Nappy';
+        strong.textContent = NAMES[row.kind];
         what.appendChild(strong);
-        what.appendChild(document.createTextNode(' · ' + R.nappyLabel(row)));
+        what.appendChild(document.createTextNode(' · ' + row.label));
         li.appendChild(time); li.appendChild(icon); li.appendChild(what);
         list.appendChild(li);
       });
@@ -122,7 +137,8 @@
     }).then(function () { setBusy(false); });
   });
 
-  showTab();
+  FEED_UI.init({ toast: toast, renderToday: renderToday, setBusy: setBusy });
+  route();
 
   // ---- Offline support ----
   var status = document.getElementById('status');
@@ -132,7 +148,7 @@
   }
   // A new version takes over in the background (sw.js skips waiting). Reload once so the page
   // and its scripts come from the same version. Not on the very first visit (no previous controller).
-  // While an Undo is still possible, wait until it is gone, so nothing the parent is doing is lost.
+  // While an Undo is still possible, or a bottle form is open, wait until that is done, so nothing the parent is doing is lost.
   var hadController = !!navigator.serviceWorker.controller;
   var reloading = false;
   navigator.serviceWorker.addEventListener('controllerchange', function () {

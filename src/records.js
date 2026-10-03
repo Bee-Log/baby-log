@@ -65,6 +65,34 @@
     return row.wee && row.poo ? 'Wee + Poo' : row.wee ? 'Wee' : 'Poo';
   }
 
+  // "Left 14 min", "Both 22 min", "Bottle 90 ml". Missing details are left out.
+  function feedLabel(rec) {
+    var d = rec.d || {};
+    if (d.kind === 'Bottle') return 'Bottle' + (d.ml != null ? ' ' + d.ml + ' ml' : '');
+    return (d.side || 'Breast') + (d.min != null ? ' ' + d.min + ' min' : '');
+  }
+
+  // Everything the Today list shows, newest first: nappies (a wee and a poo close together are one row) and feeds.
+  function timelineRows(records) {
+    var rows = nappyRows(records).map(function (r) {
+      return { kind: 'nappy', t: r.t, label: nappyLabel(r), ids: r.ids };
+    });
+    records.forEach(function (r) {
+      if (!r.deleted && r.type === 'feed') rows.push({ kind: 'feed', t: r.t, label: feedLabel(r), ids: [r.id] });
+    });
+    return rows.sort(function (a, b) { return b.t - a.t; });
+  }
+
+  // The newest live feed that matches `kind` ('Breast' or 'Bottle'), or null.
+  function lastFeed(records, kind) {
+    var best = null;
+    records.forEach(function (r) {
+      if (r.deleted || r.type !== 'feed' || (r.d || {}).kind !== kind) return;
+      if (!best || r.t > best.t) best = r;
+    });
+    return best;
+  }
+
   function formatClock(t) {
     var d = new Date(t), h = d.getHours(), m = d.getMinutes();
     return (h % 12 === 0 ? 12 : h % 12) + ':' + (m < 10 ? '0' : '') + m + (h < 12 ? ' am' : ' pm');
@@ -73,6 +101,7 @@
   root.BABYLOG_RECORDS = {
     TYPES: TYPES, NAPPY_PAIR_MS: NAPPY_PAIR_MS,
     makeRecord: makeRecord, tombstone: tombstone, dayWindow: dayWindow,
-    nappyRows: nappyRows, nappyLabel: nappyLabel, formatClock: formatClock
+    nappyRows: nappyRows, nappyLabel: nappyLabel, feedLabel: feedLabel, timelineRows: timelineRows, lastFeed: lastFeed,
+    formatClock: formatClock
   };
 })(typeof self !== 'undefined' ? self : this);

@@ -56,6 +56,21 @@
     return run('records', 'readwrite', function (s) { s.put(record); }).then(function () { keep(); return record; });
   }
 
+  // Save a record and clear a draft in ONE transaction: both happen or neither does.
+  // (A breast feed is saved and its running timer is removed together.)
+  function putClearingMeta(record, metaKey) {
+    return db().then(function (d) {
+      return new Promise(function (resolve, reject) {
+        var tx = d.transaction(['records', 'meta'], 'readwrite');
+        tx.objectStore('records').put(record);
+        tx.objectStore('meta').delete(metaKey);
+        tx.oncomplete = function () { keep(); resolve(record); };
+        tx.onerror = function () { reject(tx.error); };
+        tx.onabort = function () { reject(tx.error || new Error('Save was cancelled')); };
+      });
+    });
+  }
+
   function all() {
     return run('records', 'readonly', function (s, done) {
       var req = s.getAll();
@@ -81,6 +96,20 @@
     return deviceIdPromise;
   }
 
+  // Small values that are not records, such as a breast timer that is still running.
+  function getMeta(key) {
+    return run('meta', 'readonly', function (s, done) {
+      var req = s.get(key);
+      req.onsuccess = function () { done(req.result === undefined ? null : req.result); };
+    });
+  }
+  function setMeta(key, value) {
+    return run('meta', 'readwrite', function (s) { s.put(value, key); });
+  }
+  function removeMeta(key) {
+    return run('meta', 'readwrite', function (s) { s.delete(key); });
+  }
+
   // Ask the browser not to clear this data when the phone runs low on space. Asked once.
   var askedToKeep = false;
   function keep() {
@@ -89,5 +118,5 @@
     navigator.storage.persist().catch(function () { /* the browser decides; data still saves */ });
   }
 
-  root.BABYLOG_STORE = { dbNameFor: dbNameFor, put: put, all: all, deviceId: deviceId };
+  root.BABYLOG_STORE = { dbNameFor: dbNameFor, put: put, putClearingMeta: putClearingMeta, all: all, deviceId: deviceId, getMeta: getMeta, setMeta: setMeta, removeMeta: removeMeta };
 })(typeof self !== 'undefined' ? self : this);

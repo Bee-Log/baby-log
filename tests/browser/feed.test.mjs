@@ -1,0 +1,281 @@
+// Features 006 and 007 in a real browser: the Feed screen, the breast timer, the bottle, and what gets saved.
+import { test, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { startSite, phone, open, install, todayRows, state } from './helpers.mjs';
+
+let origin, site, browser, close;
+before(async () => ({ origin, site, browser, close } = await startSite({ 'test-v1': 'test', 'test-v2': 'test', 'live-v1': 'live' })));
+after(() => close?.());
+
+function storedRecords(page, dbName = 'test-baby-log') {
+  return page.evaluate((name) => new Promise((resolve, reject) => {
+    const req = indexedDB.open(name);
+    req.onsuccess = () => {
+      const db = req.result;
+      const get = db.transaction('records').objectStore('records').getAll();
+      get.onsuccess = () => { db.close(); resolve(get.result); };
+      get.onerror = () => reject(get.error);
+    };
+    req.onerror = () => reject(req.error);
+  }), dbName);
+}
+
+const url = () => `${origin}/baby-log/test/`;
+async function afterSave(page) {
+  await page.waitForFunction(() => location.hash === '#today' && document.getElementById('toast-text').textContent === 'Feed saved');
+}
+// Wait until the Feed screen has loaded its saved data (it marks itself ready last).
+const ready = (page) => page.waitForSelector('#screen-feed[data-ready]');
+
+test('the Feed button opens the Feed screen without the tab bar; the close button returns', async () => {
+  const { context, page, errors } = await phone(browser);
+  await install(page, url());
+  await page.click('a.quick-btn.feed');
+  await ready(page);
+  assert.equal(await page.evaluate(() => location.hash), '#feed');
+  assert.equal(await page.isVisible('.tabbar'), false, 'no tab bar on a full screen');
+  assert.equal(await page.isVisible('#view-today'), false);
+  assert.equal(await page.textContent('#breast-started'), 'Not started yet');
+  assert.equal(await page.isDisabled('#feed-save'), true, 'nothing to save before the timer starts');
+  await page.click('a[aria-label="Close"]');
+  await page.waitForFunction(() => location.hash === '#today');
+  await page.waitForSelector('.tabbar', { state: 'visible' });
+  assert.deepEqual(await storedRecords(page), [], 'closing saves nothing');
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('breast feed: start, switch sides, pause, add a note, save; it shows on Today', async () => {
+  const { context, page, errors } = await phone(browser);
+  await install(page, url());
+  await page.click('a.quick-btn.feed');
+  await ready(page);
+
+  await page.click('#btn-left');
+  assert.equal(await page.getAttribute('#btn-left', 'aria-pressed'), 'true');
+  assert.equal(await page.textContent('#btn-left-sub'), 'Tap to pause');
+  assert.equal(await page.textContent('#btn-right-sub'), 'Tap to switch');
+  assert.equal(await page.isDisabled('#feed-save'), false);
+  await page.waitForTimeout(2200);
+  assert.match(await page.textContent('#breast-timer'), /^00:0[2-4]$/, 'the timer counts');
+
+  await page.click('#btn-right');
+  assert.equal(await page.getAttribute('#btn-right', 'aria-pressed'), 'true');
+  assert.equal(await page.getAttribute('#btn-left', 'aria-pressed'), 'false');
+  await page.click('#btn-right'); // pause
+  assert.equal(await page.textContent('#btn-right-sub'), 'Tap to start');
+  const frozen = await page.textContent('#breast-timer');
+  await page.waitForTimeout(1500);
+  assert.equal(await page.textContent('#breast-timer'), frozen, 'a paused timer stands still');
+
+  await page.fill('#breast-note', 'Sleepy, fed well');
+  await page.click('#feed-save');
+  await afterSave(page);
+  assert.deepEqual(await todayRows(page), ['Feed · Both 0 min']);
+  const [r] = await storedRecords(page);
+  assert.equal(r.type, 'feed');
+  assert.deepEqual(r.d, { kind: 'Breast', side: 'Both', min: 0 });
+  assert.equal(r.note, 'Sleepy, fed well');
+  assert.equal(r.end, null);
+  assert.ok(Math.abs(r.t - Date.now()) < 60000);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('a running timer survives closing the app, and keeps the right time', async () => {
+  const { context, page, errors } = await phone(browser);
+  await install(page, url());
+  await page.click('a.quick-btn.feed');
+  await ready(page);
+  await page.click('#btn-left');
+  // Pretend the phone was away for 14 minutes: move the saved start back, as if the timer began then.
+  await page.evaluate(() => new Promise((resolve, reject) => {
+    const req = indexedDB.open('test-baby-log');
+    req.onsuccess = () => {
+      const db = req.result, tx = db.transaction('meta', 'readwrite'), s = tx.objectStore('meta');
+      const get = s.get('breastTimer');
+      get.onsuccess = () => {
+        const t = get.result, shift = 14 * 60000;
+        t.startedAt -= shift; t.segments.forEach((x) => { x.from -= shift; });
+        s.put(t, 'breastTimer');
+      };
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => reject(tx.error);
+    };
+  }));
+  await page.reload(); // a full reload on #feed, like reopening the app
+  await ready(page);
+  await page.waitForFunction(() => /^14:0\d$/.test(document.getElementById('breast-timer').textContent));
+  assert.equal(await page.getAttribute('#btn-left', 'aria-pressed'), 'true', 'still running on the same side');
+  await page.click('#feed-save');
+  await afterSave(page);
+  const [r] = await storedRecords(page);
+  assert.deepEqual(r.d, { kind: 'Breast', side: 'Left', min: 14 });
+  // The draft timer is gone: a new Feed screen starts fresh.
+  await page.click('a.quick-btn.feed');
+  await ready(page);
+  assert.equal(await page.textContent('#breast-started'), 'Not started yet');
+  assert.equal(await page.textContent('#breast-last'), `Left · ${await page.evaluate((t) => { const d = new Date(t), h = d.getHours(), m = d.getMinutes(); return (h % 12 || 12) + ':' + String(m).padStart(2, '0') + (h < 12 ? ' am' : ' pm'); }, r.t)}`);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('bottle: type, step, drag, choose milk and time, save', async () => {
+  const { context, page, errors } = await phone(browser);
+  await install(page, url());
+  await page.click('a.quick-btn.feed');
+  await ready(page);
+  await page.click('#mode-bottle');
+  assert.equal(await page.inputValue('#bottle-ml'), '90', 'starts at 90 ml');
+  assert.equal(await page.textContent('#feed-save'), 'Save · 90 ml');
+
+  await page.click('#bottle-plus');
+  await page.click('#bottle-plus');
+  assert.equal(await page.inputValue('#bottle-ml'), '110');
+  await page.click('#bottle-minus');
+  assert.equal(await page.inputValue('#bottle-ml'), '100');
+  await page.fill('#bottle-ml', '135');
+  await page.press('#bottle-ml', 'Tab');
+  assert.equal(await page.textContent('#feed-save'), 'Save · 135 ml');
+  await page.fill('#bottle-ml', '900');
+  await page.press('#bottle-ml', 'Tab');
+  assert.equal(await page.inputValue('#bottle-ml'), '240', 'the most is 240 ml');
+
+  // Drag to the middle of the scale: about 120 ml.
+  const box = await page.locator('#bt-svg').boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height * (173 / 300));
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height * (173 / 300) + 1);
+  await page.mouse.up();
+  const dragged = Number(await page.inputValue('#bottle-ml'));
+  assert.ok(dragged >= 110 && dragged <= 130 && dragged % 10 === 0, `dragged to ${dragged} ml`);
+  const milkY = Number(await page.getAttribute('#bt-milk', 'y'));
+  assert.ok(milkY > 150 && milkY < 190, 'the milk level follows');
+
+  await page.fill('#bottle-ml', '120');
+  await page.press('#bottle-ml', 'Tab');
+  await page.click('#milk-expressed');
+  assert.equal(await page.getAttribute('#milk-expressed', 'aria-pressed'), 'true');
+  await page.fill('#bottle-time', '04:05');
+  await page.click('#feed-save');
+  await afterSave(page);
+
+  const [r] = await storedRecords(page);
+  assert.deepEqual(r.d, { kind: 'Bottle', milk: 'Breast milk', ml: 120 }, 'Expressed is stored as Breast milk');
+  const when = new Date(r.t);
+  assert.deepEqual([when.getHours(), when.getMinutes()], [4, 5], 'Fed at is the time chosen');
+  assert.ok(r.t <= Date.now() + 5 * 60000, 'never in the future');
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('bottle: the next feed starts from the last amount and milk; Last bottle is shown', async () => {
+  const { context, page, errors } = await phone(browser);
+  await install(page, url());
+  await page.click('a.quick-btn.feed');
+  await ready(page);
+  assert.equal(await page.textContent('#bottle-last'), 'No bottle yet');
+  await page.click('#mode-bottle');
+  await page.fill('#bottle-ml', '70');
+  await page.press('#bottle-ml', 'Tab');
+  await page.click('#milk-expressed');
+  await page.fill('#bottle-time', '00:00');
+  await page.click('#feed-save');
+  await afterSave(page);
+
+  await page.click('a.quick-btn.feed');
+  await ready(page);
+  assert.equal(await page.getAttribute('#mode-bottle', 'aria-pressed'), 'true', 'repeats the kind of the last feed');
+  assert.equal(await page.inputValue('#bottle-ml'), '70');
+  assert.equal(await page.getAttribute('#milk-expressed', 'aria-pressed'), 'true');
+  assert.match(await page.textContent('#bottle-last'), /^70 ml · \d{1,2}:\d{2} [ap]m$/);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('Undo after saving a feed removes it from the list and leaves a tombstone', async () => {
+  const { context, page, errors } = await phone(browser);
+  await install(page, url());
+  await page.click('a.quick-btn.feed');
+  await ready(page);
+  await page.click('#mode-bottle');
+  await page.click('#feed-save');
+  await afterSave(page);
+  assert.deepEqual(await todayRows(page), ['Feed · Bottle 90 ml'], 'the new feed is on the list');
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await page.waitForFunction(() => document.getElementById('toast-text').textContent === 'Removed');
+  assert.deepEqual(await todayRows(page), []);
+  const [r] = await storedRecords(page);
+  assert.equal(r.deleted, true);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('feeds work offline, and TEST feeds never reach LIVE', async () => {
+  site.test = 'test-v1';
+  const { context, page, errors } = await phone(browser);
+  await install(page, url());
+  await context.setOffline(true);
+  await open(page, `${url()}#feed`);
+  await ready(page);
+  await page.click('#mode-bottle');
+  await page.click('#feed-save');
+  await afterSave(page);
+  assert.equal((await storedRecords(page)).length, 1);
+  await context.setOffline(false);
+  await install(page, `${origin}/baby-log/`);
+  assert.equal((await storedRecords(page, 'test-baby-log')).length, 1, 'the TEST feed is still in TEST storage');
+  assert.deepEqual(await storedRecords(page, 'baby-log'), [], 'LIVE storage has no TEST feeds');
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('an update waits while the bottle form is open, then arrives when the parent leaves', async () => {
+  site.test = 'test-v1';
+  const { context, page, errors } = await phone(browser);
+  await install(page, url());
+  await page.click('a.quick-btn.feed');
+  await ready(page);
+  await page.click('#mode-bottle');
+  await page.fill('#bottle-ml', '150');
+  await page.press('#bottle-ml', 'Tab');
+  await page.evaluate(() => { window.__sameLoad = true; });
+
+  site.test = 'test-v2'; // publish an update while the form is open
+  await page.evaluate(() => navigator.serviceWorker.getRegistration().then((r) => r.update()));
+  await page.waitForFunction(() => caches.keys().then((k) => k.includes('test-baby-log-shell-test-v2')));
+  await page.waitForTimeout(1200);
+  assert.equal(await page.evaluate(() => window.__sameLoad === true), true, 'the page was not reloaded');
+  assert.equal(await page.inputValue('#bottle-ml'), '150', 'the amount is still there');
+
+  await page.click('a[aria-label="Close"]'); // leaving the screen lets the update in
+  const s = await state(page, { until: (x) => x.pageVersion === 'test-v2', timeoutMs: 12000 });
+  assert.equal(s.pageVersion, 'test-v2');
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('a feed without details (for example from another phone) does not break the screen or the list', async () => {
+  site.test = 'test-v1';
+  const { context, page, errors } = await phone(browser);
+  await install(page, url());
+  await page.evaluate(() => new Promise((resolve, reject) => {
+    const req = indexedDB.open('test-baby-log');
+    req.onsuccess = () => {
+      const db = req.result, tx = db.transaction('records', 'readwrite');
+      tx.objectStore('records').put({ id: 'bare-1', type: 'feed', t: Date.now() - 60000, end: null, note: '', by: '', deviceId: 'other-phone', updatedAt: 1 });
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => reject(tx.error);
+    };
+  }));
+  await page.reload();
+  await page.waitForSelector('#today-list .row');
+  assert.deepEqual(await todayRows(page), ['Feed · Breast']);
+  await page.click('a.quick-btn.feed');
+  await ready(page);
+  assert.equal(await page.isDisabled('#feed-save'), true);
+  await page.click('#mode-bottle');
+  assert.equal(await page.inputValue('#bottle-ml'), '90');
+  assert.deepEqual(errors, []);
+  await context.close();
+});
