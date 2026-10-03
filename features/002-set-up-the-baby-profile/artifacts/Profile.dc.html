@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Baby profile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&amp;family=Atkinson+Hyperlegible:wght@400;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#2F5DA8}a:hover{color:#1F4580}
+button{font:inherit;cursor:pointer}
+input{font:inherit}
+.photo-input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.photo-label:focus-within{outline:3px solid #2F5DA8;outline-offset:4px}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F6F3EE; color: #1E2227; font-family: 'Atkinson Hyperlegible', system-ui, sans-serif; display: flex; flex-direction: column; padding: 56px 20px 36px; gap: 16px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<a href="Main.dc.html" aria-label="Back" style="width: 44px; height: 44px; border-radius: 22px; background: #FFFFFF; border: 1px solid #E4DED5; color: #1E2227; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+<h1 style="margin: 0; font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: 22px; font-weight: 700">Baby profile</h1>
+<div style="width: 44px"></div>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+<div style="position: relative; width: 240px; height: 200px; display: flex; align-items: center; justify-content: center">
+<svg width="240" height="200" viewBox="0 0 240 200" aria-hidden="true" style="position: absolute; left: 0; top: 0">
+<path d="M28 40l3.5 7 7.5 1-5.5 5 1.5 7.5-7-3.5-7 3.5 1.5-7.5-5.5-5 7.5-1z" fill="#F2C14E"></path>
+<path d="M214 30a12 12 0 1 1-12-14 9.5 9.5 0 0 0 12 14z" fill="#B9AEE3"></path>
+<circle cx="206" cy="150" r="7" fill="#9DBCE8"></circle>
+<circle cx="222" cy="128" r="4" fill="#F4B98F"></circle>
+<path d="M22 150c0-6 5-10 11-10 2-6 8-9 14-7 3-4 9-4 12 0 5 0 8 4 8 9H22z" fill="#FFFFFF" stroke="#E4DED5" stroke-width="1.5"></path>
+<circle cx="44" cy="96" r="3.5" fill="#9DBCE8"></circle>
+<path d="M196 84l2 4 4.5.6-3.3 3 .9 4.4-4.1-2.1-4.1 2.1.9-4.4-3.3-3 4.5-.6z" fill="#F2C14E"></path>
+</svg>
+<label class="photo-label" style="position: relative; width: 168px; height: 168px; border-radius: 84px; background: #FFF1C9; border: 3px dashed #D9A93A; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #7A5A12; cursor: pointer; overflow: hidden">
+<input class="photo-input" type="file" accept="image/*" onChange="{{onPhoto}}">
+<sc-if value="{{hasPhoto}}" hint-placeholder-val="{{ false }}">
+<img src="{{photoUrl}}" alt="Baby photo" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover">
+</sc-if>
+<sc-if value="{{noPhoto}}" hint-placeholder-val="{{ true }}">
+<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>
+<span style="font-weight: 700; font-size: 16px">Add a photo</span>
+<span style="font-size: 13px">Tap to choose</span>
+</sc-if>
+</label>
+<div aria-hidden="true" style="position: absolute; right: 40px; bottom: 14px; width: 44px; height: 44px; border-radius: 22px; background: #1E2227; color: #FFFFFF; display: flex; align-items: center; justify-content: center; border: 3px solid #F6F3EE; pointer-events: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></div>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+<div style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: 28px; font-weight: 700">{{displayName}}</div>
+<div style="font-size: 15px; color: #3C4248">{{ageLine}}</div>
+</div>
+</div>
+<div style="background: #FFFFFF; border-radius: 20px; padding: 4px 16px; display: flex; flex-direction: column">
+<div style="display: flex; flex-direction: column; gap: 6px; padding: 12px 0; border-bottom: 1px solid #EEE9E1">
+<label for="baby-nickname" style="font-size: 14px; color: #3C4248; font-weight: 700">Nickname</label>
+<input id="baby-nickname" type="text" value="{{nickname}}" onChange="{{onName}}" placeholder="What do you call them?" maxlength="20" style="min-height: 44px; border: 1px solid #E4DED5; border-radius: 12px; padding: 0 12px; font-size: 17px; color: #1E2227; background: #FBFAF7">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; padding: 12px 0; border-bottom: 1px solid #EEE9E1">
+<label for="baby-dob" style="font-size: 14px; color: #3C4248; font-weight: 700">Date of birth</label>
+<input id="baby-dob" type="date" value="{{dob}}" onChange="{{onDob}}" style="min-height: 44px; border: 1px solid #E4DED5; border-radius: 12px; padding: 0 12px; font-size: 17px; color: #1E2227; background: #FBFAF7">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; padding: 12px 0">
+<div id="baby-gender" style="font-size: 14px; color: #3C4248; font-weight: 700">Gender</div>
+<div role="group" aria-labelledby="baby-gender" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background: #EAE5DC; border-radius: 14px; padding: 3px; gap: 3px">
+<button aria-pressed="{{isGirl}}" onClick="{{pickGirl}}" style="min-height: 44px; border: none; border-radius: 11px; font-size: 16px; background: {{girlBg}}; font-weight: {{girlFw}}; color: {{girlFg}}">Girl</button>
+<button aria-pressed="{{isBoy}}" onClick="{{pickBoy}}" style="min-height: 44px; border: none; border-radius: 11px; font-size: 16px; background: {{boyBg}}; font-weight: {{boyFw}}; color: {{boyFg}}">Boy</button>
+</div>
+<div style="font-size: 13px; color: #5B6168">Used to pick the WHO growth chart.</div>
+</div>
+</div>
+<div style="flex-grow: 1"></div>
+<a href="Main.dc.html" style="min-height: 56px; border-radius: 18px; background: #1E2227; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px">Save profile</a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+// Concept "today" so the age matches the other sample screens.
+var CONCEPT_TODAY = new Date('2026-10-01T00:00:00');
+
+function ageText(dob) {
+  if (!dob) return 'Add a date of birth';
+  var born = new Date(dob + 'T00:00:00');
+  if (isNaN(born.getTime())) return 'Add a date of birth';
+  var days = Math.floor((CONCEPT_TODAY - born) / 86400000);
+  if (days < 0) return 'Due soon';
+  if (days === 0) return 'Born today';
+  if (days < 14) return days + (days === 1 ? ' day old' : ' days old');
+  if (days < 7 * 13) {
+    var w = Math.floor(days / 7);
+    var d = days % 7;
+    return w + ' weeks' + (d ? ', ' + d + (d === 1 ? ' day' : ' days') : '') + ' old';
+  }
+  var months = Math.floor(days / 30.44);
+  return months + ' months old';
+}
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { nickname: '', dob: '2026-09-10', sex: 'girl', photoUrl: '' };
+  }
+  componentWillUnmount() {
+    if (this.state.photoUrl) URL.revokeObjectURL(this.state.photoUrl);
+  }
+  renderVals() {
+    var self = this;
+    var s = this.state;
+    var on = function (c) { return c ? '#FFFFFF' : 'transparent'; };
+    var fw = function (c) { return c ? '700' : '400'; };
+    var fg = function (c) { return c ? '#1E2227' : '#5B6168'; };
+    var girl = s.sex === 'girl';
+    var boy = s.sex === 'boy';
+    return {
+      nickname: s.nickname,
+      dob: s.dob,
+      displayName: s.nickname.trim() ? s.nickname.trim() : '[Nickname]',
+      ageLine: ageText(s.dob),
+      hasPhoto: !!s.photoUrl,
+      noPhoto: !s.photoUrl,
+      photoUrl: s.photoUrl,
+      isGirl: girl ? 'true' : 'false',
+      isBoy: boy ? 'true' : 'false',
+      girlBg: on(girl), girlFw: fw(girl), girlFg: fg(girl),
+      boyBg: on(boy), boyFw: fw(boy), boyFg: fg(boy),
+      pickGirl: function () { self.setState({ sex: 'girl' }); },
+      pickBoy: function () { self.setState({ sex: 'boy' }); },
+      onName: function (e) { self.setState({ nickname: e.target.value }); },
+      onDob: function (e) { self.setState({ dob: e.target.value }); },
+      onPhoto: function (e) {
+        var f = e.target.files && e.target.files[0];
+        if (!f) return;
+        if (self.state.photoUrl) URL.revokeObjectURL(self.state.photoUrl);
+        self.setState({ photoUrl: URL.createObjectURL(f) });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

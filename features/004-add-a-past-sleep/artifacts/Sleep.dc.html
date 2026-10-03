@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sleep</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&amp;family=Atkinson+Hyperlegible:wght@400;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#2F5DA8}a:hover{color:#1F4580}
+button{font:inherit;cursor:pointer}
+input{font:inherit}
+.kb:focus-visible{outline:3px solid #2F5DA8;outline-offset:2px}
+</style>
+</helmet>
+<div style="width: 390px; height: 1300px; box-sizing: border-box; background: #F6F3EE; color: #1E2227; font-family: 'Atkinson Hyperlegible', system-ui, sans-serif; display: flex; flex-direction: column; padding: 56px 20px 36px; gap: 16px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<a href="Main.dc.html" aria-label="Back" style="width: 44px; height: 44px; border-radius: 22px; background: #FFFFFF; border: 1px solid #E4DED5; color: #1E2227; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg></a>
+<h1 style="margin: 0; font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: 22px; font-weight: 700">Sleep</h1>
+<div style="width: 44px"></div>
+</div>
+<div style="background: {{cardBg}}; color: {{cardFg}}; border-radius: 24px; padding: 8px 8px 8px 12px; display: flex; align-items: center; gap: 8px">
+<div style="flex-grow: 1; min-width: 0; min-height: 60px; display: flex; align-items: center; gap: 12px">
+<div style="width: 40px; height: 40px; border-radius: 20px; background: {{iconBg}}; color: {{iconFg}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path></svg></div>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+<div style="font-size: 14px; color: {{subFg}}">{{sinceLine}}</div>
+<div style="font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums">{{statusLabel}} {{bigTime}}</div>
+</div>
+</div>
+<button onClick="{{toggle}}" aria-pressed="{{asleepStr}}" style="min-height: 52px; padding: 0 16px; border-radius: 18px; border: none; background: {{btnBg}}; color: {{btnFg}}; font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; flex-shrink: 0">
+<sc-if value="{{asleep}}" hint-placeholder-val="{{ false }}">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+</sc-if>
+<sc-if value="{{awake}}" hint-placeholder-val="{{ true }}">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path></svg>
+</sc-if>
+{{btnLabel}}</button>
+</div>
+<div style="background: #FFFFFF; border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: 18px; font-weight: 700">Add a past sleep</h2>
+
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) 60px 44px; align-items: center; gap: 5px">
+<sc-for list="{{adds}}" as="a" hint-placeholder-count="4">
+<button class="kb" onClick="{{a.add}}" aria-pressed="{{a.on}}" style="min-height: 44px; padding: 0; border-radius: 22px; border: 1px solid {{a.border}}; background: {{a.bg}}; color: {{a.fg}}; font-size: 14px; font-weight: {{a.fw}}">+{{a.label}}</button>
+</sc-for>
+<button class="kb" onClick="{{minus}}" aria-label="{{minusAria}}" style="min-height: 44px; padding: 0; border-radius: 22px; border: none; background: #EFEAF8; color: #2B2550; font-size: 14px; font-weight: 700">−{{stepLabel}}</button>
+<button class="kb" onClick="{{reset}}" aria-label="Reset duration to 30 minutes" style="min-width: 44px; min-height: 44px; border-radius: 22px; border: none; background: transparent; color: #5B6168; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v5h5"></path></svg></button>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+<button class="kb" aria-label="Morning, 6 am to 12 pm" aria-pressed="{{p0.on}}" onClick="{{p0.pick}}" style="min-height: 60px; border-radius: 14px; border: 2px solid {{p0.border}}; background: {{p0.bg}}; color: {{p0.fg}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19h18"></path><path d="M7 19a5 5 0 0 1 10 0"></path><path d="M12 7v3M5.5 11.5l1.5 1.5M18.5 11.5L17 13"></path></svg><span style="font-size: 12px">6a–12p</span></button>
+<button class="kb" aria-label="Afternoon, 12 pm to 6 pm" aria-pressed="{{p1.on}}" onClick="{{p1.pick}}" style="min-height: 60px; border-radius: 14px; border: 2px solid {{p1.border}}; background: {{p1.bg}}; color: {{p1.fg}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg><span style="font-size: 12px">12p–6p</span></button>
+<button class="kb" aria-label="Night, 6 pm to 12 am" aria-pressed="{{p2.on}}" onClick="{{p2.pick}}" style="min-height: 60px; border-radius: 14px; border: 2px solid {{p2.border}}; background: {{p2.bg}}; color: {{p2.fg}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path></svg><span style="font-size: 12px">6p–12a</span></button>
+<button class="kb" aria-label="After midnight, 12 am to 6 am" aria-pressed="{{p3.on}}" onClick="{{p3.pick}}" style="min-height: 60px; border-radius: 14px; border: 2px solid {{p3.border}}; background: {{p3.bg}}; color: {{p3.fg}}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4l1.6 3.4 3.7.5-2.7 2.6.7 3.7L10 12.4l-3.3 1.8.7-3.7-2.7-2.6 3.7-.5z"></path><path d="M18 14l.8 1.7 1.8.3-1.3 1.3.3 1.8-1.6-.9-1.6.9.3-1.8-1.3-1.3 1.8-.3z"></path></svg><span style="font-size: 12px">12a–6a</span></button>
+</div>
+
+<div style="display: flex; justify-content: center">
+<svg width="300" height="300" viewBox="0 0 300 300" role="img" aria-label="{{clockAria}}" onPointerDown="{{down}}" onPointerMove="{{move}}" onPointerUp="{{up}}" onPointerCancel="{{up}}" style="touch-action: none; cursor: {{cursor}}">
+<circle cx="150" cy="150" r="118" fill="none" stroke="#ECE7DF" stroke-width="32"></circle>
+<path d="{{windowArc}}" fill="none" stroke="#F1EEF9" stroke-width="32"></path>
+<circle cx="150" cy="150" r="100" fill="#F6F3EE"></circle>
+<path d="{{face0.d}}" fill="{{face0.fill}}"></path>
+<path d="{{face1.d}}" fill="{{face1.fill}}"></path>
+<g transform="translate({{face0.ix}} {{face0.iy}})" fill="none" stroke="{{face0.ink}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="{{face0.show}}"><path d="{{face0.icon}}" transform="scale(0.8)"></path></g>
+<g transform="translate({{face1.ix}} {{face1.iy}})" fill="none" stroke="{{face1.ink}}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="{{face1.show}}"><path d="{{face1.icon}}" transform="scale(0.8)"></path></g>
+<path d="M150.0 50.0L150.0 56.0M200.0 63.4L197.0 68.6M236.6 100.0L231.4 103.0M250.0 150.0L244.0 150.0M236.6 200.0L231.4 197.0M200.0 236.6L197.0 231.4M150.0 250.0L150.0 244.0M100.0 236.6L103.0 231.4M63.4 200.0L68.6 197.0M50.0 150.0L56.0 150.0M63.4 100.0L68.6 103.0M100.0 63.4L103.0 68.6" stroke="#C9C2B6" stroke-width="2" stroke-linecap="round"></path>
+<text x="192.0" y="82.3" text-anchor="middle" font-size="15" font-weight="700" fill="#1E2227" opacity="{{n1}}">1</text>
+<text x="222.7" y="113.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1E2227" opacity="{{n2}}">2</text>
+<text x="234.0" y="155.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1E2227" opacity="{{n3}}">3</text>
+<text x="222.7" y="197.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1E2227" opacity="{{n4}}">4</text>
+<text x="192.0" y="227.7" text-anchor="middle" font-size="15" font-weight="700" fill="#1E2227" opacity="{{n5}}">5</text>
+<text x="150.0" y="239.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1E2227" opacity="{{n6}}">6</text>
+<text x="108.0" y="227.7" text-anchor="middle" font-size="15" font-weight="700" fill="#1E2227" opacity="{{n7}}">7</text>
+<text x="77.3" y="197.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1E2227" opacity="{{n8}}">8</text>
+<text x="66.0" y="155.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1E2227" opacity="{{n9}}">9</text>
+<text x="77.3" y="113.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1E2227" opacity="{{n10}}">10</text>
+<text x="108.0" y="82.3" text-anchor="middle" font-size="15" font-weight="700" fill="#1E2227" opacity="{{n11}}">11</text>
+<text x="150.0" y="71.0" text-anchor="middle" font-size="15" font-weight="700" fill="#1E2227" opacity="{{n12}}">12</text>
+<path d="{{loggedArcs}}" fill="none" stroke="#CFC8E2" stroke-width="22" stroke-linecap="butt"></path>
+<path d="{{draftArc}}" fill="none" stroke="{{draftColor}}" stroke-width="22" stroke-linecap="butt"></path>
+<line x1="{{startTick.x1}}" y1="{{startTick.y1}}" x2="{{startTick.x2}}" y2="{{startTick.y2}}" stroke="#2B2550" stroke-width="4" stroke-linecap="round"></line>
+<line x1="{{endTick.x1}}" y1="{{endTick.y1}}" x2="{{endTick.x2}}" y2="{{endTick.y2}}" stroke="#C99A22" stroke-width="4" stroke-linecap="round"></line>
+<circle cx="{{startDot.x}}" cy="{{startDot.y}}" r="9" fill="#2B2550" stroke="#FFFFFF" stroke-width="2"></circle>
+<circle cx="{{endDot.x}}" cy="{{endDot.y}}" r="9" fill="#F2C14E" stroke="#FFFFFF" stroke-width="2"></circle>
+<g transform="translate({{grip.x}} {{grip.y}}) rotate({{grip.rot}})"><rect x="-13" y="-8" width="26" height="16" rx="8" fill="#FFFFFF"></rect><circle cx="-6" cy="0" r="1.8" fill="{{draftColor}}"></circle><circle cx="0" cy="0" r="1.8" fill="{{draftColor}}"></circle><circle cx="6" cy="0" r="1.8" fill="{{draftColor}}"></circle></g>
+<text x="150" y="146" text-anchor="middle" font-family="Bricolage Grotesque, system-ui, sans-serif" font-size="30" font-weight="700" fill="#1E2227">{{lenText}}</text>
+<text x="150" y="170" text-anchor="middle" font-size="13" fill="#3C4248">{{rangeText}}</text>
+</svg>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<label style="display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 700; color: #3C4248">Fell asleep
+<input class="kb" type="time" step="300" value="{{fromVal}}" onClick="{{openPicker}}" onChange="{{onFrom}}" style="min-height: 48px; border: 1px solid #E4DED5; border-radius: 12px; padding: 0 12px; font: inherit; font-size: 18px; font-weight: 700; color: #1E2227; background: #FBFAF7; cursor: pointer">
+</label>
+<label style="display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 700; color: #3C4248">Woke up
+<input class="kb" type="time" step="300" value="{{toVal}}" onClick="{{openPicker}}" onChange="{{onTo}}" style="min-height: 48px; border: 1px solid #E4DED5; border-radius: 12px; padding: 0 12px; font: inherit; font-size: 18px; font-weight: 700; color: #1E2227; background: #FBFAF7; cursor: pointer">
+</label>
+</div>
+
+<sc-if value="{{hasHint}}" hint-placeholder-val="{{ false }}"><div style="font-size: 14px; font-weight: 700; color: {{hintFg}}">{{hint}}</div></sc-if>
+<button class="kb" onClick="{{addSleep}}" disabled="{{addDisabled}}" style="min-height: 52px; border-radius: 16px; border: none; background: {{addBg}}; color: #FFFFFF; font-weight: 700; font-size: 16px">Add sleep · {{lenText}}</button>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px; min-height: 0; overflow: hidden">
+<h2 style="margin: 0; font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: 18px; font-weight: 700">Logged sleeps</h2>
+<div style="display: flex; flex-direction: column">
+<sc-for list="{{sleeps}}" as="s" hint-placeholder-count="3">
+<div style="display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; min-height: 48px; border-bottom: 1px solid #E4DED5">
+<div style="width: 28px; height: 28px; border-radius: 14px; background: #ECE8F7; color: #5A4B9C; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path></svg></div>
+<div style="font-size: 16px">{{s.range}}</div>
+<div style="font-size: 16px; font-weight: 700">{{s.duration}}</div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1300}}'>
+/*
+ * Sleep page (concept prototype)
+ * ==============================
+ * Three parts on this page:
+ *   1. Live panel   - Start sleep / Wake up toggle with a running timer.
+ *   2. Past sleep   - add a sleep that was not recorded live, on a 12-hour clock ring.
+ *                     One "draft" sleep drives everything below; the controls work together
+ *                     in any order (duration first and then place it, or drag straight away).
+ *   3. Logged list  - every sleep, newest first.
+ *
+ * Past sleep controls:
+ *   - Duration: +5m / +10m / +20m / +1h add to the sleep. The last one tapped stays selected
+ *     ("sticky") and sets the minus button, e.g. after +5m the minus is always -5m.
+ *     The round arrow resets to 30m.
+ *   - Parts of day: pick one or two neighbouring 6-hour parts. Only the picked hours are
+ *     active on the ring; the rest is greyed out. Two parts = a full 12 hours.
+ *   - Clock face: each selected part is tinted with its time of day (morning, afternoon,
+ *     night, dawn) and shows its icon, so AM / PM is clear at a glance.
+ *   - Clock ring: drag an end marker or its dot (dark = fell asleep, gold = woke up) to move
+ *     that end; drag the arc (it has a grip in the middle) to move the whole sleep;
+ *     tap empty ring to centre the sleep there.
+ *     The sleep may pass over logged sleeps (orange while overlapping) and snaps to a logged
+ *     edge within SNAP_MIN.
+ *   - Fell asleep / Woke up: native <input type="time">. A tap opens the phone's own time
+ *     picker pop-up (showPicker). The parts of day follow the typed times.
+ *
+ *   - Add sleep: after adding, the same duration is offered in the next free space.
+ *
+ * Time model: minutes on a 6 am -> 6 am sleep day,
+ * 6:00 am = 360, 12:00 pm = 720, 6:00 pm = 1080, 12:00 am = 1440. Parts: 0 morning,
+ * 1 afternoon, 2 night, 3 after midnight. The day is a loop, so 3 and 0 are neighbours.
+ * On the 12-hour ring, a minute m sits at angle (m mod 720) / 720 * 360 degrees from 12.
+ * A sleep is { start, end } in these minutes. Everything snaps to 5 minutes.
+ *
+ * Note: this is a design prototype. State is local to this artboard; nothing is saved.
+ */
+
+// ---- Constants ----
+var DAY_START = 360, DAY = 1440, PART = 360, HALF_DAY = 720;
+var STEP_MIN = 5;
+var SNAP_MIN = 10;
+var MIN_LEN = 5, MAX_LEN = 720, RESET_LEN = 30;
+var CX = 150, CY = 150, RING_R = 118;
+var RING_HALF_WIDTH = 16;      // the ring band: drag here to move the whole sleep (or tap to place it)
+var OUTER_REACH = 46;          // outside the band, up to RING_R + this: grab the nearest end
+var END_GRAB_PX = 26;          // from outside the arc: how close to an end still grabs that end
+var END_INSIDE_PX = 8;         // on the arc itself, only this close to an end grabs it (else: move)
+var END_DOT_R = RING_R + 24;   // where the end dots sit
+var ADD_STEPS = [{ minutes: 5, label: '5m' }, { minutes: 10, label: '10m' }, { minutes: 20, label: '20m' }, { minutes: 60, label: '1h' }];
+// Time-of-day look for each part: face tint, icon colour, and icon (24 x 24 stroke path).
+var PART_LOOK = [
+  { name: 'morning',   fill: '#FFEBD6', ink: '#C0651B', icon: 'M3 19h18M7 19a5 5 0 0 1 10 0M12 7v3M5.5 11.5l1.5 1.5M18.5 11.5L17 13' },
+  { name: 'afternoon', fill: '#FFF5CC', ink: '#A87F00', icon: 'M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4' },
+  { name: 'night',     fill: '#E4E0F6', ink: '#4A3F86', icon: 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z' },
+  { name: 'dawn',      fill: '#DCE7F6', ink: '#2F5DA8', icon: 'M10 4l1.6 3.4 3.7.5-2.7 2.6.7 3.7L10 12.4l-3.3 1.8.7-3.7-2.7-2.6 3.7-.5zM18 14l.8 1.7 1.8.3-1.3 1.3.3 1.8-1.6-.9-1.6.9.3-1.8-1.3-1.3 1.8-.3z' }
+];
+var FACE_R = 100, ICON_R = 56;
+var COLOR = {
+  ink: '#1E2227', inkSoft: '#3C4248', muted: '#5B6168', line: '#E4DED5',
+  white: '#FFFFFF', night: '#2B2550', nightSoft: '#4A3F86', lilac: '#ECE8F7', lilacText: '#D6D0F0',
+  sleep: '#5A4B9C', sleepDisabled: '#A9A3BF', sun: '#F2C14E',
+  warn: '#9A3F0B', warnFill: '#B5561A', ok: '#2E7A57'
+};
+
+// ---- Helpers ----
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function snap(m) { return Math.round(m / STEP_MIN) * STEP_MIN; }
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
+function mod(a, n) { return ((a % n) + n) % n; }
+function formatClock(m) {
+  var t = mod(m, DAY), h = Math.floor(t / 60);
+  return (h % 12 === 0 ? 12 : h % 12) + ':' + pad2(t % 60) + (h < 12 ? ' am' : ' pm');
+}
+function formatTimer(ms) {                // 725000 -> "00:12:05"
+  var secs = Math.max(0, Math.floor(ms / 1000));
+  return pad2(Math.floor(secs / 3600)) + ':' + pad2(Math.floor(secs / 60) % 60) + ':' + pad2(secs % 60);
+}
+function formatLength(m) {
+  var h = Math.floor(m / 60);
+  return h === 0 ? m % 60 + 'm' : h + 'h ' + pad2(m % 60) + 'm';
+}
+
+// Sleeps and parts (same rules as the Sleep page)
+var SHIFTS = [-DAY, 0, DAY];
+function overlapsAny(sleep, logged) {
+  return logged.some(function (b) {
+    return SHIFTS.some(function (sh) { return sleep.start < b.end + sh && sleep.end > b.start + sh; });
+  });
+}
+function copiesInRange(logged, from, to) {
+  var out = [];
+  logged.forEach(function (b) {
+    SHIFTS.forEach(function (sh) { if (b.end + sh > from && b.start + sh < to) out.push({ start: b.start + sh, end: b.end + sh }); });
+  });
+  return out;
+}
+function nextPart(i) { return (i + 1) % 4; }
+function partOf(m) { return Math.floor(mod(m - DAY_START, DAY) / PART); }
+function formatInput(m) { var t = mod(m, DAY); return pad2(Math.floor(t / 60)) + ':' + pad2(t % 60); }
+// Clock time -> sleep-day minutes (times before 6 am belong to the end of the sleep day).
+function toDayMinutes(hours, minutes) {
+  var m = hours * 60 + minutes;
+  return m < DAY_START ? m + DAY : m;
+}
+function fromInput(value) {                                   // "14:30" -> 870
+  var p = value.split(':');
+  return toDayMinutes(parseInt(p[0], 10), parseInt(p[1], 10));
+}
+function fromTimestamp(ms) {
+  var d = new Date(ms);
+  return toDayMinutes(d.getHours(), d.getMinutes());
+}
+// Open the browser / phone time picker pop-up on tap, where supported.
+function openNativePicker(e) {
+  var el = e.currentTarget;
+  if (el && typeof el.showPicker === 'function') { try { el.showPicker(); } catch (err) { /* picker already open or not allowed */ } }
+}
+function rangeOfParts(parts) { var from = DAY_START + parts[0] * PART; return { from: from, to: from + parts.length * PART }; }
+// Nearest start to `start` where a sleep of `len` fits in the range without overlapping.
+function nearestFreeStart(start, len, logged, range) {
+  var fits = function (x) {
+    return x >= range.from && x + len <= range.to && !overlapsAny({ start: x, end: x + len }, logged);
+  };
+  for (var k = 0; k <= (range.to - range.from) / STEP_MIN; k++) {
+    if (fits(start - k * STEP_MIN)) return start - k * STEP_MIN;
+    if (fits(start + k * STEP_MIN)) return start + k * STEP_MIN;
+  }
+  return null;
+}
+function snapToEdge(value, edge, logged, range) {
+  var near = copiesInRange(logged, range.from - SNAP_MIN, range.to + SNAP_MIN);
+  for (var i = 0; i < near.length; i++) {
+    var target = edge === 'end' ? near[i].end : near[i].start;
+    if (Math.abs(value - target) <= SNAP_MIN) return target;
+  }
+  return value;
+}
+
+// Clock geometry
+function angleOf(m) { return mod(m, HALF_DAY) / HALF_DAY * 360; }               // degrees from 12, clockwise
+function pointAt(deg, r) {
+  var a = deg * Math.PI / 180;
+  return { x: +(CX + Math.sin(a) * r).toFixed(1), y: +(CY - Math.cos(a) * r).toFixed(1) };
+}
+// SVG arc on the ring from minute `from` to minute `to` (clockwise). Empty when length is 0.
+function arcPath(from, to, r) {
+  var len = to - from;
+  if (len <= 0) return '';
+  if (len >= HALF_DAY) len = HALF_DAY - 0.5;                                  // full circle
+  var a0 = angleOf(from), a1 = a0 + len / HALF_DAY * 360;
+  var p0 = pointAt(a0, r), p1 = pointAt(a1, r);
+  return 'M' + p0.x + ' ' + p0.y + ' A' + r + ' ' + r + ' 0 ' + (len > HALF_DAY / 2 ? 1 : 0) + ' 1 ' + p1.x + ' ' + p1.y;
+}
+// Pie wedge on the face for one 6-hour part (from minute `from`, 360 minutes long).
+function wedgePath(from, r) {
+  var a0 = angleOf(from), p0 = pointAt(a0, r), p1 = pointAt(a0 + 180, r);
+  return 'M' + CX + ' ' + CY + ' L' + p0.x + ' ' + p0.y + ' A' + r + ' ' + r + ' 0 0 1 ' + p1.x + ' ' + p1.y + ' Z';
+}
+// Pointer -> clock position: distance from the centre and the minute inside the active range.
+function pointerOnClock(e, range) {
+  var r = e.currentTarget.getBoundingClientRect();
+  var k = 300 / r.width;
+  var x = (e.clientX - r.left) * k - CX, y = (e.clientY - r.top) * k - CY;
+  var deg = mod(Math.atan2(x, -y) * 180 / Math.PI, 360);
+  var m12 = deg / 360 * HALF_DAY;
+  return { dist: Math.sqrt(x * x + y * y), x: x + CX, y: y + CY, minutes: range.from + mod(m12 - range.from, HALF_DAY) };
+}
+
+// ---- Component ----
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      // live panel
+      asleep: false,
+      since: null,                            // timestamp of the last toggle; null = sample state
+      now: Date.now(),
+      // past sleep
+      parts: [1],
+      draft: { start: 870, end: 930 },        // 2:30 pm - 3:30 pm
+      drag: null,                             // null | 'start' | 'end' | 'move'
+      grabOffset: 0,
+      step: 5,                                // selected +button; the minus button uses it
+      note: null,                             // null | 'added'
+      logged: [
+        { start: 490, end: 605 },             // 8:10 am - 10:05 am
+        { start: 710, end: 820 },             // 11:50 am - 1:40 pm
+        { start: 1250, end: 1450 },           // 8:50 pm - 12:10 am
+        { start: 1480, end: 1650 }            // 12:40 am - 3:30 am
+      ]
+    };
+  }
+
+  componentDidMount() {
+    var self = this;
+    this.timer = setInterval(function () { self.setState({ now: Date.now() }); }, 1000);
+  }
+  componentWillUnmount() { clearInterval(this.timer); }
+
+  // ---- Live panel ----
+  toggleLive() {
+    var now = Date.now();
+    var st = this.state;
+    if (!st.asleep) { this.setState({ asleep: true, since: now, now: now }); return; }
+    var start = fromTimestamp(st.since);
+    var end = Math.max(fromTimestamp(now), start + 1);
+    this.setState({ asleep: false, since: now, now: now, logged: st.logged.concat([{ start: start, end: end }]) });
+  }
+
+  // ---- Past sleep ----
+  setDraft(d) { this.setState({ draft: d, note: null }); }
+  range() { return rangeOfParts(this.state.parts); }
+
+  // Duration: keep the start, move the end; grow into the next part if needed.
+  setLength(len) {
+    var st = this.state;
+    len = clamp(len, MIN_LEN, MAX_LEN);
+    var parts = st.parts;
+    if (len > PART && parts.length === 1) parts = [parts[0], nextPart(parts[0])];
+    var range = rangeOfParts(parts);
+    len = Math.min(len, range.to - range.from);
+    var start = clamp(st.draft.start, range.from, range.to - len);
+    this.setState({ parts: parts, draft: { start: start, end: start + len }, note: null });
+  }
+
+  // Parts: tap a picked part to drop it (if two); tap a neighbour to add; else pick only that.
+  togglePart(i) {
+    var p = this.state.parts;
+    var next;
+    if (p.indexOf(i) >= 0) next = p.length === 2 ? p.filter(function (x) { return x !== i; }) : p;
+    else if (p.length === 1 && nextPart(p[0]) === i) next = [p[0], i];
+    else if (p.length === 1 && nextPart(i) === p[0]) next = [i, p[0]];
+    else next = [i];
+    var range = rangeOfParts(next);
+    var d = this.state.draft;
+    var len = Math.min(d.end - d.start, range.to - range.from);
+    var start = d.start;
+    while (start < range.from) start += DAY;                    // same time of day, inside the new range
+    while (start >= range.to) start -= DAY;
+    start = clamp(start, range.from, range.to - len);
+    this.setState({ parts: next, draft: { start: start, end: start + len }, note: null });
+  }
+
+  setEnd(which, minutes) {
+    var d = this.state.draft, range = this.range(), logged = this.state.logged;
+    var v = snap(minutes);
+    if (which === 'start') this.setDraft({ start: clamp(snapToEdge(v, 'end', logged, range), range.from, d.end - STEP_MIN), end: d.end });
+    else this.setDraft({ start: d.start, end: clamp(snapToEdge(v, 'start', logged, range), d.start + STEP_MIN, range.to) });
+  }
+  placeAt(start) {                                              // move the whole sleep, keep its length
+    var d = this.state.draft, range = this.range(), logged = this.state.logged;
+    var len = d.end - d.start;
+    var s = snap(start);
+    var after = snapToEdge(s, 'end', logged, range);
+    s = after !== s ? after : snapToEdge(s + len, 'start', logged, range) - len;
+    s = clamp(s, range.from, range.to - len);
+    return { start: s, end: s + len };
+  }
+
+  // Duration buttons. A +button adds its amount and becomes the selected step;
+  // the minus button always takes off the selected step.
+  addStep(minutes) {
+    var d = this.state.draft;
+    this.setLength(d.end - d.start + minutes);
+    this.setState({ step: minutes });
+  }
+  subtractStep() {
+    var d = this.state.draft;
+    this.setLength(d.end - d.start - this.state.step);
+  }
+  resetLength() { this.setLength(RESET_LEN); }
+
+  // Hit zones, from the centre out:
+  //   inner face           - nothing (shows the duration)
+  //   ring band, on the arc   - move the whole sleep (unless right on an end marker)
+  //   ring band, off the arc  - near an end: move that end; else place the sleep there
+  //   outside the band        - grab the nearest end (the dots sit here)
+  pointerDown(e) {
+    var range = this.range();
+    var p = pointerOnClock(e, range);
+    var inBand = Math.abs(p.dist - RING_R) <= RING_HALF_WIDTH;
+    var outside = p.dist > RING_R + RING_HALF_WIDTH && p.dist <= RING_R + OUTER_REACH;
+    if (!inBand && !outside) return;
+    var d = this.state.draft;
+    var near = function (m) {
+      var a = angleOf(m), onRing = pointAt(a, RING_R), dot = pointAt(a, END_DOT_R);
+      return Math.min(Math.hypot(p.x - onRing.x, p.y - onRing.y), Math.hypot(p.x - dot.x, p.y - dot.y));
+    };
+    var ds = near(d.start), de = near(d.end), nearest = Math.min(ds, de);
+    var onArc = p.minutes > d.start && p.minutes < d.end;
+    var endWhich = ds <= de ? 'start' : 'end';
+    var what, draft = d;
+    if (outside) what = endWhich;
+    else if (onArc) what = nearest <= END_INSIDE_PX ? endWhich : 'move';
+    else if (nearest <= END_GRAB_PX) what = endWhich;
+    else { what = 'move'; draft = this.placeAt(p.minutes - (d.end - d.start) / 2); }   // tap empty ring
+    if (e.currentTarget.setPointerCapture) e.currentTarget.setPointerCapture(e.pointerId);
+    this.setState({ drag: what, grabOffset: p.minutes - draft.start, draft: draft, note: null });
+  }
+  pointerMove(e) {
+    var what = this.state.drag;
+    if (!what) return;
+    var m = pointerOnClock(e, this.range()).minutes;
+    if (what === 'move') this.setDraft(this.placeAt(m - this.state.grabOffset));
+    else this.setEnd(what, m);
+  }
+  pointerUp() { if (this.state.drag) this.setState({ drag: null }); }
+
+  // Typed times. The parts of day follow when the times span at most two neighbouring parts.
+  setTyped(which, value) {
+    if (!value) return;
+    var m = fromInput(value);
+    var d = this.state.draft;
+    var nd = which === 'from' ? { start: m, end: d.end } : { start: d.start, end: m };
+    if (nd.end <= nd.start) {
+      if (nd.end + DAY - nd.start <= MAX_LEN) nd.end += DAY;           // crossed 6 am, e.g. 4:00 to 7:00
+      else if (which === 'from') nd.end = nd.start + 60;
+      else nd.start = nd.end - 60;
+    }
+    var first = partOf(nd.start), last = partOf(nd.end - 1), len = nd.end - nd.start;
+    var parts = this.state.parts;
+    if (first === last && len <= PART) parts = [first];
+    else if (nextPart(first) === last && len <= 2 * PART) parts = [first, last];
+    var range = rangeOfParts(parts);                                    // same stretch of the loop
+    while (nd.start < range.from) { nd.start += DAY; nd.end += DAY; }
+    while (nd.start >= range.to) { nd.start -= DAY; nd.end -= DAY; }
+    this.setState({ parts: parts, draft: nd, note: null });
+  }
+
+  addDraft() {
+    var st = this.state, d = st.draft;
+    if (overlapsAny(d, st.logged)) return;
+    // Store sleeps that start after 6 am of the next day (wrapped range) back on today's loop.
+    var stored = d.start >= DAY_START + DAY ? { start: d.start - DAY, end: d.end - DAY } : d;
+    var logged = st.logged.concat([stored]);
+    // Offer the same duration again in the next free space.
+    var len = d.end - d.start;
+    var next = nearestFreeStart(d.end, len, logged, this.range());
+    var update = { logged: logged, note: 'added' };
+    if (next !== null) update.draft = { start: next, end: next + len };
+    this.setState(update);
+  }
+
+  // ---- Values for the template ----
+  liveVals() {
+    var self = this;
+    var st = this.state;
+    var a = st.asleep;
+    var line, value;
+    if (a) { line = 'Fell asleep at ' + formatClock(fromTimestamp(st.since)); value = formatTimer(st.now - st.since); }
+    else if (st.since) { line = 'Woke up at ' + formatClock(fromTimestamp(st.since)); value = formatLength(Math.floor((st.now - st.since) / 60000)); }
+    else { line = 'Woke up at 1:40 pm'; value = '3h 37m'; }       // sample state
+    return {
+      asleep: a, awake: !a, asleepStr: String(a),
+      sinceLine: line, statusLabel: a ? 'Asleep' : 'Awake', bigTime: value,
+      cardBg: a ? COLOR.night : COLOR.white, cardFg: a ? COLOR.white : COLOR.ink,
+      iconBg: a ? COLOR.nightSoft : COLOR.lilac, iconFg: a ? COLOR.white : COLOR.sleep, subFg: a ? COLOR.lilacText : COLOR.muted,
+      btnBg: a ? COLOR.sun : COLOR.sleep, btnFg: a ? COLOR.ink : COLOR.white, btnLabel: a ? 'Wake up' : 'Start sleep',
+      toggle: function () { self.toggleLive(); }
+    };
+  }
+  listVals() {
+    return {
+      sleeps: this.state.logged.slice().sort(function (x, y) { return y.start - x.start; }).map(function (b) {
+        return { range: formatClock(b.start) + ' – ' + formatClock(b.end), duration: formatLength(b.end - b.start) };
+      })
+    };
+  }
+
+  renderVals() {
+    return Object.assign({}, this.liveVals(), this.pastSleepVals(), this.listVals());
+  }
+
+  pastSleepVals() {
+    var self = this;
+    var st = this.state, d = st.draft, range = this.range();
+    var overlapping = overlapsAny(d, st.logged);
+    var hint = overlapping ? 'Overlaps a sleep already logged.' : (st.note === 'added' ? 'Added.' : '');
+
+    var numbers = {};                                          // dim clock numbers outside the range
+    for (var n = 1; n <= 12; n++) {
+      var m = range.from + mod(n * 60 - range.from, HALF_DAY);
+      numbers['n' + n] = m <= range.to ? '1' : '0.3';
+    }
+    var labelOf = function (m) { return m >= 60 ? m / 60 + 'h' : m + 'm'; };
+    // Face tint + icon for each selected part (the face shows 12 hours, so at most two parts).
+    var face = function (k) {
+      var part = st.parts[k];
+      if (part === undefined) return { d: '', fill: 'none', ix: 0, iy: 0, ink: 'none', icon: '', show: '0' };
+      var look = PART_LOOK[part];
+      var from = DAY_START + part * PART;
+      var ip = pointAt(angleOf(from) + 90, ICON_R);
+      return { d: wedgePath(from, FACE_R), fill: look.fill, ink: look.ink, icon: look.icon,
+        ix: (ip.x - 9.6).toFixed(1), iy: (ip.y - 9.6).toFixed(1), show: '1' };
+    };
+    var tick = function (minute) {
+      var a = angleOf(minute), o = pointAt(a, RING_R + 18), i = pointAt(a, RING_R - 18);
+      return { x1: o.x, y1: o.y, x2: i.x, y2: i.y };
+    };
+    var parts = {};
+    [0, 1, 2, 3].forEach(function (i) {
+      var on = st.parts.indexOf(i) >= 0;
+      parts['p' + i] = { on: String(on), bg: on ? COLOR.night : COLOR.white, fg: on ? COLOR.white : COLOR.inkSoft,
+        border: on ? COLOR.night : COLOR.line, pick: function () { self.togglePart(i); } };
+    });
+
+    return Object.assign(numbers, parts, {
+      adds: ADD_STEPS.map(function (o) {
+        var on = st.step === o.minutes;
+        return {
+          label: o.label, on: String(on), fw: on ? '700' : '400',
+          bg: on ? COLOR.night : COLOR.white, fg: on ? COLOR.white : COLOR.ink, border: on ? COLOR.night : COLOR.line,
+          add: function () { self.addStep(o.minutes); }
+        };
+      }),
+      stepLabel: labelOf(st.step),
+      minus: function () { self.subtractStep(); },
+      minusAria: 'Take off ' + labelOf(st.step),
+      reset: function () { self.resetLength(); },
+      face0: face(0),
+      face1: face(1),
+      grip: (function () {
+        var mid = angleOf(d.start) + (d.end - d.start) / HALF_DAY * 180;
+        var g = pointAt(mid, RING_R);
+        return { x: g.x, y: g.y, rot: (mid + 90).toFixed(1) };
+      })(),
+      windowArc: arcPath(range.from, range.to, RING_R),
+      loggedArcs: copiesInRange(st.logged, range.from, range.to).map(function (b) {
+        return arcPath(Math.max(b.start, range.from), Math.min(b.end, range.to), RING_R);
+      }).join(' '),
+      draftArc: arcPath(d.start, d.end, RING_R),
+      draftColor: overlapping ? COLOR.warnFill : COLOR.sleep,
+      startTick: tick(d.start),
+      endTick: tick(d.end),
+      startDot: pointAt(angleOf(d.start), END_DOT_R),
+      endDot: pointAt(angleOf(d.end), END_DOT_R),
+      lenText: formatLength(d.end - d.start),
+      fromVal: formatInput(d.start),
+      toVal: formatInput(d.end),
+      openPicker: openNativePicker,
+      onFrom: function (e) { self.setTyped('from', e.target.value); },
+      onTo: function (e) { self.setTyped('to', e.target.value); },
+      rangeText: formatClock(d.start) + ' – ' + formatClock(d.end),
+      clockAria: 'Sleep from ' + formatClock(d.start) + ' to ' + formatClock(d.end) + ', ' + formatLength(d.end - d.start),
+      cursor: st.drag ? 'grabbing' : 'pointer',
+      down: function (e) { self.pointerDown(e); },
+      move: function (e) { self.pointerMove(e); },
+      up: function () { self.pointerUp(); },
+      hint: hint, hasHint: hint !== '', hintFg: overlapping ? COLOR.warn : COLOR.ok,
+      addDisabled: overlapping,
+      addBg: overlapping ? COLOR.sleepDisabled : COLOR.sleep,
+      addSleep: function () { self.addDraft(); }
+    });
+  }
+}
+</script>
+</body>
+</html>

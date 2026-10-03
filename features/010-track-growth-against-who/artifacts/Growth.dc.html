@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Growth</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&amp;family=Atkinson+Hyperlegible:wght@400;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#2F5DA8}a:hover{color:#1F4580}
+button{font:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 1160px; box-sizing: border-box; background: #F6F3EE; color: #1E2227; font-family: 'Atkinson Hyperlegible', system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden">
+<div style="flex-grow: 1; padding: 56px 20px 16px; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<h1 style="margin: 0; font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: 30px; font-weight: 700">Growth</h1>
+<button style="min-height: 44px; padding: 0 16px; border-radius: 22px; border: none; background: #2E7A57; color: #FFFFFF; font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>Add</button>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; background: #FFFFFF; border-radius: 16px; padding: 4px 4px 4px 16px">
+<div style="font-size: 15px; color: #3C4248">Using the WHO standard for <strong style="color: #1E2227">{{sexWordCap}}</strong>, from the baby profile</div>
+<a href="Profile.dc.html" style="min-height: 44px; min-width: 44px; padding: 0 14px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; text-decoration: none; color: #2F5DA8; flex-shrink: 0">Edit</a>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<div style="background: #FFFFFF; border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 14px; color: #2E7A57; font-weight: 700">Weight</div>
+<div style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: 40px; font-weight: 700; line-height: 1">4.20 kg</div>
+<div style="font-size: 14px; color: #3C4248">+250 g in 7 days</div>
+<div style="align-self: flex-start; font-size: 13px; font-weight: 700; color: #1F5A3F; background: #E0F1E8; border-radius: 999px; padding: 4px 10px">{{weightPct}}</div>
+</div>
+<div style="background: #FFFFFF; border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 14px; color: #2E7A57; font-weight: 700">Length</div>
+<div style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: 40px; font-weight: 700; line-height: 1">54 cm</div>
+<div style="font-size: 14px; color: #3C4248">+1.5 cm in 7 days</div>
+<div style="align-self: flex-start; font-size: 13px; font-weight: 700; color: #1F5A3F; background: #E0F1E8; border-radius: 999px; padding: 4px 10px">{{lengthPct}}</div>
+</div>
+</div>
+<div style="background: #FFFFFF; border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+<div style="display: flex; flex-direction: column; gap: 2px">
+<h2 style="margin: 0; font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: 18px; font-weight: 700">{{chartTitle}}</h2>
+<div style="font-size: 13px; color: #5B6168">{{chartSub}}</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background: #F0ECE5; border-radius: 14px; padding: 3px; gap: 3px">
+<button aria-pressed="{{isWeight}}" onClick="{{pickWeight}}" style="min-height: 44px; padding: 0 14px; border: none; border-radius: 11px; font-size: 14px; background: {{weightBg}}; font-weight: {{weightFw}}; color: {{weightFg}}">Weight</button>
+<button aria-pressed="{{isLength}}" onClick="{{pickLength}}" style="min-height: 44px; padding: 0 14px; border: none; border-radius: 11px; font-size: 14px; background: {{lengthBg}}; font-weight: {{lengthFw}}; color: {{lengthFg}}">Length</button>
+</div>
+</div>
+<svg width="326" height="196" viewBox="0 0 326 196" role="img" aria-label="{{chartAria}}">
+<polygon points="{{outerPts}}" fill="#EEF3EF"></polygon>
+<polygon points="{{innerPts}}" fill="#D9E8DF"></polygon>
+<polyline points="{{medianPts}}" fill="none" stroke="#6F8F7E" stroke-width="1.5" stroke-dasharray="4 4"></polyline>
+<line x1="12" y1="172" x2="279" y2="172" stroke="#E4DED5" stroke-width="1"></line>
+<text x="12" y="12" font-size="11" fill="#5B6168">{{unit}}</text>
+<text x="286" y="{{l97}}" font-size="11" fill="#5B6168">97th</text>
+<text x="286" y="{{l85}}" font-size="11" fill="#5B6168">85th</text>
+<text x="286" y="{{l50}}" font-size="11" fill="#3C4248" font-weight="700">50th</text>
+<text x="286" y="{{l15}}" font-size="11" fill="#5B6168">15th</text>
+<text x="286" y="{{l3}}" font-size="11" fill="#5B6168">3rd</text>
+<polyline points="{{babyPts}}" fill="none" stroke="#2E7A57" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+<circle cx="12" cy="{{b0}}" r="5" fill="#FFFFFF" stroke="#2E7A57" stroke-width="2.5"></circle>
+<circle cx="101" cy="{{b1}}" r="5" fill="#FFFFFF" stroke="#2E7A57" stroke-width="2.5"></circle>
+<circle cx="190" cy="{{b2}}" r="5" fill="#FFFFFF" stroke="#2E7A57" stroke-width="2.5"></circle>
+<circle cx="279" cy="{{b3}}" r="6" fill="#2E7A57"></circle>
+<text x="12" y="190" font-size="12" fill="#5B6168" text-anchor="start">Birth</text>
+<text x="101" y="190" font-size="12" fill="#5B6168" text-anchor="middle">Wk 1</text>
+<text x="190" y="190" font-size="12" fill="#5B6168" text-anchor="middle">Wk 2</text>
+<text x="279" y="190" font-size="12" fill="#1E2227" font-weight="700" text-anchor="middle">Wk 3</text>
+</svg>
+<div style="display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 13px; color: #3C4248">
+<div style="display: flex; align-items: center; gap: 6px"><div style="width: 14px; height: 10px; border-radius: 3px; background: #D9E8DF"></div>15th–85th</div>
+<div style="display: flex; align-items: center; gap: 6px"><div style="width: 14px; height: 10px; border-radius: 3px; background: #EEF3EF; border: 1px solid #D9E8DF"></div>3rd–97th</div>
+<div style="display: flex; align-items: center; gap: 6px"><div style="width: 14px; height: 0; border-top: 2px dashed #6F8F7E"></div>Median</div>
+<div style="display: flex; align-items: center; gap: 6px"><div style="width: 10px; height: 10px; border-radius: 5px; background: #2E7A57"></div>[Baby]</div>
+</div>
+<div style="font-size: 12px; color: #5B6168; line-height: 1.4">WHO Child Growth Standards. A guide only. Ask your maternal and child health nurse if you are unsure.</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h2 style="margin: 0; font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: 18px; font-weight: 700">History</h2>
+<div style="display: flex; flex-direction: column">
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 84px 64px; align-items: center; min-height: 48px; border-bottom: 1px solid #E4DED5; font-size: 16px">
+<div>1 Oct</div><div style="font-weight: 700">4.20 kg</div><div style="text-align: right">54 cm</div>
+</div>
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 84px 64px; align-items: center; min-height: 48px; border-bottom: 1px solid #E4DED5; font-size: 16px">
+<div>24 Sep</div><div style="font-weight: 700">3.95 kg</div><div style="text-align: right">52.5 cm</div>
+</div>
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 84px 64px; align-items: center; min-height: 48px; border-bottom: 1px solid #E4DED5; font-size: 16px">
+<div>17 Sep</div><div style="font-weight: 700">3.60 kg</div><div style="text-align: right">51 cm</div>
+</div>
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 84px 64px; align-items: center; min-height: 48px; font-size: 16px">
+<div>10 Sep · birth</div><div style="font-weight: 700">3.40 kg</div><div style="text-align: right">50 cm</div>
+</div>
+</div>
+</div>
+</div>
+<nav style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background: #FFFFFF; border-top: 1px solid #E4DED5; padding: 8px 12px 28px">
+<a href="Main.dc.html" style="min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: #5B6168; font-size: 13px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Today</a>
+<a href="Summary.dc.html" style="min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: #5B6168; font-size: 13px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"></rect><path d="M8 15v-3M12 15V9M16 15v-5"></path></svg>Summary</a>
+<a href="Growth.dc.html" style="min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-decoration: none; color: #1E2227; font-weight: 700; font-size: 13px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19l5-6 4 3 7-9"></path><path d="M15 7h5v5"></path></svg>Growth</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"babyGender":{"editor":"enum","options":["girl","boy"],"default":"girl","section":"Baby profile (preview only)"},"$preview":{"width":390,"height":1160}}'>
+// WHO Child Growth Standards, birth to 13 weeks, weeks 0-3.
+// Each row: P3, P15, P25, P50, P75, P85, P97.
+var WHO = {
+  girl: {
+    weight: [[2.4,2.8,2.9,3.2,3.6,3.7,4.2],[2.5,2.9,3.0,3.3,3.7,3.9,4.4],[2.7,3.1,3.2,3.6,3.9,4.1,4.6],[2.9,3.3,3.5,3.8,4.2,4.4,5.0]],
+    length: [[45.6,47.2,47.9,49.1,50.4,51.1,52.7],[46.8,48.4,49.1,50.3,51.6,52.3,53.9],[47.9,49.5,50.2,51.5,52.8,53.5,55.1],[48.8,50.5,51.2,52.5,53.8,54.5,56.1]]
+  },
+  boy: {
+    weight: [[2.5,2.9,3.0,3.3,3.7,3.9,4.3],[2.6,3.0,3.2,3.5,3.8,4.0,4.5],[2.8,3.2,3.4,3.8,4.1,4.3,4.9],[3.1,3.5,3.7,4.1,4.5,4.7,5.2]],
+    length: [[46.3,47.9,48.6,49.9,51.2,51.8,53.4],[47.5,49.1,49.8,51.1,52.4,53.1,54.7],[48.8,50.4,51.1,52.3,53.6,54.3,55.9],[49.8,51.4,52.1,53.4,54.7,55.4,57.0]]
+  }
+};
+var PCTS = [3,15,25,50,75,85,97];
+var BABY = { weight: [3.40,3.60,3.95,4.20], length: [50,51,52.5,54] };
+var DOMAIN = { weight: [2.2,5.4], length: [45,58] };
+var XS = [12,101,190,279];
+
+function percentileLabel(v, row) {
+  if (v < row[0]) return 'Below 3rd percentile';
+  if (v > row[6]) return 'Above 97th percentile';
+  for (var i = 0; i < 6; i++) {
+    if (v >= row[i] && v <= row[i + 1]) {
+      var span = row[i + 1] - row[i];
+      var p = span === 0 ? PCTS[i] : PCTS[i] + (PCTS[i + 1] - PCTS[i]) * (v - row[i]) / span;
+      var r = Math.max(5, Math.min(95, Math.round(p / 5) * 5));
+      return 'About ' + r + 'th percentile';
+    }
+  }
+  return '';
+}
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { metric: 'weight' };
+  }
+  renderVals() {
+    // Gender comes from the baby profile. In this concept it is a tweak.
+    var sex = this.props.babyGender === 'boy' ? 'boy' : 'girl';
+    var metric = this.state.metric;
+    var rows = WHO[sex][metric];
+    var d = DOMAIN[metric];
+    var y = function (v) { return (170 - (v - d[0]) / (d[1] - d[0]) * 160).toFixed(1); };
+    var line = function (vals) { return vals.map(function (v, i) { return XS[i] + ',' + y(v); }).join(' '); };
+    var col = function (k) { return rows.map(function (r) { return r[k]; }); };
+    var band = function (lo, hi) {
+      var low = col(lo).map(function (v, i) { return XS[i] + ',' + y(v); });
+      var high = col(hi).map(function (v, i) { return XS[i] + ',' + y(v); }).reverse();
+      return low.concat(high).join(' ');
+    };
+    var baby = BABY[metric];
+    var last = rows[3];
+    var self = this;
+    var sexWord = sex === 'girl' ? 'girls' : 'boys';
+    var unit = metric === 'weight' ? 'kg' : 'cm';
+    var babyNow = baby[3] + ' ' + unit;
+    var babyPct = percentileLabel(baby[3], last);
+    return {
+      isWeight: metric === 'weight' ? 'true' : 'false',
+      isLength: metric === 'length' ? 'true' : 'false',
+      weightBg: metric === 'weight' ? '#FFFFFF' : 'transparent',
+      weightFw: metric === 'weight' ? '700' : '400',
+      weightFg: metric === 'weight' ? '#1E2227' : '#5B6168',
+      lengthBg: metric === 'length' ? '#FFFFFF' : 'transparent',
+      lengthFw: metric === 'length' ? '700' : '400',
+      lengthFg: metric === 'length' ? '#1E2227' : '#5B6168',
+      pickWeight: function () { self.setState({ metric: 'weight' }); },
+      pickLength: function () { self.setState({ metric: 'length' }); },
+      weightPct: percentileLabel(BABY.weight[3], WHO[sex].weight[3]),
+      lengthPct: percentileLabel(BABY.length[3], WHO[sex].length[3]),
+      chartTitle: metric === 'weight' ? 'Weight' : 'Length',
+      sexWordCap: sex === 'girl' ? 'girls' : 'boys',
+      chartSub: 'vs WHO ' + sexWord + ' standard',
+      chartAria: (metric === 'weight' ? 'Weight' : 'Length') + ' compared with WHO ' + sexWord + ' percentiles. Now ' + babyNow + ', ' + babyPct + '.',
+      unit: unit,
+      outerPts: band(0, 6),
+      innerPts: band(1, 5),
+      medianPts: line(col(3)),
+      babyPts: line(baby),
+      l97: (parseFloat(y(last[6])) + 4).toFixed(1),
+      l85: (parseFloat(y(last[5])) + 4).toFixed(1),
+      l50: (parseFloat(y(last[3])) + 4).toFixed(1),
+      l15: (parseFloat(y(last[1])) + 4).toFixed(1),
+      l3: (parseFloat(y(last[0])) + 4).toFixed(1),
+      b0: y(baby[0]),
+      b1: y(baby[1]),
+      b2: y(baby[2]),
+      b3: y(baby[3])
+    };
+  }
+}
+</script>
+</body>
+</html>

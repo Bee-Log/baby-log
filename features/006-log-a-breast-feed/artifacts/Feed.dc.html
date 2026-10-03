@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Log a feed</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&amp;family=Atkinson+Hyperlegible:wght@400;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#2F5DA8}a:hover{color:#1F4580}
+button{font:inherit;cursor:pointer}
+input{font:inherit}
+.kb:focus-visible{outline:3px solid #2F5DA8;outline-offset:2px}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F6F3EE; color: #1E2227; font-family: 'Atkinson Hyperlegible', system-ui, sans-serif; display: flex; flex-direction: column; padding: 56px 20px 36px; gap: 22px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<a href="Main.dc.html" aria-label="Close" style="width: 44px; height: 44px; border-radius: 22px; background: #FFFFFF; border: 1px solid #E4DED5; color: #1E2227; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg></a>
+<h1 style="margin: 0; font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: 22px; font-weight: 700">Feed</h1>
+<div style="width: 44px"></div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background: #EAE5DC; border-radius: 16px; padding: 4px; gap: 4px">
+<button class="kb" aria-pressed="{{breastOn}}" onClick="{{toBreast}}" style="min-height: 44px; border: none; border-radius: 12px; background: {{breastBg}}; color: {{breastFg}}; font-weight: {{breastFw}}; font-size: 16px">Breast</button>
+<button class="kb" aria-pressed="{{bottleOn}}" onClick="{{toBottle}}" style="min-height: 44px; border: none; border-radius: 12px; background: {{bottleBg}}; color: {{bottleFg}}; font-weight: {{bottleFw}}; font-size: 16px">Bottle</button>
+</div>
+<sc-if value="{{modeBreast}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 8px">
+<div style="font-size: 14px; color: #5B6168">Started 5:17 pm</div>
+<div style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: 72px; font-weight: 700; line-height: 1; letter-spacing: -1px">08:32</div>
+<div style="font-size: 15px; color: #3C4248">Left 08:32 · Right 00:00</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+<button style="aspect-ratio: 1; border-radius: 999px; border: none; background: #2F5DA8; color: #FFFFFF; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px"><span style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: 34px; font-weight: 700">Left</span><span style="font-size: 15px; display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg>Tap to pause</span></button>
+<button style="aspect-ratio: 1; border-radius: 999px; border: 2px solid #2F5DA8; background: #FFFFFF; color: #2F5DA8; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px"><span style="font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: 34px; font-weight: 700">Right</span><span style="font-size: 15px; display: flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l11 7-11 7z"></path></svg>Tap to switch</span></button>
+</div>
+<div style="background: #FFFFFF; border-radius: 16px; padding: 4px 16px; display: flex; flex-direction: column">
+<div style="display: flex; justify-content: space-between; align-items: center; min-height: 52px; border-bottom: 1px solid #EEE9E1">
+<div style="font-size: 16px">Last time</div>
+<div style="font-size: 16px; color: #3C4248">Left · 3:02 pm</div>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: center; min-height: 52px">
+<label for="feed-note" style="font-size: 16px">Note</label>
+<input id="feed-note" type="text" placeholder="Optional" style="font: inherit; font-size: 16px; border: none; text-align: right; background: transparent; color: #1E2227; width: 60%">
+</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{modeBottle}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 16px; align-items: center">
+<svg width="150" height="300" viewBox="0 0 150 300" role="img" aria-label="{{bottleAria}}" onPointerDown="{{dragDown}}" onPointerMove="{{dragMove}}" onPointerUp="{{dragUp}}" onPointerCancel="{{dragUp}}" style="touch-action: none; cursor: ns-resize">
+<defs><clipPath id="bottle-body"><rect x="30" y="64" width="90" height="216" rx="22"></rect></clipPath></defs>
+<path d="M60 46 Q60 14 75 12 Q90 14 90 46 Z" fill="#F3D9B1" stroke="#D9B98A" stroke-width="1.5"></path>
+<rect x="44" y="44" width="62" height="22" rx="6" fill="#B9AEE3"></rect>
+<rect x="30" y="64" width="90" height="216" rx="22" fill="#FFFFFF" stroke="#C9C2B6" stroke-width="2"></rect>
+<g clip-path="url(#bottle-body)"><rect x="30" y="{{milkTop}}" width="90" height="{{milkHeight}}" fill="{{milkFill}}"></rect><rect x="30" y="{{milkTop}}" width="90" height="3" fill="{{milkEdge}}"></rect></g>
+<path d="M34 79h14M34 102.5h8M34 126h14M34 149.5h8M34 173h14M34 196.5h8M34 220h14M34 243.5h8" stroke="#8A8F96" stroke-width="1.5" stroke-linecap="round"></path>
+<text x="52" y="83" font-size="11" fill="#5B6168">240</text>
+<text x="52" y="130" font-size="11" fill="#5B6168">180</text>
+<text x="52" y="177" font-size="11" fill="#5B6168">120</text>
+<text x="52" y="224" font-size="11" fill="#5B6168">60</text>
+<line x1="24" y1="{{milkTop}}" x2="126" y2="{{milkTop}}" stroke="#2F5DA8" stroke-width="2" stroke-dasharray="4 3"></line>
+<g transform="translate(126 {{milkTop}})"><rect x="0" y="-14" width="22" height="28" rx="8" fill="#2F5DA8"></rect><path d="M6 -4h10M6 0h10M6 4h10" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"></path></g>
+</svg>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<label style="display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 700; color: #3C4248">Amount
+<div style="display: flex; align-items: baseline; gap: 6px; border-bottom: 2px solid #2F5DA8">
+<input class="kb" type="number" inputmode="numeric" min="0" max="{{maxMl}}" step="10" value="{{mlValue}}" onChange="{{onMl}}" style="width: 100%; min-width: 0; border: none; background: transparent; font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: 44px; font-weight: 700; color: #1E2227; padding: 0">
+<span style="font-size: 18px; font-weight: 700; color: #3C4248">ml</span>
+</div>
+</label>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<button class="kb" onClick="{{minus10}}" aria-label="10 ml less" style="min-height: 48px; border-radius: 14px; border: none; background: #E3ECF8; color: #1F4580; font-size: 16px; font-weight: 700">−10</button>
+<button class="kb" onClick="{{plus10}}" aria-label="10 ml more" style="min-height: 48px; border-radius: 14px; border: none; background: #E3ECF8; color: #1F4580; font-size: 16px; font-weight: 700">+10</button>
+</div>
+<div role="group" aria-label="Milk" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px">
+<button class="kb" aria-pressed="{{formulaOn}}" onClick="{{toFormula}}" style="min-height: 44px; border-radius: 12px; border: 1px solid {{formulaBorder}}; background: {{formulaBg}}; color: {{formulaFg}}; font-size: 14px; font-weight: 700">Formula</button>
+<button class="kb" aria-pressed="{{expressedOn}}" onClick="{{toExpressed}}" style="min-height: 44px; border-radius: 12px; border: 1px solid {{expressedBorder}}; background: {{expressedBg}}; color: {{expressedFg}}; font-size: 14px; font-weight: 700">Expressed</button>
+</div>
+<div style="font-size: 13px; color: #3C4248">Drag the bottle, or type the amount.</div>
+</div>
+</div>
+<div style="background: #FFFFFF; border-radius: 16px; padding: 4px 16px; display: flex; flex-direction: column">
+<div style="display: flex; justify-content: space-between; align-items: center; min-height: 52px; border-bottom: 1px solid #EEE9E1">
+<label for="bottle-time" style="font-size: 16px">Fed at</label>
+<input id="bottle-time" class="kb" type="time" step="300" value="{{fedAt}}" onClick="{{openPicker}}" onChange="{{onFedAt}}" style="font-size: 16px; font-weight: 700; border: none; background: transparent; color: #1E2227; text-align: right; cursor: pointer">
+</div>
+<div style="display: flex; justify-content: space-between; align-items: center; min-height: 52px">
+<div style="font-size: 16px">Last bottle</div>
+<div style="font-size: 16px; color: #3C4248">90 ml · 11:50 am</div>
+</div>
+</div>
+</div>
+</sc-if>
+<div style="flex-grow: 1"></div>
+<a href="Main.dc.html" style="min-height: 56px; border-radius: 18px; background: #1E2227; color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px">{{saveLabel}}</a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+/*
+ * Log a feed (concept prototype)
+ * ==============================
+ * Breast: the timer layout from the first concept (static in this prototype).
+ * Bottle: set the amount three ways, all kept in sync:
+ *   - drag up / down anywhere on the bottle (the milk level follows, snaps to ML_STEP),
+ *   - type the number (on a phone this opens the number keypad),
+ *   - -10 / +10 buttons.
+ * Milk type: formula or expressed (changes the milk colour). "Fed at" is a native time
+ * field; a tap opens the phone's time picker.
+ *
+ * Bottle geometry (svg units = px at this size): 0 ml sits at y = ML_ZERO_Y,
+ * MAX_ML at y = ML_FULL_Y. The scale marks (every 30 ml, labels every 60 ml) are drawn for
+ * that mapping: change these two numbers and the marks must move too.
+ * Note: this is a design prototype. State is local to this artboard; nothing is saved.
+ */
+var MAX_ML = 240;
+var ML_STEP = 10;
+var ML_ZERO_Y = 267;            // bottom of the milk
+var ML_FULL_Y = 79;             // top of the scale (MAX_ML)
+var MILK = {
+  formula: { fill: '#F6E7C1', edge: '#E2C98A' },
+  expressed: { fill: '#FBEEE6', edge: '#E9C9B6' }
+};
+var COLOR = { ink: '#1E2227', muted: '#5B6168', line: '#E4DED5', white: '#FFFFFF', blue: '#2F5DA8' };
+
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
+function yOfMl(ml) { return ML_ZERO_Y - ml / MAX_ML * (ML_ZERO_Y - ML_FULL_Y); }
+function mlOfY(y) { return Math.round((ML_ZERO_Y - y) / (ML_ZERO_Y - ML_FULL_Y) * MAX_ML / ML_STEP) * ML_STEP; }
+function openNativePicker(e) {
+  var el = e.currentTarget;
+  if (el && typeof el.showPicker === 'function') { try { el.showPicker(); } catch (err) { /* already open or not allowed */ } }
+}
+function seg(on) { return { bg: on ? COLOR.white : 'transparent', fg: on ? COLOR.ink : COLOR.muted, fw: on ? '700' : '400' }; }
+function chip(on) { return { bg: on ? COLOR.blue : COLOR.white, fg: on ? COLOR.white : COLOR.ink, border: on ? COLOR.blue : COLOR.line }; }
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    var now = new Date();
+    this.state = {
+      mode: 'bottle',             // 'breast' | 'bottle'
+      ml: 90,
+      milk: 'formula',            // 'formula' | 'expressed'
+      fedAt: pad2(now.getHours()) + ':' + pad2(Math.floor(now.getMinutes() / 5) * 5),
+      dragging: false
+    };
+  }
+  setMl(ml) { this.setState({ ml: clamp(ml, 0, MAX_ML) }); }
+  // Pointer y on the bottle -> ml. The svg may be scaled, so convert to svg units first.
+  mlAtPointer(e) {
+    var r = e.currentTarget.getBoundingClientRect();
+    return mlOfY((e.clientY - r.top) * (300 / r.height));
+  }
+
+  renderVals() {
+    var self = this;
+    var st = this.state;
+    var top = yOfMl(st.ml);
+    var b = seg(st.mode === 'breast'), t = seg(st.mode === 'bottle');
+    var f = chip(st.milk === 'formula'), x = chip(st.milk === 'expressed');
+    return {
+      modeBreast: st.mode === 'breast', modeBottle: st.mode === 'bottle',
+      breastOn: String(st.mode === 'breast'), bottleOn: String(st.mode === 'bottle'),
+      breastBg: b.bg, breastFg: b.fg, breastFw: b.fw, bottleBg: t.bg, bottleFg: t.fg, bottleFw: t.fw,
+      toBreast: function () { self.setState({ mode: 'breast' }); },
+      toBottle: function () { self.setState({ mode: 'bottle' }); },
+
+      milkTop: top.toFixed(1),
+      milkHeight: st.ml > 0 ? (280 - top).toFixed(1) : '0',
+      milkFill: MILK[st.milk].fill,
+      milkEdge: MILK[st.milk].edge,
+      bottleAria: 'Bottle with ' + st.ml + ' ml. Drag up or down to change.',
+      dragDown: function (e) {
+        if (e.currentTarget.setPointerCapture) e.currentTarget.setPointerCapture(e.pointerId);
+        self.setState({ dragging: true });
+        self.setMl(self.mlAtPointer(e));
+      },
+      dragMove: function (e) { if (self.state.dragging) self.setMl(self.mlAtPointer(e)); },
+      dragUp: function () { if (self.state.dragging) self.setState({ dragging: false }); },
+
+      maxMl: MAX_ML,
+      mlValue: st.ml,
+      onMl: function (e) { var v = parseInt(e.target.value, 10); if (!isNaN(v)) self.setMl(v); },
+      minus10: function () { self.setMl(self.state.ml - ML_STEP); },
+      plus10: function () { self.setMl(self.state.ml + ML_STEP); },
+      formulaOn: String(st.milk === 'formula'), expressedOn: String(st.milk === 'expressed'),
+      formulaBg: f.bg, formulaFg: f.fg, formulaBorder: f.border,
+      expressedBg: x.bg, expressedFg: x.fg, expressedBorder: x.border,
+      toFormula: function () { self.setState({ milk: 'formula' }); },
+      toExpressed: function () { self.setState({ milk: 'expressed' }); },
+
+      fedAt: st.fedAt,
+      openPicker: openNativePicker,
+      onFedAt: function (e) { if (e.target.value) self.setState({ fedAt: e.target.value }); },
+      saveLabel: st.mode === 'bottle' ? 'Save · ' + st.ml + ' ml' : 'Stop and save'
+    };
+  }
+}
+</script>
+</body>
+</html>
