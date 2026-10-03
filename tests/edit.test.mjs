@@ -33,20 +33,6 @@ test('revise: updatedAt moves forward even if this phone clock is behind', () =>
   assert.equal(R.revise(feed, { note: 'x' }, at(7), 'phone-B').updatedAt, feed.updatedAt + 1);
 });
 
-test('restore: puts the earlier values back, newer than what is stored, and clears a delete', () => {
-  const edited = R.revise(feed, { t: at(8), d: { kind: 'Bottle', milk: 'Formula', ml: 30 } }, at(10), 'phone-B');
-  const back = R.restore(feed, edited, at(10, 1), 'phone-B');
-  assert.deepEqual(plain({ ...back, updatedAt: 0, deviceId: 0 }), plain({ ...feed, updatedAt: 0, deviceId: 0 }));
-  assert.ok(back.updatedAt > edited.updatedAt, 'it wins the merge over the edit');
-
-  const gone = R.tombstone(feed, at(10), 'phone-B');
-  const undone = R.restore(feed, gone, at(10, 2), 'phone-B');
-  assert.ok(!('deleted' in undone), 'Undo of a delete brings the entry back');
-  assert.ok(undone.updatedAt > gone.updatedAt, 'it wins over the tombstone');
-  // A clock that is behind still gives a newer record.
-  assert.equal(R.restore(feed, gone, at(1), 'phone-B').updatedAt, gone.updatedAt + 1);
-});
-
 test('hh:mm for the time field', () => {
   assert.equal(R.hhmm(at(9, 5)), '09:05');
   assert.equal(R.hhmm(at(0, 0)), '00:00');

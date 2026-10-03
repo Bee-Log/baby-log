@@ -83,4 +83,5 @@ none
 - Entries stay on the phone that logged them until sync is built.
 
 ## Feedback
-(Filled in when someone tests it. Leave empty at sign-off.)
+- 2026-10-03 (owner): the **Undo** button covered other buttons, so Undo was removed for now.
+- 2026-10-03 (owner): the two big round Left / Right buttons use too much space, and the owner wants to edit Left and Right minutes separately. Not done yet: it needs two new optional data fields (minutes per side) and the owner's approval. A proposal with options is in `docs/ux/feed-and-edit-experience.md`.

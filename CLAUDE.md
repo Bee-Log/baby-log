@@ -16,6 +16,7 @@ features/NNN-slug/      SIGNOFF.md + artifacts/ for each feature
 BOARD.md                generated list of features by status (never edit by hand)
 scripts/make_board.py   rebuilds BOARD.md from the SIGNOFF.md headers
 prototype/baby-log.html first prototype, for reference only
+docs/ux/                how the screens work now and what to design next (share with Claude Design)
 DEPLOY.md               how test and live are published, rollback, links
 scripts/build.mjs       builds src/ into dist/test and dist/live (no dependencies)
 tests/                  node:test checks, run with `npm test`

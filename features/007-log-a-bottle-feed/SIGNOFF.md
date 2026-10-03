@@ -79,4 +79,6 @@ Record how much milk the baby had from a bottle.
 - Entries stay on the phone that logged them until sync is built.
 
 ## Feedback
-(Filled in when someone tests it. Leave empty at sign-off.)
+- 2026-10-03 (owner): the word **Expressed** ran outside its button on a small phone. Fixed (the bottle is a little smaller on narrow phones; a test checks 320, 360 and 390 px).
+- 2026-10-03 (owner): the **Undo** button covered other buttons, so Undo was removed for now.
+- 2026-10-03 (owner): added a **Note** to the bottle form, next to Fed at, for logging and editing (answers the open question in this signoff). The "Last bottle" row is now a small line under the Breast / Bottle switch.
