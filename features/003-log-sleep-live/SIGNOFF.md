@@ -2,7 +2,7 @@
 id: 003
 name: Log sleep live
 slug: log-sleep-live
-status: Ready
+status: Building
 updated: 2026-10-03
 ---
 
