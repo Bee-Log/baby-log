@@ -387,3 +387,52 @@ test('a feed without details (for example from another phone) does not break the
   assert.deepEqual(errors, []);
   await context.close();
 });
+
+test('breast time can be entered by hand: minutes per side and the start time, no timer', async () => {
+  const { context, page, errors } = await phone(browser);
+  await context.clock.setFixedTime(new Date(2026, 9, 3, 14, 0));
+  await install(page, url());
+  await page.click('a.quick-btn.feed');
+  await ready(page);
+  assert.equal(await page.isVisible('#breast-timer'), true);
+  assert.equal(await page.isVisible('#row-started'), false);
+
+  await page.click('#breast-manual');
+  assert.equal(await page.textContent('#breast-manual'), 'Use the timer instead');
+  assert.equal(await page.isVisible('#breast-timer'), false, 'the timer is hidden');
+  assert.equal(await page.isVisible('#left-min'), true, 'typed minutes are shown');
+  assert.equal(await page.isVisible('#row-started'), true);
+  assert.equal(await page.textContent('#feed-save'), 'Save');
+  assert.equal(await page.inputValue('#breast-time'), '13:50', 'starts 10 minutes ago, like the default minutes');
+
+  await page.fill('#left-min', '8');
+  await page.fill('#right-min', '12');
+  await page.fill('#breast-time', '13:30');
+  await page.fill('#breast-note', 'Sleepy');
+  await page.click('#feed-save');
+  await afterSave(page);
+  const [r] = (await storedRecords(page)).filter((x) => x.type === 'feed');
+  assert.equal(r.t, new Date(2026, 9, 3, 13, 30).getTime());
+  assert.deepEqual(r.d, { kind: 'Breast', side: 'Both', min: 20, leftMin: 8, rightMin: 12 });
+  assert.equal(r.note, 'Sleepy');
+  assert.equal((await todayRows(page)).length, 1);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('manual breast entry cannot save 0 minutes, and is not offered while a timer runs', async () => {
+  const { context, page, errors } = await phone(browser);
+  await install(page, url());
+  await page.click('a.quick-btn.feed');
+  await ready(page);
+  await page.click('#breast-manual');
+  await page.fill('#left-min', '0');
+  await page.dispatchEvent('#left-min', 'change');
+  assert.equal(await page.isDisabled('#feed-save'), true);
+  await page.click('#breast-manual'); // back to the timer
+  assert.equal(await page.isVisible('#breast-timer'), true);
+  await page.click('#btn-left');
+  assert.equal(await page.isVisible('#breast-manual'), false, 'hidden while the timer runs');
+  assert.deepEqual(errors, []);
+  await context.close();
+});
