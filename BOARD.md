@@ -3,7 +3,6 @@
 Generated from the header of each `features/*/SIGNOFF.md`. Do not edit by hand.
 
 ## Ready
-- 001 Install and open the app (updated 2026-10-03) - `features/001-install-and-open-the-app/`
 - 002 Set up the baby profile (updated 2026-10-03) - `features/002-set-up-the-baby-profile/`
 - 003 Log sleep live (updated 2026-10-03) - `features/003-log-sleep-live/`
 - 004 Add a past sleep (updated 2026-10-03) - `features/004-add-a-past-sleep/`
@@ -15,7 +14,7 @@ Generated from the header of each `features/*/SIGNOFF.md`. Do not edit by hand.
 - 010 Track growth against WHO (updated 2026-10-03) - `features/010-track-growth-against-who/`
 
 ## Building
-- none
+- 001 Install and open the app (updated 2026-10-03) - `features/001-install-and-open-the-app/`
 
 ## Testing
 - none

@@ -2,7 +2,7 @@
 id: 001
 name: Install and open the app
 slug: install-and-open-the-app
-status: Ready
+status: Building
 updated: 2026-10-03
 ---
 
