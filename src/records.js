@@ -128,7 +128,7 @@
   function revise(rec, changes, now, deviceId) {
     var out = {};
     for (var k in rec) out[k] = rec[k];
-    ['t', 'd', 'note'].forEach(function (f) { if (f in changes) out[f] = changes[f]; });
+    ['t', 'end', 'd', 'note'].forEach(function (f) { if (f in changes) out[f] = changes[f]; });
     out.deviceId = deviceId || rec.deviceId;
     out.updatedAt = Math.max(now, rec.updatedAt + 1);
     return out;

@@ -27,6 +27,7 @@
   <script src="feed-ui.js"></script>
   <script src="edit-ui.js"></script>
   <script src="pastsleep-ui.js"></script>
+  <script src="sleep-edit-ui.js"></script>
   <script src="sleep-ui.js"></script>
   <script src="profile-ui.js"></script>
   <script src="sync-ui.js"></script>
@@ -224,6 +225,24 @@
     <button type="button" class="delete-btn" id="edit-delete" disabled>Delete this entry</button>
   </section>
 
+  <section class="screen" id="screen-sleep-edit" aria-labelledby="h-sleep-edit" hidden>
+    <header class="screen-head">
+      <a class="round-btn" href="#today" aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </a>
+      <h1 id="h-sleep-edit">Edit sleep</h1>
+      <button type="button" class="head-delete" id="se-delete" aria-label="Delete this sleep"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6M14 11v6"></path><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"></path><path d="M9 7V4h6v3"></path></svg><span class="head-delete-text">Tap again to delete</span></button>
+    </header>
+    <div class="pf-card">
+      <div class="pf-field"><label for="se-from">Fell asleep</label><input id="se-from" type="datetime-local" step="300"></div>
+      <div class="pf-field" id="se-to-field"><label for="se-to">Woke up</label><input id="se-to" type="datetime-local" step="300"></div>
+    </div>
+    <p class="muted" id="se-running" hidden>This sleep is still going. It ends when you tap Wake up.</p>
+    <p class="ps-hint bad" id="se-hint" role="status" hidden></p>
+    <div class="screen-fill"></div>
+    <button type="button" class="save-btn" id="se-save" disabled>Save changes</button>
+  </section>
+
   <section class="screen" id="screen-sleep" aria-labelledby="h-sleep" hidden>
     <header class="screen-head">
       <a class="round-btn" href="#today" aria-label="Back">
@@ -274,6 +293,9 @@
           <g id="ps-grip"><rect x="-13" y="-8" width="26" height="16" rx="8" fill="#fff"></rect><circle cx="-6" cy="0" r="1.8"></circle><circle cx="0" cy="0" r="1.8"></circle><circle cx="6" cy="0" r="1.8"></circle></g>
           <text id="ps-len" x="150" y="146" text-anchor="middle" font-family="Bricolage Grotesque, system-ui, sans-serif" font-size="30" font-weight="700" fill="#1e2227"></text>
           <text id="ps-range" x="150" y="170" text-anchor="middle" font-size="13" fill="#3c4248"></text>
+          <path id="ps-hit-arc" class="ps-hit" fill="none" stroke="transparent" stroke-width="26"></path>
+          <circle id="ps-hit-start" class="ps-hit" r="24" fill="transparent"></circle>
+          <circle id="ps-hit-end" class="ps-hit" r="24" fill="transparent"></circle>
         </svg>
       </div>
       <div class="ps-times">

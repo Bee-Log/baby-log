@@ -122,3 +122,33 @@ test('Today rows for sleeps follow the 6 am to 6 am day by wake-up time', () => 
   assert.deepEqual(ids([sleep('old', at(20, 0, 2), at(5, 50, 3))]), [], 'woke before 6 am: it belongs to yesterday');
   assert.deepEqual(ids([sleep('next', at(5, 0, 4), at(7, 0, 4))]), [], 'tomorrow');
 });
+
+// ---- Editing a sleep: what can be saved ----
+test('check: a sleep can be saved unless it is backwards, over 12 hours, in the future, or overlaps another', () => {
+  const now = at(17, 0);
+  const others = [sleep('a', at(8, 0), at(9, 0)), sleep('b', at(12, 0), at(13, 0)), sleep('gone', at(14, 0), at(15, 0), { deleted: true })];
+  const check = (start, end, id = 'me') => S.check(others, id, start, end, now);
+  assert.equal(check(at(10, 0), at(11, 0)), null);
+  assert.equal(check(at(9, 0), at(12, 0)), null, 'touching the edges of other sleeps is fine');
+  assert.equal(check(at(11, 0), at(11, 0)), 'order');
+  assert.equal(check(at(11, 0), at(10, 0)), 'order');
+  assert.equal(check(at(1, 0), at(14, 0)), 'long');
+  assert.equal(check(at(16, 0), at(17, 5)), null, '5 minutes ahead is allowed');
+  assert.equal(check(at(16, 0), at(17, 10)), 'future');
+  assert.equal(check(at(8, 30), at(10, 0)), 'overlap');
+  assert.equal(check(at(12, 30), at(13, 30)), 'overlap');
+  assert.equal(check(at(14, 10), at(14, 50)), null, 'a removed sleep does not count');
+  assert.equal(S.check(others, 'a', at(8, 30), at(9, 30), now), null, 'a sleep may overlap its own old times');
+  assert.equal(S.check([sleep('run', at(16, 0), null)], 'me', at(16, 30), at(16, 50), now), 'overlap', 'a sleep still running lasts until now');
+});
+
+test('revise can move the end of a sleep and keeps the merge rule (newer updatedAt)', () => {
+  const rec = sleep('a', at(8, 0), at(9, 0));
+  const next = R.revise(rec, { t: at(7, 50), end: at(9, 10) }, at(10, 0), 'phone-b');
+  assert.equal(next.t, at(7, 50));
+  assert.equal(next.end, at(9, 10));
+  assert.equal(next.id, 'a');
+  assert.ok(next.updatedAt > rec.updatedAt);
+  assert.equal(next.deviceId, 'phone-b');
+  assert.equal(R.revise(rec, { t: at(7, 50) }, at(10, 0)).end, rec.end, 'the end stays when it is not changed');
+});

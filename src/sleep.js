@@ -82,8 +82,25 @@
     return rows;
   }
 
+  var MAX_SLEEP_MS = 12 * 60 * 60000;   // the longest sleep that can be saved (the same limit as on the past-sleep card)
+  var FUTURE_SLACK_MS = 5 * 60000;      // up to 5 minutes ahead is allowed, like the time pickers elsewhere
+
+  // Why a sleep from `start` to `end` cannot be saved, or null when it can. `id` is the sleep being edited (it may overlap itself).
+  // 'order' (the end is not after the start), 'long' (over 12 hours), 'future', or 'overlap' (shares time with another sleep).
+  function check(records, id, start, end, now) {
+    if (!(end > start)) return 'order';
+    if (end - start > MAX_SLEEP_MS) return 'long';
+    if (end > now + FUTURE_SLACK_MS) return 'future';
+    var clash = live(records).some(function (r) {
+      if (r.id === id) return false;
+      var rEnd = r.end == null ? now : r.end;     // a sleep still running lasts until now
+      return start < rEnd && end > r.t;
+    });
+    return clash ? 'overlap' : null;
+  }
+
   root.BABYLOG_SLEEP = {
     currentSleep: currentSleep, lastWake: lastWake, startSleep: startSleep, wake: wake,
-    formatLength: formatLength, formatElapsed: formatElapsed, sleepRows: sleepRows, rangeLabel: rangeLabel, timelineRows: timelineRows
+    formatLength: formatLength, formatElapsed: formatElapsed, sleepRows: sleepRows, rangeLabel: rangeLabel, timelineRows: timelineRows, check: check
   };
 })(typeof self !== 'undefined' ? self : this);

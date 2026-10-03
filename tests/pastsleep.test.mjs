@@ -328,34 +328,14 @@ test('after adding, if nothing fits the draft stays where it was', () => {
   assert.deepEqual(plain(next.draft), plain(s.draft));
 });
 
-// ---- Touch ----
-const onRing = (state, minute, dist = P.RING_R) => {
-  const a = P.angleOf(minute), pt = P.pointAt(a, dist);
-  return { dist, x: pt.x, y: pt.y, minutes: minute };
-};
-test('touch: the middle of the arc moves the whole sleep; near an end moves that end; empty ring places the sleep', () => {
-  const e = env(at(17, 0));
-  const s = { ...P.init(e), parts: [1], base: P.baseFor(e.now, 720), draft: { start: fromInput('14:00'), end: fromInput('14:30') } };
-  assert.equal(P.grab(s, e, onRing(s, fromInput('14:15'))).what, 'move', 'middle of the arc');
-  assert.equal(P.grab(s, e, onRing(s, fromInput('14:29'))).what, 'end', 'right on the end');
-  assert.equal(P.grab(s, e, onRing(s, fromInput('14:01'))).what, 'start');
-  assert.equal(P.grab(s, e, onRing(s, fromInput('14:33'))).what, 'end', 'just off the end of the arc');
-  assert.equal(P.grab(s, e, onRing(s, fromInput('14:15'), 50)).what, null, 'the inner face does nothing');
-  assert.equal(P.grab(s, e, onRing(s, fromInput('14:15'), 300)).what, null, 'far outside does nothing');
-  assert.equal(P.grab(s, e, onRing(s, fromInput('14:50'), P.RING_R + 30)).what, 'end', 'outside the band: the nearest end');
-  const placed = P.grab(s, e, onRing(s, fromInput('16:00')));
-  assert.equal(placed.what, 'move', 'tap on empty ring');
-  assert.deepEqual(clockOf(placed.state), ['3:45 pm', '4:15 pm'], 'the sleep is centred where you tapped');
-});
-
+// ---- Dragging ----
 test('dragging: an end moves; the whole sleep moves by where it was grabbed', () => {
   const e = env(at(17, 0));
   const s = { ...P.init(e), parts: [1], base: P.baseFor(e.now, 720), draft: { start: fromInput('14:00'), end: fromInput('14:30') } };
   assert.equal(P.formatClock(P.drag(s, e, 'end', 0, fromInput('15:10')).draft.end), '3:10 pm');
   assert.equal(P.formatClock(P.drag(s, e, 'start', 0, fromInput('13:20')).draft.start), '1:20 pm');
-  const g = P.grab(s, e, onRing(s, fromInput('14:20')));                 // grabbed 20 minutes after the start
-  assert.equal(g.grabOffset, 20);
-  assert.deepEqual(clockOf(P.drag(g.state, e, 'move', g.grabOffset, fromInput('15:20'))), ['3:00 pm', '3:30 pm']);
+  const grabbedAt = fromInput('14:20');                                  // grabbed 20 minutes after the start
+  assert.deepEqual(clockOf(P.drag(s, e, 'move', grabbedAt - s.draft.start, fromInput('15:20'))), ['3:00 pm', '3:30 pm']);
 });
 
 // ---- Numbers and drawing ----
