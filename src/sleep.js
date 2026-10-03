@@ -68,8 +68,25 @@
     return DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()] + ', ' + times;
   }
 
+  // Today's rows for sleeps, in the same shape as the feed and nappy rows (records.js).
+  // A finished sleep shows when the baby woke up. A sleep still running shows when it began.
+  // `win` is the 6 am to 6 am day: R.dayWindow(now).
+  function timelineRows(records, win) {
+    var rows = [];
+    live(records).forEach(function (r) {
+      var finished = r.end != null;
+      var t = finished ? r.end : r.t;
+      if (t < win.from || t >= win.to) return;
+      rows.push({
+        kind: 'sleep', title: finished ? 'Woke up' : 'Fell asleep', t: t,
+        label: finished ? 'slept ' + formatLength(r.end - r.t) : 'asleep now', ids: [r.id]
+      });
+    });
+    return rows;
+  }
+
   root.BABYLOG_SLEEP = {
     currentSleep: currentSleep, lastWake: lastWake, startSleep: startSleep, wake: wake,
-    formatLength: formatLength, formatElapsed: formatElapsed, sleepRows: sleepRows, rangeLabel: rangeLabel
+    formatLength: formatLength, formatElapsed: formatElapsed, sleepRows: sleepRows, rangeLabel: rangeLabel, timelineRows: timelineRows
   };
 })(typeof self !== 'undefined' ? self : this);

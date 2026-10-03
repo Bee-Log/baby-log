@@ -200,3 +200,20 @@ test('#feed opens the Feed screen; tabs and anything else do not', () => {
   for (const h of ['#today', '#growth', '', '#feeds', undefined]) assert.equal(nav.screenFromHash(h), null, String(h));
   assert.equal(nav.tabFromHash('#feed'), 'today', 'the tab bar falls back to Today');
 });
+
+test('latest feed of any kind, and the "ago" text', () => {
+  const records = [
+    rec('a', 'feed', T0, { kind: 'Bottle', ml: 60 }),
+    rec('b', 'feed', T0 + 9 * MIN, { kind: 'Breast', side: 'Left', min: 5 }),
+    rec('c', 'feed', T0 + 20 * MIN, { kind: 'Bottle', ml: 90 }, { deleted: true }),
+    rec('d', 'pee', T0 + 30 * MIN)
+  ];
+  assert.equal(R.latestFeed(records).id, 'b');
+  assert.equal(R.latestFeed([rec('d', 'pee', T0)]), null);
+  assert.equal(R.agoText(20 * 1000), 'Just now');
+  assert.equal(R.agoText(45 * MIN), '45m ago');
+  assert.equal(R.agoText(60 * MIN), '1h 0m ago');
+  assert.equal(R.agoText(135 * MIN), '2h 15m ago');
+  assert.equal(R.agoText((26 * 60 + 5) * MIN), '1d 2h ago');
+  assert.equal(R.agoText(-5 * MIN), 'Just now', 'a clock that moved back never shows a negative time');
+});

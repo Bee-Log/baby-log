@@ -12,6 +12,7 @@ var SHELL = [
   'app.js',
   'config.js',
   'nav.js',
+  'icons.js',
   'records.js',
   'store.js',
   'feed.js',

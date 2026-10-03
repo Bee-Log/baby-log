@@ -79,12 +79,30 @@
   // Everything the Today list shows, newest first: nappies (a wee and a poo close together are one row) and feeds.
   function timelineRows(records) {
     var rows = nappyRows(records).map(function (r) {
-      return { kind: 'nappy', t: r.t, label: nappyLabel(r), ids: r.ids };
+      return { kind: 'nappy', title: 'Nappy', t: r.t, label: nappyLabel(r), ids: r.ids };
     });
     records.forEach(function (r) {
-      if (!r.deleted && r.type === 'feed') rows.push({ kind: 'feed', t: r.t, label: feedLabel(r), ids: [r.id] });
+      if (!r.deleted && r.type === 'feed') rows.push({ kind: 'feed', title: 'Feed', t: r.t, label: feedLabel(r), ids: [r.id] });
     });
     return rows.sort(function (a, b) { return b.t - a.t; });
+  }
+
+  // The newest live feed of any kind, or null (the "Last feed" card on Today).
+  function latestFeed(records) {
+    var best = null;
+    records.forEach(function (r) {
+      if (!r.deleted && r.type === 'feed' && (!best || r.t > best.t)) best = r;
+    });
+    return best;
+  }
+
+  // "Just now", "45m ago", "2h 15m ago", "1d 3h ago". Whole minutes, rounded down.
+  function agoText(ms) {
+    var min = Math.max(0, Math.floor(ms / 60000));
+    if (min < 1) return 'Just now';
+    var d = Math.floor(min / 1440), h = Math.floor(min / 60) % 24, m = min % 60;
+    if (d > 0) return d + 'd ' + h + 'h ago';
+    return (h > 0 ? h + 'h ' : '') + m + 'm ago';
   }
 
   // The newest live feed that matches `kind` ('Breast' or 'Bottle'), or null.
@@ -144,7 +162,7 @@
   root.BABYLOG_RECORDS = {
     TYPES: TYPES, NAPPY_PAIR_MS: NAPPY_PAIR_MS,
     makeRecord: makeRecord, tombstone: tombstone, dayWindow: dayWindow,
-    nappyRows: nappyRows, nappyLabel: nappyLabel, feedLabel: feedLabel, timelineRows: timelineRows, lastFeed: lastFeed,
+    nappyRows: nappyRows, nappyLabel: nappyLabel, feedLabel: feedLabel, timelineRows: timelineRows, lastFeed: lastFeed, latestFeed: latestFeed, agoText: agoText,
     revise: revise, withFields: withFields, sameContent: sameContent, hhmm: hhmm, timeInDay: timeInDay,
     formatClock: formatClock
   };

@@ -68,42 +68,59 @@
   }
   window.addEventListener('hashchange', route);
 
-  // ---- Today: nappies (005) and feeds (006, 007) ----
-  var ICONS = {
-    nappy: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s-6 7-6 11a6 6 0 0 0 12 0c0-4-6-11-6-11z"></path></svg>',
-    feed: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2h6"></path><path d="M10 2v3L8 8v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V8l-2-3V2"></path></svg>'
-  };
-  var NAMES = { nappy: 'Nappy', feed: 'Feed' };
+  // ---- Today: the last feed card, and the list of feeds, nappies and sleeps ----
+  var ICONS = self.BABYLOG_ICONS;
+  var S = self.BABYLOG_SLEEP;
+  var feedRecord = null;   // the newest feed, kept so the "ago" text can count on without reading the database
+
+  function renderLastFeed() {
+    var big = document.getElementById('lf-big'), detail = document.getElementById('lf-detail');
+    if (!feedRecord) {
+      big.textContent = 'No feed yet';
+      detail.textContent = 'Tap Feed to log one';
+      return;
+    }
+    big.textContent = R.agoText(Date.now() - feedRecord.t);
+    detail.textContent = R.formatClock(feedRecord.t) + ' · ' + R.feedLabel(feedRecord);
+  }
+  setInterval(function () { if (!document.getElementById('view-today').hidden) renderLastFeed(); }, 30000);
+
+  function rowElement(row) {
+    var li = document.createElement('li');
+    li.className = 'row';
+    var link = document.createElement('a');
+    link.className = 'row-link';
+    // Feeds and nappies open their editor. Editing a sleep is not designed yet, so a sleep opens the Sleep page.
+    link.href = row.kind === 'sleep' ? '#sleep' : '#edit/' + row.ids.map(encodeURIComponent).join('+');
+    var time = document.createElement('span');
+    time.className = 'row-time';
+    time.textContent = R.formatClock(row.t);
+    var icon = document.createElement('span');
+    icon.className = 'row-icon ' + row.kind;
+    icon.innerHTML = ICONS[row.kind];
+    var what = document.createElement('span');
+    what.className = 'row-what';
+    var strong = document.createElement('strong');
+    strong.textContent = row.title;
+    what.appendChild(strong);
+    what.appendChild(document.createTextNode(' · ' + row.label));
+    link.appendChild(time); link.appendChild(icon); link.appendChild(what);
+    li.appendChild(link);
+    return li;
+  }
 
   function renderToday() {
     return store.all().then(function (records) {
       SLEEP_UI.renderToday(records); // the sleep card above the buttons
+      feedRecord = R.latestFeed(records);
+      renderLastFeed();
       var w = R.dayWindow(Date.now());
-      var rows = R.timelineRows(records.filter(function (r) { return r.t >= w.from && r.t < w.to; }));
+      var rows = R.timelineRows(records.filter(function (r) { return r.t >= w.from && r.t < w.to; }))
+        .concat(S.timelineRows(records, w))
+        .sort(function (a, b) { return b.t - a.t; });
       var list = document.getElementById('today-list');
       list.textContent = '';
-      rows.forEach(function (row) {
-        var li = document.createElement('li');
-        li.className = 'row';
-        var link = document.createElement('a');
-        link.className = 'row-link';
-        link.href = '#edit/' + row.ids.map(encodeURIComponent).join('+');
-        var time = document.createElement('span');
-        time.className = 'row-time';
-        time.textContent = R.formatClock(row.t);
-        var icon = document.createElement('span');
-        icon.className = 'row-icon ' + row.kind;
-        icon.innerHTML = ICONS[row.kind]; // fixed markup, no user data
-        var what = document.createElement('span');
-        what.className = 'row-what';
-        var strong = document.createElement('strong');
-        strong.textContent = NAMES[row.kind];
-        what.appendChild(strong);
-        what.appendChild(document.createTextNode(' · ' + row.label));
-        link.appendChild(time); link.appendChild(icon); link.appendChild(what);
-        li.appendChild(link);
-        list.appendChild(li);
-      });
+      rows.forEach(function (row) { list.appendChild(rowElement(row)); });
       document.getElementById('today-empty').hidden = rows.length > 0;
     }).catch(function (err) {
       console.error('[baby-log] read', err);
