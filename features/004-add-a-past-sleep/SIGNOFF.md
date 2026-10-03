@@ -2,7 +2,7 @@
 id: 004
 name: Add a past sleep
 slug: add-a-past-sleep
-status: Ready
+status: Testing
 updated: 2026-10-03
 ---
 
@@ -56,7 +56,20 @@ none
 - `artifacts/Sleep.dc.html` — Sleep screen (artboard "6 · Sleep"): live sleep panel, "Add a past sleep" card with step buttons, parts of day, clock ring and native time fields, "Logged sleeps" list. For this feature: the "Add a past sleep" card. Design prototype from the "Simple Baby Log" canvas; it needs the canvas runtime (`support.js`) to run, so open it in the canvas or read it as a reference.
 
 ## Build notes
-(Filled in by the build step. Leave empty at sign-off.)
+**Built (2026-10-03).**
+- **"Add a past sleep" card** on the Sleep page (`#sleep`), between the live card and "Logged sleeps", as in `artifacts/Sleep.dc.html`: step buttons (+5m, +10m, +20m, +1h), a minus button for the last step used, a reset arrow (back to 30 minutes), four parts of the day, the 12-hour clock ring, two time fields and the **Add sleep** button.
+- **Clock ring.** Drag the start dot or the end dot to change that end. Drag the arc to move the whole sleep. Tap an empty part of the ring to put the sleep there. Everything snaps to 5 minutes. A sleep also snaps to the edge of a logged sleep when it is within 10 minutes.
+- **Time fields.** The native time pickers move the ring. The parts of the day follow the times.
+- **It opens on the 30 minutes that ended now.** After Add, it offers the same length in the next free space.
+- **Blocked, with a message and an orange arc:** a sleep that overlaps a logged one ("Overlaps a sleep already logged."), and a sleep that ends more than 5 minutes in the future ("That time has not happened yet."). A sleep that is still running counts as ending now.
+- **Saved as the same record as a live sleep:** `type: 'sleep'`, `t` and `end` in ms, `d: { source: 'manual' }`. The owner approved this field with feature 003. No other data change.
+- **The open questions.** *Maximum:* 12 hours (the ring shows 12 hours), and the minimum is 5 minutes. *Which day:* each part of the day means its latest occurrence that has already started. At 8 am, "6p-12a" is yesterday evening and "12a-6a" is this morning. So last night's sleep can be added in the morning. The day is fixed when the parts are chosen.
+- **An update waits** while the Sleep page is open, so a reload cannot lose a draft.
+- The Today list does not show sleeps yet. That is feature 008.
+
+**Files changed.** `src/pastsleep.js` (new: the rules), `src/pastsleep-ui.js` (new: drawing and saving), `src/sleep-ui.js`, `src/index.html`, `src/styles.css`, `src/sw.js`, `tests/pastsleep.test.mjs` (new: rules, run in six time zones), `tests/browser/pastsleep.test.mjs` (new), `tests/sleep.test.mjs` (a daylight-saving case now ends at 3:30 am so it is valid in every zone).
+
+**Test link.** https://oudam-meas.github.io/baby-log/test/
 
 ## Feedback
 (Filled in when someone tests it. Leave empty at sign-off.)
