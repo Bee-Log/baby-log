@@ -153,25 +153,53 @@
 
   function rangeOf(state) { return rangeOfParts(state.parts); }
 
+  // ---- Crossing the 6-hour borders ----
+  // A sleep may sit across a border (12 or 6). The parts then follow the draft: the parts it touches, at most two.
+  // Minutes here can run outside the base day (before 6 am, or after the next 6 am), so the base day moves with them.
+  function absPart(m) { return Math.floor((m - DAY_START) / PART); }
+  function shiftBase(b, days) { var t = new Date(b.y, b.m, b.d + days); return { y: t.getFullYear(), m: t.getMonth(), d: t.getDate() }; }
+
+  // Keeps a draft inside two neighbouring parts. A sleep over 6 hours can touch three; then it is pulled in.
+  function fitDraft(draft, which) {
+    var pa = absPart(draft.start), pb = absPart(draft.end - 1);
+    if (pb - pa <= 1) return draft;
+    var len = draft.end - draft.start;
+    if (which === 'start') return { start: DAY_START + (pb - 1) * PART, end: draft.end };
+    if (which === 'end') return { start: draft.start, end: DAY_START + (pa + 2) * PART };
+    var early = DAY_START + pa * PART + 2 * PART - len, late = DAY_START + (pa + 1) * PART;       // the two windows that can hold it
+    var start = Math.abs(draft.start - early) <= Math.abs(late - draft.start) ? early : late;
+    return { start: start, end: start + len };
+  }
+
+  // The state for a draft in the base day's minutes: its parts, and a base day that keeps those parts inside one day.
+  function settle(state, draft) {
+    var pa = absPart(draft.start), pb = absPart(draft.end - 1);
+    var days = Math.floor(pa / 4), parts = [];
+    for (var i = pa; i <= pb; i++) parts.push(mod(i, 4));
+    return copy(state, {
+      parts: parts, base: days ? shiftBase(state.base, days) : state.base,
+      draft: { start: draft.start - days * DAY, end: draft.end - days * DAY }, note: null
+    });
+  }
+
   function setEnd(state, env, which, minutes) {
-    var d = state.draft, range = rangeOf(state), logged = loggedOf(state, env);
+    var d = state.draft, logged = loggedOf(state, env);
     var v = snap(minutes), draft;
-    if (which === 'start') draft = { start: clamp(snapToEdge(v, 'end', logged), range.from, d.end - STEP_MIN), end: d.end };
-    else draft = { start: d.start, end: clamp(snapToEdge(v, 'start', logged), d.start + STEP_MIN, range.to) };
-    return copy(state, { draft: draft, note: null });
+    if (which === 'start') draft = { start: clamp(snapToEdge(v, 'end', logged), d.end - MAX_LEN, d.end - STEP_MIN), end: d.end };
+    else draft = { start: d.start, end: clamp(snapToEdge(v, 'start', logged), d.start + STEP_MIN, d.start + MAX_LEN) };
+    return settle(state, fitDraft(draft, which));
   }
 
   // Where the whole sleep would sit if its start were here (keeps its length, snaps to logged edges).
   function placeAt(state, env, start) {
-    var d = state.draft, range = rangeOf(state), logged = loggedOf(state, env);
+    var d = state.draft, logged = loggedOf(state, env);
     var len = d.end - d.start;
     var s = snap(start);
     var after = snapToEdge(s, 'end', logged);
     s = after !== s ? after : snapToEdge(s + len, 'start', logged) - len;
-    s = clamp(s, range.from, range.to - len);
-    return { start: s, end: s + len };
+    return fitDraft({ start: s, end: s + len }, 'move');
   }
-  function moveTo(state, env, start) { return copy(state, { draft: placeAt(state, env, start), note: null }); }
+  function moveTo(state, env, start) { return settle(state, placeAt(state, env, start)); }
 
   // Duration buttons. A + button adds its amount and becomes the selected step; the minus button takes off the selected step.
   function addStep(state, env, minutes) {
