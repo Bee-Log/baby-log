@@ -2,7 +2,7 @@
 id: 011
 name: Edit an entry
 slug: edit-an-entry
-status: Building
+status: Testing
 updated: 2026-10-03
 ---
 
@@ -49,7 +49,41 @@ No new fields and no change to the record format.
 None. This feature has no Claude Design screen. It reuses the controls of the Feed screen (`features/006-log-a-breast-feed/artifacts/Feed.dc.html`).
 
 ## Build notes
-(Filled in by the build step. Leave empty at sign-off.)
+**Built (2026-10-03).**
+- Every row in the Today list is now a link. The small text "Tap a row to edit" sits next to the "Today" title, as in the design.
+- A new **Edit screen** (`#edit/<ids>`) opens for the tapped row. It has a close button, **Save changes** and **Delete this entry**.
+  - Breast feed: started time, side (Left, Right, Both), minutes (type, or −1 / +1) and note.
+  - Bottle feed: fed time, amount (type, or −10 / +10, 0 to 240 ml) and milk (Formula or Expressed).
+  - Nappy: the time. A "Wee + Poo" row moves both entries by the same amount, and Delete removes both.
+- After **Save changes** or **Delete**, a message offers **Undo** for 6 seconds. Undo says "Change undone" or "Restored".
+- **Save changes with nothing changed** just returns to Today and writes nothing.
+- A time that has not happened yet is refused ("That time has not happened yet."). Up to 5 minutes ahead is allowed, because the time picker works in 5-minute steps.
+- An app update waits while the Edit screen is open, so a half-finished edit is not lost.
+
+**Data.** No change to the record format and no new fields.
+- An edit keeps the same `id` and sets a newer `updatedAt` and this phone's `deviceId`. The existing rule applies: the newest `updatedAt` wins.
+- Delete writes a tombstone. Undo writes the earlier values back with an `updatedAt` newer than the edit or the tombstone, so Undo wins over it everywhere, even if the phone clock is behind.
+- Details this screen does not know are kept, not dropped.
+
+**Files changed.** `src/edit-ui.js` (new: the Edit screen), `src/records.js` (revise, restore, time inside a day), `src/store.js` (read one entry, save several in one step), `src/nav.js` (`#edit/<ids>`), `src/app.js` (tappable rows, routing, Undo message), `src/index.html`, `src/styles.css`, `src/sw.js` (new file in the offline list), `tests/edit.test.mjs` and `tests/browser/edit.test.mjs` (new), `tests/browser/helpers.mjs` (helpers to put entries into storage).
+
+**Test link.** https://oudam-meas.github.io/baby-log/test/
+
+**Tested.**
+- `npm test`: 43 pass, also in Melbourne and New York time zones.
+- `npm run test:browser`: 25 pass, 3 runs in a row. The edit tests use a fixed clock (2 pm), so they behave the same at any time of day. They cover: changing a bottle (offline) and Undo; changing a breast feed; a Wee + Poo row (time change, delete, Undo); deleting a feed and Undo; a future time refused; Save with no change; a missing entry; and an update waiting while the Edit screen is open.
+- A test found a real bug before release: on the bottle Edit screen the breast fields also showed. It is fixed, and the test now guards it.
+- `npm run build` passes. Screenshots at phone size were checked.
+
+**Choices the signoff did not cover.**
+- There is no Claude Design screen, so the look follows the Feed screen. The partner should say if she wants it changed.
+- No "Are you sure?" on Delete, because Undo is there.
+- The note can be edited on breast feeds only, because only the breast screen has a note.
+- Editing keeps an entry inside its own Today (6 am to 6 am). A time before 6 am means after midnight.
+
+**Known gaps.**
+- Only today's entries can be edited, because Today shows only today.
+- Editing, like everything else, stays on this phone until sync is built.
 
 ## Feedback
 (Filled in when someone tests it. Leave empty at sign-off.)

@@ -56,6 +56,19 @@
     return run('records', 'readwrite', function (s) { s.put(record); }).then(function () { keep(); return record; });
   }
 
+  function getRecord(id) {
+    return run('records', 'readonly', function (s, done) {
+      var req = s.get(id);
+      req.onsuccess = function () { done(req.result || null); };
+    });
+  }
+
+  // Save several records in ONE transaction: all of them or none (a "Wee + Poo" row is two records).
+  function putMany(records) {
+    return run('records', 'readwrite', function (s) { records.forEach(function (r) { s.put(r); }); })
+      .then(function () { keep(); return records; });
+  }
+
   // Save a record and clear a draft in ONE transaction: both happen or neither does.
   // (A breast feed is saved and its running timer is removed together.)
   function putClearingMeta(record, metaKey) {
@@ -118,5 +131,5 @@
     navigator.storage.persist().catch(function () { /* the browser decides; data still saves */ });
   }
 
-  root.BABYLOG_STORE = { dbNameFor: dbNameFor, put: put, putClearingMeta: putClearingMeta, all: all, deviceId: deviceId, getMeta: getMeta, setMeta: setMeta, removeMeta: removeMeta };
+  root.BABYLOG_STORE = { dbNameFor: dbNameFor, put: put, putMany: putMany, getRecord: getRecord, putClearingMeta: putClearingMeta, all: all, deviceId: deviceId, getMeta: getMeta, setMeta: setMeta, removeMeta: removeMeta };
 })(typeof self !== 'undefined' ? self : this);

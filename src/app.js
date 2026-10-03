@@ -22,17 +22,20 @@
 
   // ---- Routes: three tabs, and full screens (the Feed screen) without the tab bar ----
   var FEED_UI = self.BABYLOG_FEED_UI;
+  var EDIT_UI = self.BABYLOG_EDIT_UI;
   function route() {
     var screen = nav.screenFromHash(location.hash);
     document.body.classList.toggle('on-screen', !!screen);
-    if (screen === 'feed') {
+    if (screen) {
       var hidden = document.querySelectorAll('.view');
       for (var h = 0; h < hidden.length; h++) hidden[h].hidden = true;
-      FEED_UI.show();
+      if (screen === 'feed') { EDIT_UI.hide(); FEED_UI.show(); }
+      else { FEED_UI.hide(); EDIT_UI.show(nav.argFromHash(location.hash)); }
       window.scrollTo(0, 0);
       return;
     }
     FEED_UI.hide();
+    EDIT_UI.hide();
     var tab = nav.tabFromHash(location.hash);
     var views = document.querySelectorAll('.view');
     for (var i = 0; i < views.length; i++) views[i].hidden = views[i].getAttribute('data-tab') !== tab;
@@ -62,6 +65,9 @@
       rows.forEach(function (row) {
         var li = document.createElement('li');
         li.className = 'row';
+        var link = document.createElement('a');
+        link.className = 'row-link';
+        link.href = '#edit/' + row.ids.map(encodeURIComponent).join('+');
         var time = document.createElement('span');
         time.className = 'row-time';
         time.textContent = R.formatClock(row.t);
@@ -74,7 +80,8 @@
         strong.textContent = NAMES[row.kind];
         what.appendChild(strong);
         what.appendChild(document.createTextNode(' · ' + row.label));
-        li.appendChild(time); li.appendChild(icon); li.appendChild(what);
+        link.appendChild(time); link.appendChild(icon); link.appendChild(what);
+        li.appendChild(link);
         list.appendChild(li);
       });
       document.getElementById('today-empty').hidden = rows.length > 0;
@@ -131,13 +138,15 @@
     undoAction = null; // keep busy until the undo is saved
     toastEl.hidden = true;
     clearTimeout(toastTimer);
-    undo().then(function () { toast('Removed'); }, function (err) {
+    undo().then(function (message) { toast(typeof message === 'string' ? message : 'Removed'); }, function (err) {
       console.error('[baby-log] undo', err);
       toast('Could not undo. Please try again.');
     }).then(function () { setBusy(false); });
   });
 
-  FEED_UI.init({ toast: toast, renderToday: renderToday, setBusy: setBusy });
+  var shared = { toast: toast, renderToday: renderToday, setBusy: setBusy };
+  FEED_UI.init(shared);
+  EDIT_UI.init(shared);
   route();
 
   // ---- Offline support ----

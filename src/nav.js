@@ -3,18 +3,29 @@
 // serves everything offline and the phone's back button moves between them.
 (function (root) {
   var TABS = ['today', 'summary', 'growth'];
-  var SCREENS = ['feed'];       // full screens: no tab bar
+  var SCREENS = ['feed', 'edit']; // full screens: no tab bar. #edit/<ids> edits an entry (feature 011)
   var DEFAULT_TAB = 'today';
 
   function tabFromHash(hash) {
-    var key = String(hash || '').replace(/^#\/?/, '').toLowerCase();
+    var key = parts(hash).name;
     return TABS.indexOf(key) > -1 ? key : DEFAULT_TAB;
   }
 
-  function screenFromHash(hash) {
-    var key = String(hash || '').replace(/^#\/?/, '').toLowerCase();
-    return SCREENS.indexOf(key) > -1 ? key : null;
+  function parts(hash) {
+    var text = String(hash || '').replace(/^#\/?/, '');
+    var slash = text.indexOf('/');
+    return { name: (slash < 0 ? text : text.slice(0, slash)).toLowerCase(), arg: slash < 0 ? '' : text.slice(slash + 1) };
   }
 
-  root.BABYLOG_NAV = { TABS: TABS, SCREENS: SCREENS, DEFAULT_TAB: DEFAULT_TAB, tabFromHash: tabFromHash, screenFromHash: screenFromHash };
+  // 'feed', 'edit' or null. #edit needs something to edit: #edit/<ids>.
+  function screenFromHash(hash) {
+    var p = parts(hash);
+    if (SCREENS.indexOf(p.name) < 0) return null;
+    return p.name === 'edit' && !p.arg ? null : p.name;
+  }
+
+  // The part after the slash: the ids to edit, joined with +.
+  function argFromHash(hash) { return parts(hash).arg; }
+
+  root.BABYLOG_NAV = { TABS: TABS, SCREENS: SCREENS, DEFAULT_TAB: DEFAULT_TAB, tabFromHash: tabFromHash, screenFromHash: screenFromHash, argFromHash: argFromHash };
 })(typeof self !== 'undefined' ? self : this);

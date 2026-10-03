@@ -93,6 +93,42 @@
     return best;
   }
 
+  // ---- Editing (feature 011) ----
+  // An edit keeps the id and moves updatedAt forward, so the existing merge rule (newest updatedAt wins) carries it.
+  function revise(rec, changes, now, deviceId) {
+    var out = {};
+    for (var k in rec) out[k] = rec[k];
+    ['t', 'd', 'note'].forEach(function (f) { if (f in changes) out[f] = changes[f]; });
+    out.deviceId = deviceId || rec.deviceId;
+    out.updatedAt = Math.max(now, rec.updatedAt + 1);
+    return out;
+  }
+
+  // Put an earlier version back (Undo after an edit or a delete). `current` is what is stored now,
+  // so the restored copy is newer than it and wins everywhere.
+  function restore(original, current, now, deviceId) {
+    var out = {};
+    for (var k in original) out[k] = original[k];
+    delete out.deleted;
+    out.deviceId = deviceId || original.deviceId;
+    out.updatedAt = Math.max(now, current.updatedAt + 1);
+    return out;
+  }
+
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  // 24-hour hh:mm, as a time field wants it.
+  function hhmm(t) { var d = new Date(t); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
+
+  // The moment inside the 6 am to 6 am day that contains `t` which shows hh:mm on the clock.
+  // Editing a time never moves an entry to another day: 01:30 in a day that began at 6 am yesterday is after midnight.
+  function timeInDay(t, text) {
+    var m = /^(\d{1,2}):(\d{2})$/.exec(String(text));
+    if (!m || +m[1] > 23 || +m[2] > 59) return null;
+    var start = new Date(dayWindow(t).from);
+    var date = +m[1] < DAY_START_HOUR ? start.getDate() + 1 : start.getDate();
+    return new Date(start.getFullYear(), start.getMonth(), date, +m[1], +m[2]).getTime();
+  }
+
   function formatClock(t) {
     var d = new Date(t), h = d.getHours(), m = d.getMinutes();
     return (h % 12 === 0 ? 12 : h % 12) + ':' + (m < 10 ? '0' : '') + m + (h < 12 ? ' am' : ' pm');
@@ -102,6 +138,7 @@
     TYPES: TYPES, NAPPY_PAIR_MS: NAPPY_PAIR_MS,
     makeRecord: makeRecord, tombstone: tombstone, dayWindow: dayWindow,
     nappyRows: nappyRows, nappyLabel: nappyLabel, feedLabel: feedLabel, timelineRows: timelineRows, lastFeed: lastFeed,
+    revise: revise, restore: restore, hhmm: hhmm, timeInDay: timeInDay,
     formatClock: formatClock
   };
 })(typeof self !== 'undefined' ? self : this);

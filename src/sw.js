@@ -16,6 +16,7 @@ var SHELL = [
   'store.js',
   'feed.js',
   'feed-ui.js',
+  'edit-ui.js',
   'styles.css',
   'manifest.webmanifest',
   'fonts/atkinson-hyperlegible-400.woff2',
