@@ -3,7 +3,6 @@
 Generated from the header of each `features/*/SIGNOFF.md`. Do not edit by hand.
 
 ## Ready
-- 009 See the daily summary (updated 2026-10-03) - `features/009-see-the-daily-summary/`
 - 010 Track growth against WHO (updated 2026-10-03) - `features/010-track-growth-against-who/`
 
 ## Building
@@ -11,6 +10,7 @@ Generated from the header of each `features/*/SIGNOFF.md`. Do not edit by hand.
 
 ## Testing
 - 002 Set up the baby profile (updated 2026-10-03) - `features/002-set-up-the-baby-profile/`
+- 009 See the daily summary (updated 2026-10-03) - `features/009-see-the-daily-summary/`
 - 013 Sync between phones (updated 2026-10-03) - `features/013-sync-between-phones/`
 
 ## Done

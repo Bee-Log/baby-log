@@ -19,7 +19,7 @@ test('fresh install: tabs work and the app opens offline', async () => {
   assertConsistent(s, 'installed');
   assert.equal(s.tab, 'today');
   assert.equal((await tapTab(page, 'growth')).heading, 'Growth');
-  assert.equal((await tapTab(page, 'summary')).heading, 'Summary');
+  assert.equal((await tapTab(page, 'summary')).tab, 'summary');
   await context.setOffline(true);
   const off = await open(page, url + '#growth');
   assertConsistent(off, 'offline');
@@ -43,13 +43,13 @@ test('update: a new version never mixes with the old one, and is there on the ne
   // Open 2: the new version.
   const second = await open(page, url);
   assert.equal(second.pageVersion, 'test-v3', 'update not picked up');
-  assert.equal((await tapTab(page, 'summary')).heading, 'Summary', 'tabs work on open 2');
+  assert.equal((await tapTab(page, 'summary')).tab, 'summary', 'tabs work on open 2');
 
   await context.setOffline(true);
   const off = await open(page, url + '#summary');
   assertConsistent(off, 'offline after update');
   assert.equal(off.pageVersion, 'test-v3');
-  assert.equal(off.heading, 'Summary');
+  assert.equal(off.tab, 'summary');
   assert.deepEqual(errors, []);
   await context.close();
 });
