@@ -19,6 +19,7 @@ A parent uses this at night, with one hand. If editing is a different form from 
 - Top: a **Breast | Bottle** switch.
 - A small line under the switch with the last feed of that kind ("Last bottle: 90 ml · 11:50 am").
 - **Breast:** a big total timer, then **two compact rows**, **Left** and **Right**, then a card with **Note**, and **Stop and save**.
+- **Enter time manually** (a text button under the rows, only when no timer is running): swaps the timer for the same minutes controls and **Started at** that the edit form uses, so a feed that was not timed can be logged afterwards. The button then says **Use the timer instead**. Save needs at least 1 minute.
   - Each row shows that side's time and one button: **Start** (nothing is running), **Pause** (this side is running) or **Switch** (the other side is running). The running row is highlighted.
   - The timer keeps running if the app is closed.
 - **Bottle:** a bottle drawing (drag it up and down), an amount (type, or −10 / +10), **Formula | Expressed**, a card with **Fed at** and **Note**, and **Save**.
