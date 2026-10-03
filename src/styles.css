@@ -239,3 +239,34 @@ body.on-screen .toast { bottom: auto; top: calc(12px + env(safe-area-inset-top))
 .last-feed-label { font-size: 14px; color: var(--muted); }
 .last-feed-big { font-family: var(--display); font-size: clamp(32px, 11vw, 44px); font-weight: 700; line-height: 1.05; color: var(--accent); }
 .last-feed-detail { font-size: 15px; color: #3c4248; }
+
+/* Baby profile (feature 002) and the header on Today */
+.baby-head { display: flex; align-items: center; gap: 12px; min-height: 52px; color: inherit; text-decoration: none; margin-top: 8px; }
+.baby-head:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 12px; }
+.baby-photo { position: relative; width: 52px; height: 52px; border-radius: 26px; background: #fff1c9; border: 2px dashed #d9a93a; color: #7a5a12; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+.baby-photo.has-photo { border: 2px solid #fff; }
+.baby-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.baby-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.baby-sub { font-size: 14px; color: var(--muted); }
+.baby-name { font-family: var(--display); font-size: 28px; font-weight: 700; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-top { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.pf-frame { position: relative; width: 240px; height: 200px; display: flex; align-items: center; justify-content: center; }
+.pf-sky { position: absolute; left: 0; top: 0; }
+.pf-photo { position: relative; width: 168px; height: 168px; border-radius: 84px; background: #fff1c9; border: 3px dashed #d9a93a; display: flex; align-items: center; justify-content: center; color: #7a5a12; cursor: pointer; overflow: hidden; }
+.pf-photo:focus-within { outline: 3px solid var(--accent); outline-offset: 4px; }
+.pf-photo.has-photo { border-style: solid; border-color: #fff; }
+.pf-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.pf-file { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.pf-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.pf-empty strong { font-size: 16px; }
+.pf-empty small { font-size: 13px; }
+.pf-plus { position: absolute; right: 40px; bottom: 14px; width: 44px; height: 44px; border-radius: 22px; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center; border: 3px solid var(--bg); pointer-events: none; }
+.pf-name { font-family: var(--display); font-size: 28px; font-weight: 700; text-align: center; overflow-wrap: anywhere; }
+.pf-age { font-size: 15px; color: #3c4248; min-height: 1.5em; }
+.pf-card { background: var(--surface); border-radius: 20px; padding: 4px 16px; display: flex; flex-direction: column; }
+.pf-field { display: flex; flex-direction: column; gap: 6px; padding: 12px 0; }
+.pf-field + .pf-field { border-top: 1px solid #eee9e1; }
+.pf-field label, .pf-label { font-size: 14px; color: #3c4248; font-weight: 700; }
+.pf-field input { min-height: 44px; border: 1px solid var(--line); border-radius: 12px; padding: 0 12px; font: inherit; font-size: 17px; color: var(--ink); background: #fbfaf7; }
+.pf-field input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.pf-note { font-size: 13px; }

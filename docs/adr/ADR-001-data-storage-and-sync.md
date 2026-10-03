@@ -1,6 +1,6 @@
 # ADR-001: Data storage and sync
 
-- **Status:** Proposed. The owner accepts it by merging the pull request that adds this file.
+- **Status:** Accepted (2026-10-03). The owner accepted it by asking for it to be built; it was merged in the pull request that adds this file.
 - **Date:** 2026-10-03
 - **Decider:** owner (oudam-meas)
 - **Where it goes:** `docs/adr/ADR-001-data-storage-and-sync.md`

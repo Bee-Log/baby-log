@@ -24,6 +24,7 @@
   var FEED_UI = self.BABYLOG_FEED_UI;
   var EDIT_UI = self.BABYLOG_EDIT_UI;
   var SLEEP_UI = self.BABYLOG_SLEEP_UI;
+  var PROFILE_UI = self.BABYLOG_PROFILE_UI;
   // #edit/<ids>: a feed is edited on the Feed screen, a nappy on its own small Edit screen.
   function openEdit(arg, hashAtStart) {
     FEED_UI.hide();
@@ -46,15 +47,18 @@
     if (screen) {
       var hidden = document.querySelectorAll('.view');
       for (var h = 0; h < hidden.length; h++) hidden[h].hidden = true;
-      if (screen === 'feed') { EDIT_UI.hide(); SLEEP_UI.hide(); FEED_UI.show(); }
-      else if (screen === 'sleep') { FEED_UI.hide(); EDIT_UI.hide(); SLEEP_UI.show(); }
-      else { SLEEP_UI.hide(); openEdit(nav.argFromHash(location.hash), location.hash); }
+      FEED_UI.hide(); EDIT_UI.hide(); SLEEP_UI.hide(); PROFILE_UI.hide();
+      if (screen === 'feed') FEED_UI.show();
+      else if (screen === 'sleep') SLEEP_UI.show();
+      else if (screen === 'profile') PROFILE_UI.show();
+      else openEdit(nav.argFromHash(location.hash), location.hash);
       window.scrollTo(0, 0);
       return;
     }
     FEED_UI.hide();
     EDIT_UI.hide();
     SLEEP_UI.hide();
+    PROFILE_UI.hide();
     var tab = nav.tabFromHash(location.hash);
     var views = document.querySelectorAll('.view');
     for (var i = 0; i < views.length; i++) views[i].hidden = views[i].getAttribute('data-tab') !== tab;
@@ -111,6 +115,7 @@
 
   function renderToday() {
     return store.all().then(function (records) {
+      PROFILE_UI.renderHead(records); // the baby's photo and name at the top
       SLEEP_UI.renderToday(records); // the sleep card above the buttons
       feedRecord = R.latestFeed(records);
       renderLastFeed();
@@ -171,6 +176,7 @@
   FEED_UI.init(shared);
   EDIT_UI.init(shared);
   SLEEP_UI.init(shared);
+  PROFILE_UI.init(shared);
   route();
 
   // ---- Offline support ----
