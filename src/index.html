@@ -70,6 +70,8 @@
       <button type="button" id="mode-bottle" aria-pressed="false">Bottle</button>
     </div>
 
+    <p class="muted last-line" id="last-line"></p>
+
     <div id="panel-breast">
       <div class="timer-block" id="breast-timer-block">
         <div class="muted" id="breast-started">Not started yet</div>
@@ -90,7 +92,6 @@
         <button type="button" class="side-btn" id="btn-right" aria-pressed="false"><span class="side-name">Right</span><span id="btn-right-sub">Tap to start</span></button>
       </div>
       <div class="card">
-        <div class="card-row" id="row-last-time"><span>Last time</span><span id="breast-last"></span></div>
         <div class="card-row" id="row-started" hidden><label for="breast-time">Started at</label><input id="breast-time" type="time" step="60"></div>
         <div class="card-row"><label for="breast-note">Note</label><input id="breast-note" type="text" placeholder="Optional" maxlength="200"></div>
       </div>
@@ -129,7 +130,7 @@
       </div>
       <div class="card">
         <div class="card-row"><label for="bottle-time">Fed at</label><input id="bottle-time" type="time" step="300"></div>
-        <div class="card-row" id="row-last-bottle"><span>Last bottle</span><span id="bottle-last"></span></div>
+        <div class="card-row"><label for="bottle-note">Note</label><input id="bottle-note" type="text" placeholder="Optional" maxlength="200"></div>
       </div>
     </div>
 
@@ -159,7 +160,6 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden>
     <span id="toast-text"></span>
-    <button type="button" id="toast-undo">Undo</button>
   </div>
 
   <nav class="tabbar" aria-label="Main">

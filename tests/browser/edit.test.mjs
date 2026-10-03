@@ -1,4 +1,4 @@
-// Feature 011 in a real browser: tap a row on Today, fix or delete the entry, and undo.
+// Feature 011 in a real browser: tap a row on Today, fix or delete the entry.
 // A feed is edited on the Feed screen itself (same Breast / Bottle switch, same controls); a nappy has a small Edit screen.
 // The clock is fixed at 2:00 pm on 3 Oct 2026, so the tests behave the same at any time of day.
 import { test, before, after } from 'node:test';
@@ -52,7 +52,7 @@ test('editing a feed opens the Feed screen itself: same switch, same controls', 
   await context.close();
 });
 
-test('bottle: change the amount, milk and time; Undo puts it back; it works offline', async () => {
+test('bottle: change the amount, milk, time and note; it works offline', async () => {
   const original = rec('b1', 'feed', at(13), { kind: 'Bottle', milk: 'Formula', ml: 90, extra: 'kept' });
   const { context, page, errors } = await start([original]);
   assert.deepEqual(await todayRows(page), ['Feed · Bottle 90 ml']);
@@ -66,6 +66,7 @@ test('bottle: change the amount, milk and time; Undo puts it back; it works offl
   await page.fill('#bottle-ml', '120');           // typed, then Save straight away
   await page.click('#milk-expressed');
   await page.fill('#bottle-time', '12:40');
+  await page.fill('#bottle-note', 'half asleep');
   await page.click('#feed-save');
   await waitToast(page, 'Changes saved');
   await page.waitForFunction(() => location.hash === '#today');
@@ -76,15 +77,9 @@ test('bottle: change the amount, milk and time; Undo puts it back; it works offl
   assert.deepEqual(saved.d, { kind: 'Bottle', milk: 'Breast milk', ml: 120, extra: 'kept' }, 'unknown details are kept');
   assert.ok(saved.updatedAt > original.updatedAt, 'newer, so it wins the merge');
   assert.notEqual(saved.deviceId, 'other-phone', 'now this phone');
+  assert.equal(saved.note, 'half asleep');
   assert.equal((await readRecords(page)).length, 1, 'edited in place, not copied');
 
-  await page.getByRole('button', { name: 'Undo' }).click();
-  await waitToast(page, 'Change undone');
-  assert.deepEqual(await todayRows(page), ['Feed · Bottle 90 ml']);
-  const back = await byId(page, 'b1');
-  assert.equal(back.t, at(13));
-  assert.deepEqual(back.d, original.d);
-  assert.ok(back.updatedAt > saved.updatedAt, 'the undo is newer than the edit');
   assert.deepEqual(errors, []);
   await context.close();
 });
@@ -169,7 +164,7 @@ test('switch Breast <-> Bottle while editing: the entry becomes the other kind',
   await context.close();
 });
 
-test('a Wee + Poo row is two entries: a time change moves both, Delete removes both, Undo brings both back', async () => {
+test('a Wee + Poo row is two entries: a time change moves both, and Delete removes both', async () => {
   const { context, page, errors } = await start([rec('w1', 'pee', at(13, 0)), rec('p1', 'poop', at(13, 1))]);
   assert.deepEqual(await todayRows(page), ['Nappy · Wee + Poo']);
   await openNappy(page);
@@ -182,34 +177,32 @@ test('a Wee + Poo row is two entries: a time change moves both, Delete removes b
   assert.deepEqual([(await byId(page, 'w1')).t, (await byId(page, 'p1')).t], [at(12, 30), at(12, 31)], 'moved together, order kept');
 
   await openNappy(page);
+  await page.click('#edit-delete');                      // the first tap only asks
+  assert.equal(await page.textContent('#edit-delete'), 'Tap again to delete');
+  assert.deepEqual([(await byId(page, 'w1')).deleted, (await byId(page, 'p1')).deleted], [undefined, undefined]);
   await page.click('#edit-delete');
   await waitToast(page, 'Deleted');
   assert.deepEqual(await todayRows(page), []);
   assert.deepEqual([(await byId(page, 'w1')).deleted, (await byId(page, 'p1')).deleted], [true, true], 'tombstones, not removed');
-
-  await page.getByRole('button', { name: 'Undo' }).click();
-  await waitToast(page, 'Restored');
-  assert.deepEqual(await todayRows(page), ['Nappy · Wee + Poo']);
-  const [w, p] = [await byId(page, 'w1'), await byId(page, 'p1')];
-  assert.ok(!('deleted' in w) && !('deleted' in p));
-  assert.equal(w.t, at(12, 30));
   assert.deepEqual(errors, []);
   await context.close();
 });
 
-test('delete a feed, then Undo', async () => {
+test('delete a feed: the first tap asks, the second deletes', async () => {
   const { context, page, errors } = await start([rec('b1', 'feed', at(13), { kind: 'Bottle', milk: 'Formula', ml: 60 })]);
   await openFeed(page);
+  await page.click('#feed-delete');
+  assert.equal(await page.textContent('#feed-delete'), 'Tap again to delete');
+  assert.ok(!(await byId(page, 'b1')).deleted, 'one tap deletes nothing');
+  await page.waitForTimeout(4300);                       // it relaxes if the second tap does not come
+  assert.equal(await page.textContent('#feed-delete'), 'Delete this entry');
+  await page.click('#feed-delete');
   await page.click('#feed-delete');
   await waitToast(page, 'Deleted');
   await page.waitForFunction(() => location.hash === '#today');
   assert.deepEqual(await todayRows(page), []);
   assert.equal(await page.isVisible('#today-empty'), true);
   assert.equal((await byId(page, 'b1')).deleted, true);
-  await page.getByRole('button', { name: 'Undo' }).click();
-  await waitToast(page, 'Restored');
-  assert.deepEqual(await todayRows(page), ['Feed · Bottle 60 ml']);
-  assert.ok(!('deleted' in (await byId(page, 'b1'))));
   assert.deepEqual(errors, []);
   await context.close();
 });
@@ -221,6 +214,21 @@ test('a time that has not happened yet is refused, and nothing changes', async (
   await page.fill('#bottle-time', '16:00');
   await page.click('#feed-save');
   await waitToast(page, 'That time has not happened yet.');
+  // The message is on top of everything, including the orange TEST banner, so it can be read.
+  const onTop = await page.evaluate(() => {
+    const el = document.getElementById('toast');
+    el.style.pointerEvents = 'auto'; // the message ignores taps on purpose, and elementFromPoint skips such elements
+    const r = el.getBoundingClientRect();
+    const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2).closest('#toast') !== null;
+    el.style.pointerEvents = '';
+    return top;
+  });
+  assert.equal(onTop, true, 'something covers the message');
+  const toastBox = await page.locator('#toast').boundingBox();
+  for (const id of ['#feed-save', '#feed-delete', '#bottle-ml', '#bottle-time']) {
+    const b = await page.locator(id).boundingBox();
+    assert.ok(toastBox.y + toastBox.height <= b.y || b.y + b.height <= toastBox.y, `the message covers ${id}`);
+  }
   assert.match(await page.evaluate(() => location.hash), /^#edit\//, 'stays on the Edit screen');
   assert.deepEqual(await byId(page, 'b1'), before);
   await page.fill('#bottle-time', '14:03'); // up to 5 minutes ahead is allowed

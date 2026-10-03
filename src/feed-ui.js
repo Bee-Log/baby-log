@@ -11,7 +11,8 @@
   var ctx = null;               // { toast, renderToday, setBusy, commitEdit } from app.js
   var editing = null;           // the saved feed being edited, or null when logging a new one
   var timer = null;             // breast timer state (feed.js), or null
-  var form = { mode: 'breast', ml: F.DEFAULT_ML, milk: 'Formula', fedAt: '', sides: { Left: true, Right: false }, min: 0 };
+  var form = { mode: 'breast', ml: F.DEFAULT_ML, milk: 'Formula', fedAt: '', note: '', sides: { Left: true, Right: false }, min: 0 };
+  var lastText = { breast: '', bottle: '' };   // "Last bottle: 90 ml · 11:50 am", shown under the switch when logging
   var MAX_MIN = 300;
   var tick = null;
   var saving = false;
@@ -26,6 +27,35 @@
     if (on === holdingBusy) return;
     holdingBusy = on;
     ctx.setBusy(on);
+  }
+
+  // The note is one value for the feed, shown in both forms, so switching kind never loses it.
+  function setNote(text) {
+    form.note = text;
+    $('breast-note').value = text;
+    $('bottle-note').value = text;
+  }
+
+  function renderLast() {
+    $('last-line').textContent = form.mode === 'breast' ? lastText.breast : lastText.bottle;
+  }
+
+  // Delete asks for a second tap, because there is no Undo. The button turns red and says so, then relaxes.
+  var armTimer = null;
+  function armDelete(button, label, doDelete) {
+    if (!button.classList.contains('armed')) {
+      button.classList.add('armed');
+      button.textContent = 'Tap again to delete';
+      armTimer = setTimeout(function () { disarm(button, label); }, 4000);
+      return;
+    }
+    disarm(button, label);
+    doDelete();
+  }
+  function disarm(button, label) {
+    clearTimeout(armTimer);
+    button.classList.remove('armed');
+    button.textContent = label;
   }
 
   // ---- Breast ----
@@ -128,6 +158,7 @@
     $('mode-breast').setAttribute('aria-pressed', breast ? 'true' : 'false');
     $('mode-bottle').setAttribute('aria-pressed', breast ? 'false' : 'true');
     $('feed-save').textContent = editing ? 'Save changes' : breast ? 'Stop and save' : 'Save';
+    renderLast();
     if (breast) renderBreast(); else renderBottle();
   }
 
@@ -136,10 +167,10 @@
     var e = !!editing;
     $('breast-timer-block').hidden = e;
     $('breast-manual').hidden = !e;
-    $('row-last-time').hidden = e;
     $('row-started').hidden = !e;
-    $('row-last-bottle').hidden = e;
+    $('last-line').hidden = e;
     $('feed-delete').hidden = !e;
+    disarm($('feed-delete'), 'Delete this entry');
     $('h-feed').textContent = e ? 'Edit feed' : 'Feed';
     $('bottle-time').step = e ? '60' : '300';
     $('breast-time').step = '60';
@@ -154,13 +185,12 @@
     var breast = form.mode === 'breast';
     var sameKind = (editing.d || {}).kind === (breast ? 'Breast' : 'Bottle');
     var base = sameKind ? editing.d : {};            // switching Breast <-> Bottle starts the details afresh
-    var changes = { t: t };
+    var changes = { t: t, note: form.note.trim() };
     if (breast) {
       var min = clampMin($('breast-min').value);     // read what is typed right now
       if (min != null) form.min = min;
       var side = form.sides.Left && form.sides.Right ? 'Both' : form.sides.Right ? 'Right' : 'Left';
       changes.d = R.withFields(base, { kind: 'Breast', side: side, min: form.min });
-      changes.note = $('breast-note').value.trim();
     } else {
       var ml = F.clampMl($('bottle-ml').value);
       if (ml != null) form.ml = ml;
@@ -170,7 +200,7 @@
     store.deviceId().then(function (deviceId) {
       var next = R.revise(editing, changes, now, deviceId);
       if (R.sameContent(next, editing)) { saving = false; holdBusy(false); location.hash = '#today'; return; } // nothing changed
-      return ctx.commitEdit('Changes saved', [editing], [next]).then(function () { saving = false; holdBusy(false); });
+      return ctx.commitEdit('Changes saved', [next]).then(function () { saving = false; holdBusy(false); });
     }).catch(function (err) {
       saving = false;
       console.error('[baby-log] feed edit save', err);
@@ -182,7 +212,7 @@
     if (saving || !editing) return;
     saving = true;
     store.deviceId().then(function (deviceId) {
-      return ctx.commitEdit('Deleted', [editing], [R.tombstone(editing, Date.now(), deviceId)]);
+      return ctx.commitEdit('Deleted', [R.tombstone(editing, Date.now(), deviceId)]);
     }).then(function () { saving = false; holdBusy(false); }, function (err) {
       saving = false;
       console.error('[baby-log] feed delete', err);
@@ -204,11 +234,11 @@
     if (form.mode === 'breast') {
       var f = F.breastFields(F.stop(timer, now), now);
       if (!f) { saving = false; return; }
-      work = { t: f.t, d: f.d, note: $('breast-note').value.trim() };
+      work = { t: f.t, d: f.d, note: form.note.trim() };
     } else {
       var t = F.timeOnOrBefore(now, form.fedAt);
       if (t == null) { saving = false; ctx.toast('Please check the time.'); return; }
-      work = { t: t, d: { kind: 'Bottle', milk: form.milk, ml: form.ml }, note: '' };
+      work = { t: t, d: { kind: 'Bottle', milk: form.milk, ml: form.ml }, note: form.note.trim() };
     }
     var wasBreast = form.mode === 'breast';
     store.deviceId().then(function (deviceId) {
@@ -218,10 +248,7 @@
     }).then(function (rec) {
       timer = null;
       saving = false;
-      // The message comes first, so an update cannot reload the page between saving and Undo.
-      ctx.toast('Feed saved', function () {
-        return store.put(R.tombstone(rec, Date.now())).then(ctx.renderToday);
-      });
+      ctx.toast('Feed saved');
       holdBusy(false);
       location.hash = '#today'; // the Today screen draws the new entry
     }).catch(function (err) {
@@ -240,7 +267,7 @@
     screen.hidden = false;
     screen.removeAttribute('data-ready');
     $('feed-save').disabled = true; // until the saved data has loaded
-    $('breast-note').value = '';
+    setNote('');
     var loading = [store.getMeta(TIMER_KEY), store.all()];
     if (editId) loading.push(store.getRecord(editId));
     Promise.all(loading).then(function (r) {
@@ -263,14 +290,14 @@
       form.fedAt = F.inputTime(Date.now());
       form.sides = { Left: true, Right: false };
       form.min = 10;
-      $('breast-last').textContent = lastBreast ? (breast.side || 'Breast') + ' · ' + R.formatClock(lastBreast.t) : 'No breast feed yet';
-      $('bottle-last').textContent = lastBottle ? (bottle.ml != null ? bottle.ml + ' ml · ' : '') + R.formatClock(lastBottle.t) : 'No bottle yet';
+      lastText.breast = lastBreast ? 'Last breast feed: ' + (breast.side || 'Breast') + ' · ' + R.formatClock(lastBreast.t) : 'No breast feed yet';
+      lastText.bottle = lastBottle ? 'Last bottle: ' + (bottle.ml != null ? bottle.ml + ' ml · ' : '') + R.formatClock(lastBottle.t) : 'No bottle yet';
       var mode;
       if (editing) {
         // Open with this feed's own values. The other kind keeps the defaults above, in case the parent switches.
         var d = editing.d || {};
         form.fedAt = R.hhmm(editing.t);
-        $('breast-note').value = editing.note || '';
+        setNote(editing.note || '');
         if (d.kind === 'Bottle') {
           if (d.ml != null && F.clampMl(d.ml) != null) form.ml = F.clampMl(d.ml);
           if (F.MILK.indexOf(d.milk) > -1) form.milk = d.milk;
@@ -339,7 +366,9 @@
       if (typeof e.currentTarget.showPicker === 'function') { try { e.currentTarget.showPicker(); } catch (err) { /* already open or not allowed */ } }
     });
     $('feed-save').addEventListener('click', save);
-    $('feed-delete').addEventListener('click', deleteEntry);
+    $('breast-note').addEventListener('input', function (e) { setNote(e.target.value); });
+    $('bottle-note').addEventListener('input', function (e) { setNote(e.target.value); });
+    $('feed-delete').addEventListener('click', function (e) { armDelete(e.currentTarget, 'Delete this entry', deleteEntry); });
   }
 
   root.BABYLOG_FEED_UI = { init: init, show: show, hide: hide };

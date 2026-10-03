@@ -34,7 +34,7 @@ test('bad records are refused', () => {
   assert.throws(() => R.makeRecord({ ...ok, t: NaN }), /ms/);
 });
 
-test('undo makes a tombstone; updatedAt always moves forward', () => {
+test('delete makes a tombstone; updatedAt always moves forward', () => {
   const r = R.makeRecord({ id: 'a', type: 'pee', t: at(9), now: at(9), deviceId: 'p' });
   const gone = R.tombstone(r, at(9, 1));
   assert.equal(gone.deleted, true);

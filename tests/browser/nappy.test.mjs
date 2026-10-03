@@ -1,4 +1,4 @@
-// Feature 005: log a wee or a poo with one tap, undo it, and keep TEST data apart from LIVE.
+// Feature 005: log a wee or a poo with one tap, fix a wrong tap from the list, and keep TEST data apart from LIVE.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { startSite, phone, state, open, install, todayRows } from './helpers.mjs';
@@ -56,14 +56,19 @@ test('one tap logs a wee or a poo; both together show as one nappy; it survives 
   await context.close();
 });
 
-test('Undo removes the entry from the list but keeps a tombstone for sync', async () => {
-  site.test = 'test-v1';
+test('a wrong tap is removed from the list: open the row, tap Delete twice', async () => {
   const { context, page, errors } = await phone(browser);
   await install(page, `${origin}/baby-log/test/`);
   await tap(page, 'Poo');
   assert.deepEqual(await todayRows(page), ['Nappy · Poo']);
-  await page.getByRole('button', { name: 'Undo' }).click();
-  await page.waitForFunction(() => document.getElementById('toast-text').textContent === 'Removed');
+  assert.equal(await page.isVisible('#toast-undo'), false, 'there is no Undo button');
+  await page.locator('#today-list .row-link').first().click();
+  await page.waitForSelector('#screen-edit[data-ready]');
+  await page.click('#edit-delete');
+  assert.equal(await page.textContent('#edit-delete'), 'Tap again to delete', 'the first tap only asks');
+  assert.deepEqual((await storedRecords(page, 'test-baby-log')).map((r) => r.deleted), [undefined], 'nothing is deleted yet');
+  await page.click('#edit-delete');
+  await page.waitForFunction(() => location.hash === '#today');
   assert.deepEqual(await todayRows(page), []);
   const [rec] = await storedRecords(page, 'test-baby-log');
   assert.equal(rec.deleted, true, 'removed entries are tombstones, not deleted');
@@ -95,29 +100,6 @@ test('TEST entries never reach LIVE storage', async () => {
   await tap(page, 'Poo');
   assert.deepEqual((await storedRecords(page, 'baby-log')).map((r) => r.type), ['poop']);
   assert.deepEqual((await storedRecords(page, 'test-baby-log')).map((r) => r.type), ['pee']);
-  assert.deepEqual(errors, []);
-  await context.close();
-});
-
-test('an update does not reload the page while Undo is still possible', async () => {
-  site.test = 'test-v1';
-  const { context, page, errors } = await phone(browser);
-  const url = `${origin}/baby-log/test/`;
-  await install(page, url);
-  await tap(page, 'Wee');
-  await page.evaluate(() => { window.__sameLoad = true; });
-
-  site.test = 'test-v2'; // publish an update while the Undo message is showing
-  await page.evaluate(() => navigator.serviceWorker.getRegistration().then((r) => r.update()));
-  await page.waitForFunction(() => navigator.serviceWorker.controller.scriptURL && caches.keys().then((k) => k.includes('test-baby-log-shell-test-v2')));
-  await page.waitForTimeout(1000);
-  assert.equal(await page.evaluate(() => window.__sameLoad === true && !document.getElementById('toast').hidden), true,
-    'no reload while Undo is showing');
-
-  // When the message is gone, the page moves to the new version by itself.
-  const s = await state(page, { until: (x) => x.pageVersion === 'test-v2', timeoutMs: 12000 });
-  assert.equal(s.pageVersion, 'test-v2');
-  assert.deepEqual(await todayRows(page), ['Nappy · Wee'], 'the entry is still there after the update');
   assert.deepEqual(errors, []);
   await context.close();
 });

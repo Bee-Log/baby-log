@@ -74,3 +74,4 @@ Record a wee or a poo with one tap.
 
 ## Feedback
 - 2026-10-03: Tested OK on the TEST address (Wee, Poo, Undo, offline, entries kept after closing the app).
+- 2026-10-03 (owner): the **Undo** button covered other buttons, so Undo was removed for now. A wrong tap is fixed from the Today list (feature 011): open the row and tap Delete twice. See `docs/ux/feed-and-edit-experience.md`.

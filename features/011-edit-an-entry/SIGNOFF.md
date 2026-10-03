@@ -19,20 +19,19 @@ Fix or delete a nappy or feed after it was saved, by tapping its row on Today.
 - **Bottle feed:** exactly the bottle controls used for logging: drag the bottle, type the amount, −10 / +10, Formula or Expressed, and "Fed at".
 - **The kind can be changed.** The parent can switch Breast / Bottle while editing, to fix a feed saved as the wrong kind. The details of the other kind start from defaults, and the note is kept.
 - **Nappy:** a small screen with the time and Delete. A "Wee + Poo" row is two entries. A time change moves both by the same amount, and Delete removes both. A nappy cannot be changed from Wee to Poo (delete it and log the right one).
-- **Delete** is on the edit screens. **Undo** is offered for 6 seconds after "Save changes" and after "Delete".
+- **Delete** is on the edit screens. It asks for a second tap ("Tap again to delete"). **There is no Undo for now**, because the Undo button covered other buttons (owner feedback).
 - The time stays inside the same Today (6 am to 6 am), and can never be more than 5 minutes ahead of now.
 
 ## How it should work
 1. Tap a row on Today. The Feed screen (or the nappy screen) opens with the saved values.
 2. Change what is wrong. Tap **Save changes**. The app returns to Today and shows the new values.
 3. Or tap **Delete this entry**. The row goes away.
-4. If it was a mistake, tap **Undo** in the message at the bottom.
 
 ## Data it captures
 No new fields and no change to the record format.
 - An edit changes the entry **in place**: the same `id`, new values in `t`, `d` and `note`, a newer `updatedAt`, and this phone's `deviceId`.
 - This is the existing merge rule: the newest `updatedAt` wins.
-- Delete sets `deleted: true` and a newer `updatedAt` (a tombstone). Undo writes the earlier values back with an even newer `updatedAt`.
+- Delete sets `deleted: true` and a newer `updatedAt` (a tombstone).
 - Fields that can change: feed `t`, `d.kind`, `d.side`, `d.min`, `d.ml`, `d.milk`, `note`; nappy `t`.
 - Changing a feed between Breast and Bottle replaces `d` with the new kind's fields. Nothing is left over from the old kind.
 
@@ -44,12 +43,14 @@ No new fields and no change to the record format.
 
 ## Open questions
 - Does the partner like the look? The edit form reuses the Feed screen, so it should feel familiar.
-- Should "Delete" ask "Are you sure?" It does not now, because Undo is there and a night-time parent has one hand free.
+- Should Undo come back? It is removed for now. Delete asks for a second tap instead.
 
 ## Artifacts
 None. This feature has no Claude Design screen. It reuses the Feed screen (`features/006-log-a-breast-feed/artifacts/Feed.dc.html`).
 
 ## Build notes
+**Update (2026-10-03, after the owner tried it).** Undo was removed: the Undo button covered other buttons. Delete now asks for a second tap. The notes below were written before that, so wherever they mention Undo, read "removed". Other changes: **Fed at** and **Note** are the card for both kinds, the **Expressed** button fits on small phones, and messages sit at the top of full screens, above the TEST banner. See `docs/ux/feed-and-edit-experience.md`.
+
 **Built (2026-10-03), then rebuilt the same day after the owner's feedback.**
 
 *First version.* A separate Edit screen with different controls (Left / Right / Both chips, a different layout). The owner tried it and said it was not like the logging form.
@@ -90,3 +91,6 @@ None. This feature has no Claude Design screen. It reuses the Feed screen (`feat
 
 ## Feedback
 - 2026-10-03 (owner): the first version used a different form from logging, with different controls. Rebuilt so editing opens the Feed screen itself.
+- 2026-10-03 (owner): the edit form must be the same as the logging form. Done in the second version.
+- 2026-10-03 (owner): **Expressed** overflowed its button; a stray line under Fed at; the Undo button covered other buttons. Fixed: narrower bottle on small phones, one line only between two visible rows, Undo removed (Delete asks for a second tap), messages sit at the top of full screens.
+- 2026-10-03 (owner): **Fed at** and **Note** are now the card for both Breast and Bottle, when logging and when editing.

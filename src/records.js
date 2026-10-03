@@ -95,23 +95,13 @@
 
   // ---- Editing (feature 011) ----
   // An edit keeps the id and moves updatedAt forward, so the existing merge rule (newest updatedAt wins) carries it.
+  // (There is no Undo for now. If it returns, it writes the earlier values back with an even newer updatedAt.)
   function revise(rec, changes, now, deviceId) {
     var out = {};
     for (var k in rec) out[k] = rec[k];
     ['t', 'd', 'note'].forEach(function (f) { if (f in changes) out[f] = changes[f]; });
     out.deviceId = deviceId || rec.deviceId;
     out.updatedAt = Math.max(now, rec.updatedAt + 1);
-    return out;
-  }
-
-  // Put an earlier version back (Undo after an edit or a delete). `current` is what is stored now,
-  // so the restored copy is newer than it and wins everywhere.
-  function restore(original, current, now, deviceId) {
-    var out = {};
-    for (var k in original) out[k] = original[k];
-    delete out.deleted;
-    out.deviceId = deviceId || original.deviceId;
-    out.updatedAt = Math.max(now, current.updatedAt + 1);
     return out;
   }
 
@@ -151,7 +141,7 @@
     TYPES: TYPES, NAPPY_PAIR_MS: NAPPY_PAIR_MS,
     makeRecord: makeRecord, tombstone: tombstone, dayWindow: dayWindow,
     nappyRows: nappyRows, nappyLabel: nappyLabel, feedLabel: feedLabel, timelineRows: timelineRows, lastFeed: lastFeed,
-    revise: revise, restore: restore, withFields: withFields, sameContent: sameContent, hhmm: hhmm, timeInDay: timeInDay,
+    revise: revise, withFields: withFields, sameContent: sameContent, hhmm: hhmm, timeInDay: timeInDay,
     formatClock: formatClock
   };
 })(typeof self !== 'undefined' ? self : this);

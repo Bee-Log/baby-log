@@ -115,7 +115,7 @@ test('a running timer survives closing the app, and keeps the right time', async
   await page.click('a.quick-btn.feed');
   await ready(page);
   assert.equal(await page.textContent('#breast-started'), 'Not started yet');
-  assert.equal(await page.textContent('#breast-last'), `Left · ${await page.evaluate((t) => { const d = new Date(t), h = d.getHours(), m = d.getMinutes(); return (h % 12 || 12) + ':' + String(m).padStart(2, '0') + (h < 12 ? ' am' : ' pm'); }, r.t)}`);
+  assert.equal(await page.textContent('#last-line'), `Last breast feed: Left · ${await page.evaluate((t) => { const d = new Date(t), h = d.getHours(), m = d.getMinutes(); return (h % 12 || 12) + ':' + String(m).padStart(2, '0') + (h < 12 ? ' am' : ' pm'); }, r.t)}`);
   assert.deepEqual(errors, []);
   await context.close();
 });
@@ -174,8 +174,9 @@ test('bottle: the next feed starts from the last amount and milk; Last bottle is
   await install(page, url());
   await page.click('a.quick-btn.feed');
   await ready(page);
-  assert.equal(await page.textContent('#bottle-last'), 'No bottle yet');
+  assert.equal(await page.textContent('#last-line'), 'No breast feed yet');
   await page.click('#mode-bottle');
+  assert.equal(await page.textContent('#last-line'), 'No bottle yet');
   await page.fill('#bottle-ml', '70');
   await page.press('#bottle-ml', 'Tab');
   await page.click('#milk-expressed');
@@ -188,12 +189,12 @@ test('bottle: the next feed starts from the last amount and milk; Last bottle is
   assert.equal(await page.getAttribute('#mode-bottle', 'aria-pressed'), 'true', 'repeats the kind of the last feed');
   assert.equal(await page.inputValue('#bottle-ml'), '70');
   assert.equal(await page.getAttribute('#milk-expressed', 'aria-pressed'), 'true');
-  assert.match(await page.textContent('#bottle-last'), /^70 ml · \d{1,2}:\d{2} [ap]m$/);
+  assert.match(await page.textContent('#last-line'), /^Last bottle: 70 ml · \d{1,2}:\d{2} [ap]m$/);
   assert.deepEqual(errors, []);
   await context.close();
 });
 
-test('Undo after saving a feed removes it from the list and leaves a tombstone', async () => {
+test('after saving there is a message and no Undo button; the feed is on the list', async () => {
   const { context, page, errors } = await phone(browser);
   await install(page, url());
   await page.click('a.quick-btn.feed');
@@ -202,13 +203,62 @@ test('Undo after saving a feed removes it from the list and leaves a tombstone',
   await page.click('#feed-save');
   await afterSave(page);
   assert.deepEqual(await todayRows(page), ['Feed · Bottle 90 ml'], 'the new feed is on the list');
-  await page.getByRole('button', { name: 'Undo' }).click();
-  await page.waitForFunction(() => document.getElementById('toast-text').textContent === 'Removed');
-  assert.deepEqual(await todayRows(page), []);
-  const [r] = await storedRecords(page);
-  assert.equal(r.deleted, true);
+  assert.equal(await page.isVisible('#toast-undo'), false);
   assert.deepEqual(errors, []);
   await context.close();
+});
+
+test('bottle and breast both have a Note; it is kept when switching kind and saved with the feed', async () => {
+  const { context, page, errors } = await phone(browser);
+  await install(page, url());
+  await page.click('a.quick-btn.feed');
+  await ready(page);
+  await page.click('#mode-bottle');
+  await page.fill('#bottle-note', 'Spat up a little');
+  await page.click('#mode-breast');
+  assert.equal(await page.inputValue('#breast-note'), 'Spat up a little', 'the same note in both forms');
+  await page.click('#mode-bottle');
+  await page.click('#feed-save');
+  await afterSave(page);
+  const [r] = await storedRecords(page);
+  assert.equal(r.note, 'Spat up a little');
+  assert.deepEqual(r.d.kind, 'Bottle');
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('the card under the form has Fed at and Note, with a line between them and no stray line', async () => {
+  const { context, page, errors } = await phone(browser);
+  await install(page, url());
+  await page.click('a.quick-btn.feed');
+  await ready(page);
+  await page.click('#mode-bottle');
+  const lines = () => page.$$eval('#panel-bottle .card-row', (rows) => rows.filter((r) => !r.hidden).map((r) => [
+    r.querySelector('label').textContent, getComputedStyle(r).borderTopWidth, getComputedStyle(r).borderBottomWidth]));
+  assert.deepEqual(await lines(), [['Fed at', '0px', '0px'], ['Note', '1px', '0px']]);
+  assert.equal(await page.textContent('#last-line'), 'No bottle yet', 'the last-bottle info is a small line under the switch');
+  await page.click('#screen-feed a[aria-label="Close"]');
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('the bottle controls fit on a narrow phone (Expressed does not overflow its button)', async () => {
+  for (const width of [320, 360, 390]) {
+    const context = await browser.newContext({ viewport: { width, height: 740 } });
+    const page = await context.newPage();
+    await install(page, url());
+    await page.click('a.quick-btn.feed');
+    await ready(page);
+    await page.click('#mode-bottle');
+    const overflowing = await page.$$eval('#panel-bottle .chip, #panel-bottle .step-btn', (els) =>
+      els.filter((e) => e.scrollWidth > e.clientWidth).map((e) => e.textContent));
+    assert.deepEqual(overflowing, [], `${width}px wide: these overflow`);
+    const bottle = await page.locator('#bt-svg').boundingBox();
+    const side = await page.locator('.bottle-side').boundingBox();
+    assert.ok(bottle.x + bottle.width <= side.x, `${width}px wide: the bottle and the controls overlap`);
+    assert.ok(side.x + side.width <= width, `${width}px wide: the controls run off the screen`);
+    await context.close();
+  }
 });
 
 test('feeds work offline, and TEST feeds never reach LIVE', async () => {

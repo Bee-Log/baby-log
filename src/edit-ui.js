@@ -69,7 +69,7 @@
     saving = true;
     store.deviceId().then(function (deviceId) {
       var next = recs.map(function (r) { return R.revise(r, { t: r.t + delta }, now, deviceId); });
-      return ctx.commitEdit('Changes saved', recs, next);
+      return ctx.commitEdit('Changes saved', next);
     }).then(function () { saving = false; holdBusy(false); }, function (err) {
       saving = false;
       console.error('[baby-log] edit save', err);
@@ -82,7 +82,7 @@
     saving = true;
     var now = Date.now();
     store.deviceId().then(function (deviceId) {
-      return ctx.commitEdit('Deleted', recs, recs.map(function (r) { return R.tombstone(r, now, deviceId); }));
+      return ctx.commitEdit('Deleted', recs.map(function (r) { return R.tombstone(r, now, deviceId); }));
     }).then(function () { saving = false; holdBusy(false); }, function (err) {
       saving = false;
       console.error('[baby-log] edit delete', err);
@@ -96,7 +96,21 @@
       if (typeof e.currentTarget.showPicker === 'function') { try { e.currentTarget.showPicker(); } catch (err) { /* already open or not allowed */ } }
     });
     $('edit-save').addEventListener('click', save);
-    $('edit-delete').addEventListener('click', remove);
+    // Delete asks for a second tap, because there is no Undo.
+    var armTimer = null;
+    $('edit-delete').addEventListener('click', function (e) {
+      var button = e.currentTarget;
+      if (button.classList.contains('armed')) {
+        clearTimeout(armTimer);
+        button.classList.remove('armed');
+        button.textContent = 'Delete this entry';
+        remove();
+        return;
+      }
+      button.classList.add('armed');
+      button.textContent = 'Tap again to delete';
+      armTimer = setTimeout(function () { button.classList.remove('armed'); button.textContent = 'Delete this entry'; }, 4000);
+    });
   }
 
   root.BABYLOG_EDIT_UI = { init: init, show: show, hide: hide };

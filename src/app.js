@@ -12,7 +12,7 @@
   document.getElementById('version').textContent =
     '· ' + (isTest ? 'TEST · ' : '') + 'version ' + cfg.version;
 
-  // ---- Busy: while the parent can still undo, an update waits instead of reloading the page ----
+  // ---- Busy: while a form is open, an update waits instead of reloading the page ----
   var busy = 0;
   var reloadWhenIdle = false;
   function setBusy(on) {
@@ -113,13 +113,9 @@
     store.deviceId().then(function (deviceId) {
       var rec = R.makeRecord({ id: crypto.randomUUID(), type: type, t: now, now: now, deviceId: deviceId });
       return store.put(rec);
-    }).then(function (rec) {
+    }).then(function () {
       // Show the entry in the list first, then confirm, so the message never runs ahead of the screen.
-      return renderToday().then(function () {
-        toast(WORD[type] + ' saved', function () {
-          return store.put(R.tombstone(rec, Date.now())).then(renderToday);
-        });
-      });
+      return renderToday().then(function () { toast(WORD[type] + ' saved'); });
     }).catch(function (err) {
       console.error('[baby-log] save', err);
       toast('Not saved. Please try again.');
@@ -131,47 +127,24 @@
     quick[q].addEventListener('click', function (e) { log(e.currentTarget.getAttribute('data-log')); });
   }
 
-  // Save changed entries and offer Undo for 6 seconds. `before` are the entries as stored and `after` their new
-  // versions (same ids): an edit, or tombstones for a delete. Undo writes the earlier values back with an
-  // updatedAt newer than what is stored now, so it wins everywhere. Used by the Feed screen and the nappy Edit screen.
-  function commitEdit(message, before, after) {
+  // Save changed entries (an edit, or tombstones for a delete) in one step, say so, and go back to Today.
+  // `after` are the new versions of the stored entries. Used by the Feed screen and the nappy Edit screen.
+  function commitEdit(message, after) {
     return store.putMany(after).then(function () {
-      toast(message, function () {
-        var back = before.map(function (b, i) { return R.restore(b, after[i], Date.now(), after[i].deviceId); });
-        return store.putMany(back).then(renderToday).then(function () { return message === 'Deleted' ? 'Restored' : 'Change undone'; });
-      });
+      toast(message);
       location.hash = '#today';
     });
   }
 
-  // ---- Toast with an optional Undo, for 6 seconds ----
+  // ---- A short message, for 3.5 seconds. On a full screen it sits at the top, so it never covers a button ----
   var toastEl = document.getElementById('toast');
-  var toastUndo = document.getElementById('toast-undo');
-  var toastTimer = null, undoAction = null;
-  function toast(text, undo) {
-    hideToast();
+  var toastTimer = null;
+  function toast(text) {
+    clearTimeout(toastTimer);
     document.getElementById('toast-text').textContent = text;
-    undoAction = undo || null;
-    toastUndo.hidden = !undo;
     toastEl.hidden = false;
-    if (undo) setBusy(true);
-    toastTimer = setTimeout(hideToast, 6000);
+    toastTimer = setTimeout(function () { toastEl.hidden = true; }, 3500);
   }
-  function hideToast() {
-    clearTimeout(toastTimer);
-    toastEl.hidden = true;
-    if (undoAction) { undoAction = null; setBusy(false); }
-  }
-  toastUndo.addEventListener('click', function () {
-    var undo = undoAction;
-    undoAction = null; // keep busy until the undo is saved
-    toastEl.hidden = true;
-    clearTimeout(toastTimer);
-    undo().then(function (message) { toast(typeof message === 'string' ? message : 'Removed'); }, function (err) {
-      console.error('[baby-log] undo', err);
-      toast('Could not undo. Please try again.');
-    }).then(function () { setBusy(false); });
-  });
 
   var shared = { toast: toast, renderToday: renderToday, setBusy: setBusy, commitEdit: commitEdit };
   FEED_UI.init(shared);
@@ -186,7 +159,7 @@
   }
   // A new version takes over in the background (sw.js skips waiting). Reload once so the page
   // and its scripts come from the same version. Not on the very first visit (no previous controller).
-  // While an Undo is still possible, or a bottle form is open, wait until that is done, so nothing the parent is doing is lost.
+  // While a form is open, wait until the parent is done, so nothing they are typing is lost.
   var hadController = !!navigator.serviceWorker.controller;
   var reloading = false;
   navigator.serviceWorker.addEventListener('controllerchange', function () {
