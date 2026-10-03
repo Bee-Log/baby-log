@@ -16,6 +16,7 @@ features/NNN-slug/      SIGNOFF.md + artifacts/ for each feature
 BOARD.md                generated list of features by status (never edit by hand)
 scripts/make_board.py   rebuilds BOARD.md from the SIGNOFF.md headers
 prototype/baby-log.html first prototype, for reference only
+docs/adr/               architecture decision records (ADR-001: data storage and sync)
 DEPLOY.md               how test and live are published, rollback, links
 scripts/build.mjs       builds src/ into dist/test and dist/live (no dependencies)
 tests/                  node:test checks, run with `npm test`
@@ -36,7 +37,7 @@ To build, the owner says "build feature 001" or names the signoff. Find it in `f
 ## Decisions already made
 - Installable web app (PWA). Static hosting on GitHub Pages. No servers.
 - The phone is the main store (IndexedDB). It must work fully offline.
-- Sync uses the hidden app data folder in Google Drive. Merge by record id; the newest `updatedAt` wins; deletes are tombstones.
+- Storage and sync: see `docs/adr/ADR-001-data-storage-and-sync.md` (one shared Google account, one append-only file per phone in the hidden app data folder, merge by id with the newest `updatedAt`).
 - Data is plain JSON with a CSV export, so it can move to another backend later.
 - Data protection (owner decision, 2026-10-03): TEST, LIVE and every other GitHub Pages site of this account share one browser origin (`oudam-meas.github.io`), so they share storage. For now we keep that and protect real data in code (see "Shared origin" in app-rules). Moving LIVE to its own domain stays open for later.
 - Full rules and the record format: `.claude/skills/build-feature/references/app-rules.md`.

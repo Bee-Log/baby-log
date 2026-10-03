@@ -31,11 +31,19 @@ deleted     true if the entry was removed (a "tombstone"), otherwise absent
 - Do not store anything that would lock the data into one backend. The same JSON must be easy to move to another database later.
 
 ## Sync with Google Drive
-- Use the hidden app data folder in Google Drive (scope `drive.appdata`). It needs no app review and does not show in the user's normal Drive.
-- Each device writes its own file of records. On sync, read the other device files and merge by `id`. The record with the larger `updatedAt` wins. A tombstone wins over an older live record.
-- Sync when the app opens, after changes, and when the network comes back. Sign-in tokens in a browser expire about hourly; renew quietly and show a small "Sign in again" button only if renewal fails.
-- A new phone signs in, pulls all files, merges, and continues.
-- Show a small, honest sync status: synced, waiting for network, or sign-in needed.
+Full reasoning and rejected options: `docs/adr/ADR-001-data-storage-and-sync.md`. Sync is a feature of its own and goes through a signoff.
+
+- **One shared Google account.** Both phones sign in with the same account, made only for baby-log. Its password and 2-step code live in 1Password. No credentials in the repository; only the public OAuth client ID may appear in code.
+- **Scope `drive.appdata`** (the hidden app-data folder). It needs no app review and does not show in the normal Drive.
+- **One file per phone.** Layout: `baby-log/devices/<deviceId>.jsonl` for LIVE and `baby-log-test/devices/<deviceId>.jsonl` for TEST (the name is `driveFolder` in `src/config.js`). Format is JSON Lines: one full record per line, in the record format above.
+- **A phone writes only its own file**, never another phone's. A change appends a line with the full record and a new `updatedAt`. A delete appends the record with `deleted: true`.
+- **Compaction.** A phone may rewrite its own file and keep only the newest line per `id` (tombstones included). This is safe because only that phone writes that file.
+- **Push** after a change (short debounce) and when the network returns. **Pull** when the app opens, when the network returns, and every few minutes while open. A pull lists `devices/*.jsonl`, downloads the files that changed since the last pull, and merges each line into the phone store.
+- **Merge rule.** Match by `id`. The larger `updatedAt` wins. A tombstone wins over an older live record. If `updatedAt` is equal, the record whose `deviceId` sorts higher wins, so every phone reaches the same result.
+- **New or reset phone:** sign in, pull all files, merge, continue.
+- **Sign-in tokens** last about one hour. Renew them quietly. Show a small "Sign in again" button only if renewal fails.
+- **Status shown to the user:** synced, waiting for network, or sign-in needed.
+- **Export.** Keep the CSV export (prototype column names) and add a JSONL export of all records. The hidden folder cannot be browsed, so the export buttons are the way to get the data out. DuckDB is for later analysis only, not used inside the app.
 
 ## Test data stays separate
 A test build must never touch the real data. Use a different storage name prefix (for example `test-`) and a different Drive folder name for test builds. Show a clear "TEST" label in the app when running as a test.
