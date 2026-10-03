@@ -22,10 +22,6 @@
 
   // Ring geometry, in the 300 x 300 drawing.
   var CX = 150, CY = 150, RING_R = 118;
-  var RING_HALF_WIDTH = 16;       // the ring band: drag on the arc to move the whole sleep, tap to place it
-  var OUTER_REACH = 46;           // outside the band, up to RING_R + this: grab the nearest end
-  var END_GRAB_PX = 26;           // from off the arc: how close to an end still grabs that end
-  var END_INSIDE_PX = 8;          // on the arc itself, only this close to an end grabs it (else: move)
   var END_DOT_R = RING_R + 24;    // where the end dots sit
 
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
@@ -273,31 +269,8 @@
     return 'M' + CX + ' ' + CY + ' L' + p0.x + ' ' + p0.y + ' A' + r + ' ' + r + ' 0 0 1 ' + p1.x + ' ' + p1.y + ' Z';
   }
 
-  // What a touch does. `p` is where it landed: { dist, x, y, minutes } (distance from the centre, drawing x and y, and the
-  // minute inside the active range). Returns { what: 'start' | 'end' | 'move' | null, grabOffset, state }.
-  //   inner face             - nothing
-  //   ring band, on the arc  - move the whole sleep (unless right on an end marker)
-  //   ring band, off the arc - near an end: move that end; else place the sleep there
-  //   outside the band       - grab the nearest end (the dots sit here)
-  function grab(state, env, p) {
-    var inBand = Math.abs(p.dist - RING_R) <= RING_HALF_WIDTH;
-    var outside = p.dist > RING_R + RING_HALF_WIDTH && p.dist <= RING_R + OUTER_REACH;
-    if (!inBand && !outside) return { what: null, grabOffset: 0, state: state };
-    var d = state.draft;
-    var near = function (m) {
-      var a = angleOf(m), onRing = pointAt(a, RING_R), dot = pointAt(a, END_DOT_R);
-      return Math.min(Math.hypot(p.x - onRing.x, p.y - onRing.y), Math.hypot(p.x - dot.x, p.y - dot.y));
-    };
-    var ds = near(d.start), de = near(d.end), nearest = Math.min(ds, de);
-    var onArc = p.minutes > d.start && p.minutes < d.end;
-    var endWhich = ds <= de ? 'start' : 'end';
-    var what, next = state;
-    if (outside) what = endWhich;
-    else if (onArc) what = nearest <= END_INSIDE_PX ? endWhich : 'move';
-    else if (nearest <= END_GRAB_PX) what = endWhich;
-    else { what = 'move'; next = moveTo(state, env, p.minutes - (d.end - d.start) / 2); }       // tap empty ring
-    return { what: what, grabOffset: p.minutes - next.draft.start, state: copy(next, { note: null }) };
-  }
+  // Dragging. `what` is the handle that was touched: 'start' or 'end' (the dots), or 'move' (the arc).
+  // `minutes` is where the finger is now. For 'move', `grabOffset` is how far after the start of the sleep it was grabbed.
   function drag(state, env, what, grabOffset, minutes) {
     return what === 'move' ? moveTo(state, env, minutes - grabOffset) : setEnd(state, env, what, minutes);
   }
@@ -307,7 +280,7 @@
     STEP_MIN: STEP_MIN, MIN_LEN: MIN_LEN, MAX_LEN: MAX_LEN, RESET_LEN: RESET_LEN,
     init: init, setLength: setLength, togglePart: togglePart, setEnd: setEnd, placeAt: placeAt, moveTo: moveTo, addStep: addStep,
     subtractStep: subtractStep, resetLength: resetLength, setTyped: setTyped, draftTimes: draftTimes, afterAdd: afterAdd,
-    grab: grab, drag: drag, problem: problem, isFuture: isFuture, isOverlapping: isOverlapping, loggedOf: loggedOf, nowMinute: nowMinute,
+    drag: drag, problem: problem, isFuture: isFuture, isOverlapping: isOverlapping, loggedOf: loggedOf, nowMinute: nowMinute,
     rangeOf: rangeOf, rangeOfParts: rangeOfParts, partOf: partOf, nextPart: nextPart,
     baseFor: baseFor, toTime: toTime, toInputValue: toInputValue, partDay: partDay, toMinute: toMinute, formatClock: formatClock, formatLength: formatLength,
     angleOf: angleOf, pointAt: pointAt, arcPath: arcPath, wedgePath: wedgePath

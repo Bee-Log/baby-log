@@ -21,6 +21,7 @@ var SHELL = [
   'sleep-ui.js',
   'pastsleep.js',
   'pastsleep-ui.js',
+  'sleep-edit-ui.js',
   'profile.js',
   'profile-ui.js',
   'sync.js',

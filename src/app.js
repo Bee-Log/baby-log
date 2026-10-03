@@ -24,18 +24,21 @@
   var FEED_UI = self.BABYLOG_FEED_UI;
   var EDIT_UI = self.BABYLOG_EDIT_UI;
   var SLEEP_UI = self.BABYLOG_SLEEP_UI;
+  var SLEEP_EDIT_UI = self.BABYLOG_SLEEP_EDIT_UI;
   var PROFILE_UI = self.BABYLOG_PROFILE_UI;
   var SYNC_UI = self.BABYLOG_SYNC_UI;
   var SUMMARY_UI = self.BABYLOG_SUMMARY_UI;
-  // #edit/<ids>: a feed is edited on the Feed screen, a nappy on its own small Edit screen.
+  // #edit/<ids>: a feed is edited on the Feed screen, a sleep on the Edit sleep screen, a nappy on its own small Edit screen.
   function openEdit(arg, hashAtStart) {
     FEED_UI.hide();
     EDIT_UI.hide();
+    SLEEP_EDIT_UI.hide();
     var first = String(arg).split('+')[0];
     try { first = decodeURIComponent(first); } catch (err) { /* a broken link just finds nothing */ }
     store.getRecord(first).then(function (rec) {
       if (location.hash !== hashAtStart) return; // the parent already moved on
       if (rec && rec.type === 'feed') FEED_UI.show({ editId: rec.id });
+      else if (rec && rec.type === 'sleep') SLEEP_EDIT_UI.show(rec.id);
       else EDIT_UI.show(arg);
     }).catch(function (err) {
       console.error('[baby-log] edit lookup', err);
@@ -49,7 +52,7 @@
     if (screen) {
       var hidden = document.querySelectorAll('.view');
       for (var h = 0; h < hidden.length; h++) hidden[h].hidden = true;
-      FEED_UI.hide(); EDIT_UI.hide(); SLEEP_UI.hide(); PROFILE_UI.hide(); SYNC_UI.hide();
+      FEED_UI.hide(); EDIT_UI.hide(); SLEEP_EDIT_UI.hide(); SLEEP_UI.hide(); PROFILE_UI.hide(); SYNC_UI.hide();
       if (screen === 'feed') FEED_UI.show();
       else if (screen === 'sleep') SLEEP_UI.show();
       else if (screen === 'profile') PROFILE_UI.show();
@@ -60,6 +63,7 @@
     }
     FEED_UI.hide();
     EDIT_UI.hide();
+    SLEEP_EDIT_UI.hide();
     SLEEP_UI.hide();
     PROFILE_UI.hide();
     SYNC_UI.hide();
@@ -99,8 +103,7 @@
     li.className = 'row';
     var link = document.createElement('a');
     link.className = 'row-link';
-    // Feeds and nappies open their editor. Editing a sleep is not designed yet, so a sleep opens the Sleep page.
-    link.href = row.kind === 'sleep' ? '#sleep' : '#edit/' + row.ids.map(encodeURIComponent).join('+');
+    link.href = '#edit/' + row.ids.map(encodeURIComponent).join('+');
     var time = document.createElement('span');
     time.className = 'row-time';
     time.textContent = R.formatClock(row.t);
@@ -181,6 +184,7 @@
   FEED_UI.init(shared);
   EDIT_UI.init(shared);
   SLEEP_UI.init(shared);
+  SLEEP_EDIT_UI.init(shared);
   PROFILE_UI.init(shared);
   SYNC_UI.init(shared);
   SUMMARY_UI.init(shared);

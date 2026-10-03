@@ -79,3 +79,10 @@ A feed is saved as: kind (`Breast` or `Bottle`), the time, a note; for breast th
 - Whether Undo comes back, and if so, how it looks without covering anything.
 - Whether Delete should also ask in words ("Delete this feed?") instead of the second tap.
 - A dark look for night use (the first designs are light only).
+
+## Editing and deleting a sleep (added 2026-10-03, not yet designed)
+- Tapping a sleep in the Today list, or in the Sleep page list, opens **Edit sleep**: a close button on the left, the title, and a **Delete** button at the top right.
+- Two cards-in-one: **Fell asleep** and **Woke up** as date-and-time fields, then **Save changes** at the bottom. A sleep that is still running shows only the start.
+- **Delete** is a trash icon. The first tap turns it into a red "Tap again to delete" button for 4 seconds. The second tap deletes. There is no Undo.
+- The messages are the same as on the add card: "Woke up must be after fell asleep.", "A sleep can be 12 hours at most.", "That time has not happened yet.", "Overlaps a sleep already logged."
+- On the add-a-sleep clock, only the two dots and the arc can be dragged. The rest of the clock scrolls the page.

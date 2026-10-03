@@ -55,7 +55,7 @@ test('the Last feed time counts on while the app stays open', async () => {
   await context.close();
 });
 
-test('the Today list mixes feeds, nappies and sleeps, newest first; a sleep opens the Sleep page', async () => {
+test('the Today list mixes feeds, nappies and sleeps, newest first; a sleep opens its edit page', async () => {
   const sleep = (id, t, end) => rec(id, 'sleep', t, { end, d: { source: 'live' } });
   const { context, page, errors } = await start([
     rec('f1', 'feed', at(15, 2), { d: { kind: 'Breast', side: 'Left', min: 14 } }),
@@ -66,8 +66,8 @@ test('the Today list mixes feeds, nappies and sleeps, newest first; a sleep open
   ]);
   assert.deepEqual(await todayRows(page), ['Fell asleep · asleep now', 'Feed · Left 14 min', 'Nappy · Wee', 'Woke up · slept 1h 50m']);
   await page.locator('#today-list .row-link').nth(3).click();
-  await page.waitForSelector('#screen-sleep[data-ready]');
-  assert.equal(await page.evaluate(() => location.hash), '#sleep');
+  await page.waitForSelector('#screen-sleep-edit[data-ready]');
+  assert.equal(await page.evaluate(() => location.hash.startsWith('#edit/')), true);
   assert.deepEqual(errors, []);
   await context.close();
 });

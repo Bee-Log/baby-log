@@ -46,8 +46,9 @@
     rows.forEach(function (row) {
       var li = document.createElement('li');
       li.className = 'row';
-      var line = document.createElement('div');
+      var line = document.createElement('a');
       line.className = 'sleep-row';
+      line.href = '#edit/' + encodeURIComponent(row.id);
       var icon = document.createElement('span');
       icon.className = 'row-icon sleep';
       icon.innerHTML = root.BABYLOG_ICONS.sleep;

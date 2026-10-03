@@ -207,6 +207,59 @@ test('dragging stays inside the last 24 hours', async () => {
   await context.close();
 });
 
+// Real touches (a finger), sent through the browser's debugging channel so the browser decides what scrolls.
+async function touchDrag(client, from, to, steps = 8) {
+  const point = (x, y) => [{ x: Math.round(x), y: Math.round(y), id: 1 }];
+  await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: point(from.x, from.y) });
+  for (let i = 1; i <= steps; i++) {
+    await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: point(from.x + (to.x - from.x) * i / steps, from.y + (to.y - from.y) * i / steps) });
+  }
+  await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+}
+async function touchPhone() {
+  const context = await browser.newContext({ viewport: { width: 390, height: 600 }, hasTouch: true, isMobile: true });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  await context.clock.setFixedTime(NOW);
+  await install(page, url());
+  await page.click('a.sleep-main');
+  await page.waitForSelector('#screen-sleep[data-ready]');
+  return { context, page, errors, client: await context.newCDPSession(page) };
+}
+
+test('touch: a swipe that starts on the clock but not on a handle scrolls the page and changes nothing', async () => {
+  const { context, page, errors, client } = await touchPhone();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  const before = [await page.inputValue('#ps-from'), await page.inputValue('#ps-to')];
+  const onEmptyRing = await ringPoint(page, 250, 118);       // far from the dots and the arc
+  await touchDrag(client, onEmptyRing, { x: onEmptyRing.x, y: onEmptyRing.y - 220 });
+  await page.waitForTimeout(300);
+  assert.ok(await page.evaluate(() => window.scrollY) > 50, 'the page scrolled');
+  assert.deepEqual([await page.inputValue('#ps-from'), await page.inputValue('#ps-to')], before, 'the sleep did not change');
+  const inside = await ringPoint(page, 250, 60);              // the face inside the ring
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await touchDrag(client, inside, { x: inside.x, y: inside.y - 150 });
+  await page.waitForTimeout(300);
+  assert.deepEqual([await page.inputValue('#ps-from'), await page.inputValue('#ps-to')], before, 'nor from the face of the clock');
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('touch: a finger on a dot adjusts it and the page stays still', async () => {
+  const { context, page, errors, client } = await touchPhone();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  const startDot = await ringPoint(page, 45, 142);            // 1:30 pm
+  const earlier = await ringPoint(page, 30, 142);             // 1:00 pm
+  await touchDrag(client, startDot, earlier);
+  await page.waitForTimeout(200);
+  assert.equal(await page.inputValue('#ps-from'), '2026-10-03T13:00', 'the start moved');
+  assert.equal(await page.inputValue('#ps-to'), '2026-10-03T14:00', 'the end stayed');
+  assert.equal(await page.evaluate(() => window.scrollY), 0, 'the page did not scroll');
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
 test('the card fits narrow phones (no sideways scrolling)', async () => {
   const { context, page, errors } = await start();
   for (const width of [320, 360, 390]) {

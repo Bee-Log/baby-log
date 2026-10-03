@@ -84,12 +84,15 @@
       .map(function (b) { return P.arcPath(Math.max(b.start, range.from), Math.min(b.end, range.to), P.RING_R); }).join(' '));
     $('ps-draft').setAttribute('d', P.arcPath(d.start, d.end, P.RING_R));
     $('ps-draft').setAttribute('stroke', colour);
+    $('ps-hit-arc').setAttribute('d', P.arcPath(d.start, d.end, P.RING_R));
     var tick = function (m) { var a = P.angleOf(m); return [P.pointAt(a, P.RING_R + 18), P.pointAt(a, P.RING_R - 18)]; };
     var ts = tick(d.start), te = tick(d.end);
     setLine($('ps-tick-start'), ts[0], ts[1]);
     setLine($('ps-tick-end'), te[0], te[1]);
     setDot($('ps-dot-start'), P.pointAt(P.angleOf(d.start), P.END_DOT_R));
     setDot($('ps-dot-end'), P.pointAt(P.angleOf(d.end), P.END_DOT_R));
+    setDot($('ps-hit-start'), P.pointAt(P.angleOf(d.start), P.END_DOT_R));
+    setDot($('ps-hit-end'), P.pointAt(P.angleOf(d.end), P.END_DOT_R));
     var mid = P.angleOf(d.start) + len / P.HALF_DAY * 180, gp = P.pointAt(mid, P.RING_R);
     var grip = $('ps-grip');
     grip.setAttribute('transform', 'translate(' + gp.x + ' ' + gp.y + ') rotate(' + (mid + 90).toFixed(1) + ')');
@@ -97,7 +100,7 @@
     $('ps-len').textContent = P.formatLength(len);
     $('ps-range').textContent = P.formatClock(d.start) + ' – ' + P.formatClock(d.end);
     $('ps-clock').setAttribute('aria-label', 'Sleep from ' + P.formatClock(d.start) + ' to ' + P.formatClock(d.end) + ', ' + P.formatLength(len));
-    $('ps-clock').style.cursor = drag ? 'grabbing' : 'pointer';
+    $('ps-clock').classList.toggle('dragging', !!drag);
 
     Array.prototype.forEach.call(document.querySelectorAll('.ps-part'), function (b) {
       b.setAttribute('aria-pressed', state.parts.indexOf(+b.getAttribute('data-part')) >= 0 ? 'true' : 'false');
@@ -144,14 +147,17 @@
     return { dist: Math.sqrt(x * x + y * y), x: x + P.CX, y: y + P.CY, minutes: ref + diff };
   }
 
-  function onDown(ev) {
-    if (!state) return;
-    var hit = P.grab(state, env(), pointer(ev, (state.draft.start + state.draft.end) / 2));
-    if (!hit.what) return;
-    ev.preventDefault();
-    if (ev.currentTarget.setPointerCapture) { try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (e) { /* not a real pointer */ } }
-    drag = { what: hit.what, grabOffset: hit.grabOffset };
-    update(hit.state);
+  // Only the three handles start a drag: the two dots and the arc. A touch anywhere else scrolls the page as usual.
+  function begin(what) {
+    return function (ev) {
+      if (!state) return;
+      var d = state.draft;
+      var ref = what === 'start' ? d.start : what === 'end' ? d.end : (d.start + d.end) / 2;
+      ev.preventDefault();
+      if (ev.target.setPointerCapture) { try { ev.target.setPointerCapture(ev.pointerId); } catch (e) { /* not a real pointer */ } }
+      drag = { what: what, grabOffset: what === 'move' ? pointer(ev, ref).minutes - d.start : 0 };
+      render();
+    };
   }
   function onMove(ev) {
     if (!drag || !state) return;
@@ -190,9 +196,10 @@
     onAdded = callback;
     buildStatic();
     var svg = $('ps-clock');
-    svg.style.touchAction = 'none';
-    svg.addEventListener('pointerdown', onDown);
-    svg.addEventListener('pointermove', onMove);
+    $('ps-hit-start').addEventListener('pointerdown', begin('start'));
+    $('ps-hit-end').addEventListener('pointerdown', begin('end'));
+    $('ps-hit-arc').addEventListener('pointerdown', begin('move'));
+    svg.addEventListener('pointermove', onMove);   // the handle that was touched keeps the pointer, so its moves arrive here
     svg.addEventListener('pointerup', onUp);
     svg.addEventListener('pointercancel', onUp);
     Array.prototype.forEach.call(document.querySelectorAll('.ps-part'), function (b) {
