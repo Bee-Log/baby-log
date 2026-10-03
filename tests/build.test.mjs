@@ -46,3 +46,15 @@ test('no secrets in src/', () => {
     assert.doesNotMatch(readFileSync(f, 'utf8'), /client_secret|GOCSPX-|AIza[0-9A-Za-z_-]{20}/, f);
   }
 });
+
+// A new version must never mix with the previous one (seen on TEST after feature 001):
+// install skips the HTTP cache, update checks skip it too, and pages come from the cache, like their scripts.
+test('updates never mix an old and a new version', () => {
+  const sw = read('test', 'sw.js');
+  assert.match(sw, /new Request\(url, \{ cache: 'reload' \}\)/, 'install must bypass the HTTP cache');
+  assert.match(sw, /req\.mode === 'navigate'[\s\S]*?fromCache\(req/, 'pages must come from this version\'s cache');
+  assert.doesNotMatch(sw, /caches\.match\(/, 'look only in this version\'s cache');
+  const app = read('test', 'app.js');
+  assert.match(app, /updateViaCache: 'none'/);
+  assert.match(app, /controllerchange[\s\S]*?location\.reload\(\)/);
+});
