@@ -66,9 +66,13 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height
 .quick-btn.feed { background: var(--accent); color: #fff; }
 .quick-btn:active { transform: scale(0.98); }
 .quick-btn:focus-visible, .toast button:focus-visible, .screen button:focus-visible, .screen a:focus-visible, .screen input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.list-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 24px 0 4px; }
+.list-head .list-title { margin: 0; }
 .list-title { font-size: 20px; margin: 24px 0 4px; }
 .timeline { list-style: none; margin: 0; padding: 0; }
-.row { display: grid; grid-template-columns: 72px 36px minmax(0, 1fr); align-items: center; min-height: 52px; border-bottom: 1px solid var(--line); }
+.row { border-bottom: 1px solid var(--line); }
+.row-link { display: grid; grid-template-columns: 72px 36px minmax(0, 1fr); align-items: center; min-height: 52px; color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+.row-link:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; border-radius: 8px; }
 .row:last-child { border-bottom: none; }
 .row-time { font-size: 15px; color: var(--muted); }
 .row-icon { width: 28px; height: 28px; border-radius: 14px; display: flex; align-items: center; justify-content: center; }
@@ -122,6 +126,15 @@ body.on-screen main, body.on-screen .tabbar { display: none; }
 .chip { min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
 .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
 .hint { font-size: 13px; color: #3c4248; }
+
+/* Edit screen */
+.edit-group { display: flex; flex-direction: column; gap: 14px; }
+.edit-group[hidden], .edit-kind[hidden] { display: none; } /* the class sets display, which would beat the hidden attribute */
+.edit-kind { margin: 0; font-size: 20px; font-weight: 700; font-family: var(--display); }
+.field-label { font-size: 13px; font-weight: 700; color: #3c4248; margin-bottom: 6px; }
+.trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.delete-btn { min-height: 56px; border-radius: 18px; border: 2px solid #9a3f0b; background: transparent; color: #9a3f0b; font: inherit; font-weight: 700; font-size: 17px; cursor: pointer; }
+.delete-btn:disabled { border-color: #c9c5be; color: #a7abb0; cursor: not-allowed; }
 
 /* Short message above the tab bar, with Undo. */
 .toast {

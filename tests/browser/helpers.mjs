@@ -104,3 +104,30 @@ export async function tapTab(page, tab) {
 export function todayRows(page) {
   return page.$$eval('#today-list .row', (rows) => rows.map((r) => r.querySelector('.row-what').textContent.trim()));
 }
+
+// Put an entry straight into this build's storage, for tests that need old or special entries.
+export function seed(page, record, dbName = 'test-baby-log') {
+  return page.evaluate(({ record, dbName }) => new Promise((resolve, reject) => {
+    const req = indexedDB.open(dbName);
+    req.onsuccess = () => {
+      const db = req.result, tx = db.transaction('records', 'readwrite');
+      tx.objectStore('records').put(record);
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => reject(tx.error);
+    };
+    req.onerror = () => reject(req.error);
+  }), { record, dbName });
+}
+
+export function readRecords(page, dbName = 'test-baby-log') {
+  return page.evaluate((name) => new Promise((resolve, reject) => {
+    const req = indexedDB.open(name);
+    req.onsuccess = () => {
+      const db = req.result;
+      const get = db.transaction('records').objectStore('records').getAll();
+      get.onsuccess = () => { db.close(); resolve(get.result); };
+      get.onerror = () => reject(get.error);
+    };
+    req.onerror = () => reject(req.error);
+  }), dbName);
+}

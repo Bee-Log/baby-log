@@ -16,6 +16,7 @@
   <script src="store.js"></script>
   <script src="feed.js"></script>
   <script src="feed-ui.js"></script>
+  <script src="edit-ui.js"></script>
 </head>
 <body>
   <div id="test-banner" class="test-banner" hidden>TEST version. Data here is kept apart from the real app.</div>
@@ -36,7 +37,10 @@
           Poo
         </button>
       </div>
-      <h1 id="h-today" class="list-title">Today</h1>
+      <div class="list-head">
+        <h1 id="h-today" class="list-title">Today</h1>
+        <span class="muted">Tap a row to edit</span>
+      </div>
       <ol class="timeline" id="today-list"></ol>
       <p class="empty" id="today-empty" hidden>Nothing logged yet today.</p>
     </section>
@@ -121,6 +125,61 @@
 
     <div class="screen-fill"></div>
     <button type="button" class="save-btn" id="feed-save" disabled>Stop and save</button>
+  </section>
+
+  <section class="screen" id="screen-edit" aria-labelledby="h-edit" hidden>
+    <header class="screen-head">
+      <a class="round-btn" href="#today" aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </a>
+      <h1 id="h-edit">Edit</h1>
+      <span class="round-spacer"></span>
+    </header>
+
+    <div class="card">
+      <div class="card-row"><label for="edit-time" id="edit-time-label">Time</label><input id="edit-time" type="time" step="60"></div>
+    </div>
+    <p id="edit-nappy" class="edit-kind" hidden></p>
+
+    <div id="edit-breast" class="edit-group" hidden>
+      <div>
+        <div class="field-label" id="edit-side-label">Side</div>
+        <div class="trio" role="group" aria-labelledby="edit-side-label">
+          <button type="button" class="chip" id="edit-side-Left" aria-pressed="false">Left</button>
+          <button type="button" class="chip" id="edit-side-Right" aria-pressed="false">Right</button>
+          <button type="button" class="chip" id="edit-side-Both" aria-pressed="false">Both</button>
+        </div>
+      </div>
+      <label class="amount">Minutes in total
+        <span class="amount-row"><input id="edit-min" type="number" inputmode="numeric" min="0" max="300" step="1" value="0"><span class="unit">min</span></span>
+      </label>
+      <div class="pair">
+        <button type="button" class="step-btn" id="edit-min-minus" aria-label="1 minute less">−1</button>
+        <button type="button" class="step-btn" id="edit-min-plus" aria-label="1 minute more">+1</button>
+      </div>
+    </div>
+
+    <div id="edit-bottle" class="edit-group" hidden>
+      <label class="amount">Amount
+        <span class="amount-row"><input id="edit-ml" type="number" inputmode="numeric" min="0" max="240" step="10" value="0"><span class="unit">ml</span></span>
+      </label>
+      <div class="pair">
+        <button type="button" class="step-btn" id="edit-ml-minus" aria-label="10 ml less">−10</button>
+        <button type="button" class="step-btn" id="edit-ml-plus" aria-label="10 ml more">+10</button>
+      </div>
+      <div class="pair" role="group" aria-label="Milk">
+        <button type="button" class="chip" id="edit-milk-formula" aria-pressed="true">Formula</button>
+        <button type="button" class="chip" id="edit-milk-expressed" aria-pressed="false">Expressed</button>
+      </div>
+    </div>
+
+    <div class="card" id="edit-note-row" hidden>
+      <div class="card-row"><label for="edit-note">Note</label><input id="edit-note" type="text" placeholder="Optional" maxlength="200"></div>
+    </div>
+
+    <div class="screen-fill"></div>
+    <button type="button" class="save-btn" id="edit-save" disabled>Save changes</button>
+    <button type="button" class="delete-btn" id="edit-delete" disabled>Delete this entry</button>
   </section>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden>

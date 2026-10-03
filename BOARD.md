@@ -16,6 +16,7 @@ Generated from the header of each `features/*/SIGNOFF.md`. Do not edit by hand.
 ## Testing
 - 006 Log a breast feed (updated 2026-10-03) - `features/006-log-a-breast-feed/`
 - 007 Log a bottle feed (updated 2026-10-03) - `features/007-log-a-bottle-feed/`
+- 011 Edit an entry (updated 2026-10-03) - `features/011-edit-an-entry/`
 
 ## Done
 - 001 Install and open the app (updated 2026-10-03) - `features/001-install-and-open-the-app/`
