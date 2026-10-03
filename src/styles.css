@@ -82,6 +82,31 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height
 .row-what { font-size: 16px; }
 .empty { color: var(--muted); margin: 8px 0; }
 
+/* Sleep card (Main.dc.html, Sleep.dc.html): the same small card on Today and on the Sleep page. */
+.sleep-card { background: var(--surface); color: var(--ink); border-radius: 24px; padding: 8px 8px 8px 12px; display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.sleep-main { flex: 1; min-width: 0; min-height: 60px; display: flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; }
+a.sleep-main:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 16px; }
+.sleep-icon { width: 40px; height: 40px; border-radius: 20px; background: #ece8f7; color: #5a4b9c; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.sleep-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.sleep-sub { font-size: 14px; color: var(--muted); }
+.sleep-big { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.sleep-chev { flex-shrink: 0; opacity: 0.6; }
+.sleep-btn { min-height: 52px; padding: 0 16px; border-radius: 18px; border: none; background: #5a4b9c; color: #fff; font: inherit; font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; cursor: pointer; }
+.sleep-btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.sleep-card.asleep { background: #2b2550; color: #fff; }
+.sleep-card.asleep .sleep-sub { color: #d6d0f0; }
+.sleep-card.asleep .sleep-icon { background: #4a3f86; color: #fff; }
+.sleep-card.asleep .sleep-btn { background: #f2c14e; color: var(--ink); }
+/* On a very narrow phone the small arrow and the button icon go, so the time has room. */
+@media (max-width: 359px) {
+  .sleep-chev, .sleep-btn svg { display: none; }
+  .sleep-btn { padding: 0 12px; }
+}
+.section-title { font-family: var(--display); font-size: 18px; font-weight: 700; margin: 8px 0 4px; }
+.row-icon.sleep { background: #ece8f7; color: #5a4b9c; }
+.sleep-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; min-height: 52px; gap: 0; font-size: 16px; }
+.sleep-row .row-length { font-weight: 700; font-variant-numeric: tabular-nums; }
+
 /* Feed screen (Feed.dc.html): a full screen without the tab bar. */
 body.on-screen main, body.on-screen .tabbar { display: none; }
 .screen { max-width: 560px; width: 100%; margin: 0 auto; padding: 16px 20px 24px; flex: 1; display: flex; flex-direction: column; gap: 22px; }

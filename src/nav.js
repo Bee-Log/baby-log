@@ -1,9 +1,9 @@
 // Navigation: which tab or full screen a URL hash points to.
-// Tabs (#today, #summary, #growth) and full screens (#feed) live in the hash, so one cached index.html
+// Tabs (#today, #summary, #growth) and full screens (#feed, #edit/<ids>, #sleep) live in the hash, so one cached index.html
 // serves everything offline and the phone's back button moves between them.
 (function (root) {
   var TABS = ['today', 'summary', 'growth'];
-  var SCREENS = ['feed', 'edit']; // full screens: no tab bar. #edit/<ids> edits an entry (feature 011)
+  var SCREENS = ['feed', 'edit', 'sleep']; // full screens: no tab bar. #edit/<ids> edits an entry (011), #sleep is the Sleep page (003)
   var DEFAULT_TAB = 'today';
 
   function tabFromHash(hash) {

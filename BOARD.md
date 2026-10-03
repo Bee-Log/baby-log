@@ -10,10 +10,10 @@ Generated from the header of each `features/*/SIGNOFF.md`. Do not edit by hand.
 - 010 Track growth against WHO (updated 2026-10-03) - `features/010-track-growth-against-who/`
 
 ## Building
-- 003 Log sleep live (updated 2026-10-03) - `features/003-log-sleep-live/`
+- none
 
 ## Testing
-- none
+- 003 Log sleep live (updated 2026-10-03) - `features/003-log-sleep-live/`
 
 ## Done
 - 001 Install and open the app (updated 2026-10-03) - `features/001-install-and-open-the-app/`

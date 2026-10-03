@@ -23,6 +23,7 @@
   // ---- Routes: three tabs, and full screens (the Feed screen) without the tab bar ----
   var FEED_UI = self.BABYLOG_FEED_UI;
   var EDIT_UI = self.BABYLOG_EDIT_UI;
+  var SLEEP_UI = self.BABYLOG_SLEEP_UI;
   // #edit/<ids>: a feed is edited on the Feed screen, a nappy on its own small Edit screen.
   function openEdit(arg, hashAtStart) {
     FEED_UI.hide();
@@ -45,13 +46,15 @@
     if (screen) {
       var hidden = document.querySelectorAll('.view');
       for (var h = 0; h < hidden.length; h++) hidden[h].hidden = true;
-      if (screen === 'feed') { EDIT_UI.hide(); FEED_UI.show(); }
-      else openEdit(nav.argFromHash(location.hash), location.hash);
+      if (screen === 'feed') { EDIT_UI.hide(); SLEEP_UI.hide(); FEED_UI.show(); }
+      else if (screen === 'sleep') { FEED_UI.hide(); EDIT_UI.hide(); SLEEP_UI.show(); }
+      else { SLEEP_UI.hide(); openEdit(nav.argFromHash(location.hash), location.hash); }
       window.scrollTo(0, 0);
       return;
     }
     FEED_UI.hide();
     EDIT_UI.hide();
+    SLEEP_UI.hide();
     var tab = nav.tabFromHash(location.hash);
     var views = document.querySelectorAll('.view');
     for (var i = 0; i < views.length; i++) views[i].hidden = views[i].getAttribute('data-tab') !== tab;
@@ -74,6 +77,7 @@
 
   function renderToday() {
     return store.all().then(function (records) {
+      SLEEP_UI.renderToday(records); // the sleep card above the buttons
       var w = R.dayWindow(Date.now());
       var rows = R.timelineRows(records.filter(function (r) { return r.t >= w.from && r.t < w.to; }));
       var list = document.getElementById('today-list');
@@ -149,6 +153,7 @@
   var shared = { toast: toast, renderToday: renderToday, setBusy: setBusy, commitEdit: commitEdit };
   FEED_UI.init(shared);
   EDIT_UI.init(shared);
+  SLEEP_UI.init(shared);
   route();
 
   // ---- Offline support ----
