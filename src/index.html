@@ -10,15 +10,42 @@
   <link rel="apple-touch-icon" href="icons/__ICON_PREFIX__icon-192.png">
   <link rel="stylesheet" href="styles.css">
   <script src="config.js"></script>
+  <script src="nav.js"></script>
 </head>
 <body>
   <div id="test-banner" class="test-banner" hidden>TEST version. Data here is kept apart from the real app.</div>
+
   <main>
-    <h1>Baby Log</h1>
-    <p class="lead">The app is set up. Logging screens arrive with the first feature.</p>
-    <p class="status" id="status">Checking offline support…</p>
+    <section class="view" id="view-today" data-tab="today" aria-labelledby="h-today">
+      <h1 id="h-today">Today</h1>
+      <p class="lead">Feeds, sleep and nappies will show here.</p>
+    </section>
+    <section class="view" id="view-summary" data-tab="summary" aria-labelledby="h-summary" hidden>
+      <h1 id="h-summary">Summary</h1>
+      <p class="lead">Daily totals will show here.</p>
+    </section>
+    <section class="view" id="view-growth" data-tab="growth" aria-labelledby="h-growth" hidden>
+      <h1 id="h-growth">Growth</h1>
+      <p class="lead">Weight and length will show here.</p>
+    </section>
+    <p class="status"><span id="status">Checking offline support…</span> <span id="version"></span></p>
   </main>
-  <footer><span id="version"></span></footer>
+
+  <nav class="tabbar" aria-label="Main">
+    <a href="#today" data-tab="today">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+      Today
+    </a>
+    <a href="#summary" data-tab="summary">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"></rect><path d="M8 15v-3M12 15V9M16 15v-5"></path></svg>
+      Summary
+    </a>
+    <a href="#growth" data-tab="growth">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19l5-6 4 3 7-9"></path><path d="M15 7h5v5"></path></svg>
+      Growth
+    </a>
+  </nav>
+
   <script src="app.js"></script>
 </body>
 </html>
