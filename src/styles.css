@@ -55,16 +55,17 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height
 .status { color: var(--muted); font-size: 13px; margin-top: 32px; }
 
 /* Today: quick log buttons and the timeline (Main.dc.html). */
-.quick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 8px; }
+.quick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 8px; }
 .quick-btn {
   min-height: 92px; border-radius: 20px; border: none;
   background: var(--nappy-bg); color: var(--nappy-ink);
-  font: inherit; font-weight: 700; font-size: 16px; cursor: pointer;
+  font: inherit; font-weight: 700; font-size: 16px; cursor: pointer; text-decoration: none;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
   -webkit-tap-highlight-color: transparent;
 }
+.quick-btn.feed { background: var(--accent); color: #fff; }
 .quick-btn:active { transform: scale(0.98); }
-.quick-btn:focus-visible, .toast button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.quick-btn:focus-visible, .toast button:focus-visible, .screen button:focus-visible, .screen a:focus-visible, .screen input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .list-title { font-size: 20px; margin: 24px 0 4px; }
 .timeline { list-style: none; margin: 0; padding: 0; }
 .row { display: grid; grid-template-columns: 72px 36px minmax(0, 1fr); align-items: center; min-height: 52px; border-bottom: 1px solid var(--line); }
@@ -72,8 +73,55 @@ h1 { font-family: var(--display); font-weight: 700; font-size: 30px; line-height
 .row-time { font-size: 15px; color: var(--muted); }
 .row-icon { width: 28px; height: 28px; border-radius: 14px; display: flex; align-items: center; justify-content: center; }
 .row-icon.nappy { background: var(--nappy-bg); color: #b5561a; }
+.row-icon.feed { background: #e3ecf8; color: var(--accent); }
 .row-what { font-size: 16px; }
 .empty { color: var(--muted); margin: 8px 0; }
+
+/* Feed screen (Feed.dc.html): a full screen without the tab bar. */
+body.on-screen main, body.on-screen .tabbar { display: none; }
+.screen { max-width: 560px; width: 100%; margin: 0 auto; padding: 16px 20px 24px; flex: 1; display: flex; flex-direction: column; gap: 22px; }
+.screen[hidden] { display: none; }
+.screen-head { display: flex; justify-content: space-between; align-items: center; }
+.screen-head h1 { font-size: 22px; margin: 0; }
+.round-btn, .round-spacer { width: 44px; height: 44px; border-radius: 22px; }
+.round-btn { background: var(--surface); border: 1px solid var(--line); color: var(--ink); display: flex; align-items: center; justify-content: center; }
+.seg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background: #eae5dc; border-radius: 16px; padding: 4px; gap: 4px; }
+.seg button { min-height: 44px; border: none; border-radius: 12px; background: transparent; color: var(--muted); font: inherit; font-size: 16px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 700; }
+.screen-fill { flex: 1; }
+.save-btn { min-height: 56px; border-radius: 18px; border: none; background: var(--ink); color: #fff; font: inherit; font-weight: 700; font-size: 17px; cursor: pointer; }
+.save-btn:disabled { background: #a7abb0; cursor: not-allowed; }
+.muted { color: var(--muted); font-size: 14px; }
+.card { background: var(--surface); border-radius: 16px; padding: 4px 16px; }
+.card-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 52px; border-bottom: 1px solid #eee9e1; font-size: 16px; }
+.card-row:last-child { border-bottom: none; }
+.card-row input { font: inherit; font-size: 16px; border: none; background: transparent; color: var(--ink); text-align: right; min-width: 0; width: 60%; }
+.card-row input[type="time"] { width: auto; font-weight: 700; cursor: pointer; }
+
+/* Breast timer */
+.timer-block { display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 8px; }
+.timer { font-family: var(--display); font-size: 72px; font-weight: 700; line-height: 1; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+.side-btns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 22px 0; }
+.side-btn {
+  aspect-ratio: 1; border-radius: 999px; border: 2px solid var(--accent); background: var(--surface); color: var(--accent);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font: inherit; font-size: 15px; cursor: pointer;
+}
+.side-btn.active { background: var(--accent); color: #fff; }
+.side-name { font-family: var(--display); font-size: 34px; font-weight: 700; }
+
+/* Bottle */
+.bottle-grid { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 16px; align-items: center; margin-bottom: 18px; }
+.bottle { touch-action: none; cursor: ns-resize; }
+.bottle-side { display: flex; flex-direction: column; gap: 12px; }
+.amount { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 700; color: #3c4248; }
+.amount-row { display: flex; align-items: baseline; gap: 6px; border-bottom: 2px solid var(--accent); }
+.amount-row input { width: 100%; min-width: 0; border: none; background: transparent; font-family: var(--display); font-size: 44px; font-weight: 700; color: var(--ink); padding: 0; }
+.unit { font-size: 18px; font-weight: 700; color: #3c4248; }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.step-btn { min-height: 48px; border-radius: 14px; border: none; background: #e3ecf8; color: #1f4580; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; }
+.chip { min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.hint { font-size: 13px; color: #3c4248; }
 
 /* Short message above the tab bar, with Undo. */
 .toast {

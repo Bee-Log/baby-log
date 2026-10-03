@@ -14,6 +14,8 @@
   <script src="nav.js"></script>
   <script src="records.js"></script>
   <script src="store.js"></script>
+  <script src="feed.js"></script>
+  <script src="feed-ui.js"></script>
 </head>
 <body>
   <div id="test-banner" class="test-banner" hidden>TEST version. Data here is kept apart from the real app.</div>
@@ -21,6 +23,10 @@
   <main>
     <section class="view" id="view-today" data-tab="today" aria-labelledby="h-today">
       <div class="quick">
+        <a class="quick-btn feed" href="#feed">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2h6"></path><path d="M10 2v3L8 8v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V8l-2-3V2"></path><path d="M8 12h8"></path></svg>
+          Feed
+        </a>
         <button type="button" class="quick-btn" data-log="pee">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s-6 7-6 11a6 6 0 0 0 12 0c0-4-6-11-6-11z"></path></svg>
           Wee
@@ -44,6 +50,78 @@
     </section>
     <p class="status"><span id="status">Checking offline support…</span> <span id="version"></span></p>
   </main>
+
+
+  <section class="screen" id="screen-feed" aria-labelledby="h-feed" hidden>
+    <header class="screen-head">
+      <a class="round-btn" href="#today" aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </a>
+      <h1 id="h-feed">Feed</h1>
+      <span class="round-spacer"></span>
+    </header>
+
+    <div class="seg" role="group" aria-label="Type of feed">
+      <button type="button" id="mode-breast" aria-pressed="true">Breast</button>
+      <button type="button" id="mode-bottle" aria-pressed="false">Bottle</button>
+    </div>
+
+    <div id="panel-breast">
+      <div class="timer-block">
+        <div class="muted" id="breast-started">Not started yet</div>
+        <div class="timer" id="breast-timer" aria-live="off">00:00</div>
+        <div id="breast-sides">Left 00:00 · Right 00:00</div>
+      </div>
+      <div class="side-btns">
+        <button type="button" class="side-btn" id="btn-left" aria-pressed="false"><span class="side-name">Left</span><span id="btn-left-sub">Tap to start</span></button>
+        <button type="button" class="side-btn" id="btn-right" aria-pressed="false"><span class="side-name">Right</span><span id="btn-right-sub">Tap to start</span></button>
+      </div>
+      <div class="card">
+        <div class="card-row"><span>Last time</span><span id="breast-last"></span></div>
+        <div class="card-row"><label for="breast-note">Note</label><input id="breast-note" type="text" placeholder="Optional" maxlength="200"></div>
+      </div>
+    </div>
+
+    <div id="panel-bottle" hidden>
+      <div class="bottle-grid">
+        <svg id="bt-svg" width="150" height="300" viewBox="0 0 150 300" role="img" aria-label="Bottle" class="bottle">
+          <defs><clipPath id="bottle-body"><rect x="30" y="64" width="90" height="216" rx="22"></rect></clipPath></defs>
+          <path d="M60 46 Q60 14 75 12 Q90 14 90 46 Z" fill="#f3d9b1" stroke="#d9b98a" stroke-width="1.5"></path>
+          <rect x="44" y="44" width="62" height="22" rx="6" fill="#b9aee3"></rect>
+          <rect x="30" y="64" width="90" height="216" rx="22" fill="#ffffff" stroke="#c9c2b6" stroke-width="2"></rect>
+          <g clip-path="url(#bottle-body)"><rect id="bt-milk" x="30" y="171" width="90" height="109" fill="#f6e7c1"></rect><rect id="bt-edge" x="30" y="171" width="90" height="3" fill="#e2c98a"></rect></g>
+          <path d="M34 79h14M34 102.5h8M34 126h14M34 149.5h8M34 173h14M34 196.5h8M34 220h14M34 243.5h8" stroke="#8a8f96" stroke-width="1.5" stroke-linecap="round"></path>
+          <text x="52" y="83" font-size="11" fill="#5b6168">240</text>
+          <text x="52" y="130" font-size="11" fill="#5b6168">180</text>
+          <text x="52" y="177" font-size="11" fill="#5b6168">120</text>
+          <text x="52" y="224" font-size="11" fill="#5b6168">60</text>
+          <line id="bt-line" x1="24" y1="171" x2="126" y2="171" stroke="#2f5da8" stroke-width="2" stroke-dasharray="4 3"></line>
+          <g id="bt-handle" transform="translate(126 171)"><rect x="0" y="-14" width="22" height="28" rx="8" fill="#2f5da8"></rect><path d="M6 -4h10M6 0h10M6 4h10" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round"></path></g>
+        </svg>
+        <div class="bottle-side">
+          <label class="amount">Amount
+            <span class="amount-row"><input id="bottle-ml" type="number" inputmode="numeric" min="0" max="240" step="10" value="90"><span class="unit">ml</span></span>
+          </label>
+          <div class="pair">
+            <button type="button" class="step-btn" id="bottle-minus" aria-label="10 ml less">−10</button>
+            <button type="button" class="step-btn" id="bottle-plus" aria-label="10 ml more">+10</button>
+          </div>
+          <div class="pair" role="group" aria-label="Milk">
+            <button type="button" class="chip" id="milk-formula" aria-pressed="true">Formula</button>
+            <button type="button" class="chip" id="milk-expressed" aria-pressed="false">Expressed</button>
+          </div>
+          <div class="hint">Drag the bottle, or type the amount.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-row"><label for="bottle-time">Fed at</label><input id="bottle-time" type="time" step="300"></div>
+        <div class="card-row"><span>Last bottle</span><span id="bottle-last"></span></div>
+      </div>
+    </div>
+
+    <div class="screen-fill"></div>
+    <button type="button" class="save-btn" id="feed-save" disabled>Stop and save</button>
+  </section>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden>
     <span id="toast-text"></span>

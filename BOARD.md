@@ -11,11 +11,11 @@ Generated from the header of each `features/*/SIGNOFF.md`. Do not edit by hand.
 - 010 Track growth against WHO (updated 2026-10-03) - `features/010-track-growth-against-who/`
 
 ## Building
-- 006 Log a breast feed (updated 2026-10-03) - `features/006-log-a-breast-feed/`
-- 007 Log a bottle feed (updated 2026-10-03) - `features/007-log-a-bottle-feed/`
+- none
 
 ## Testing
-- none
+- 006 Log a breast feed (updated 2026-10-03) - `features/006-log-a-breast-feed/`
+- 007 Log a bottle feed (updated 2026-10-03) - `features/007-log-a-bottle-feed/`
 
 ## Done
 - 001 Install and open the app (updated 2026-10-03) - `features/001-install-and-open-the-app/`
