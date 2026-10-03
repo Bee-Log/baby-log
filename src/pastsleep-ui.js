@@ -110,8 +110,12 @@
     $('ps-minus').setAttribute('aria-label', 'Take off ' + label);
 
     var from = $('ps-from'), to = $('ps-to');
-    if (from.value !== P.formatInput(d.start)) from.value = P.formatInput(d.start);
-    if (to.value !== P.formatInput(d.end)) to.value = P.formatInput(d.end);
+    if (from.value !== P.toInputValue(state.base, d.start)) from.value = P.toInputValue(state.base, d.start);
+    if (to.value !== P.toInputValue(state.base, d.end)) to.value = P.toInputValue(state.base, d.end);
+    to.max = from.max = P.toInputValue(state.base, P.nowMinute(state, e) + 5);   // nothing in the future
+    Array.prototype.forEach.call(document.querySelectorAll('.ps-part'), function (b) {
+      b.querySelector('.ps-day').textContent = P.partDay(e.now, +b.getAttribute('data-part'));
+    });
 
     var hint = $('ps-hint');
     var text = problem === 'overlap' ? 'Overlaps a sleep already logged.'

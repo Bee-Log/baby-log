@@ -60,7 +60,9 @@ none
 - **"Add a past sleep" card** on the Sleep page (`#sleep`), between the live card and "Logged sleeps", as in `artifacts/Sleep.dc.html`: step buttons (+5m, +10m, +20m, +1h), a minus button for the last step used, a reset arrow (back to 30 minutes), four parts of the day, the 12-hour clock ring, two time fields and the **Add sleep** button.
 - **Clock ring.** Drag the start dot or the end dot to change that end. Drag the arc to move the whole sleep. Tap an empty part of the ring to put the sleep there. Everything snaps to 5 minutes. A sleep also snaps to the edge of a logged sleep when it is within 10 minutes.
 - **Borders.** A sleep can sit across the 12 or 6 borders (for example 11:45 am to 12:15 pm). While you drag, the parts of the day follow the sleep. A sleep can touch at most two neighbouring parts (the ring shows 12 hours).
-- **Time fields.** The native time pickers move the ring. The parts of the day follow the times.
+- **Which day (changed 2026-10-03, on the owner's feedback).** Each part button says **Today** or **Yesterday** under its hours. A part always means its latest occurrence, so it is always inside the last 24 hours.
+- **Dragging is for the last 24 hours only.** A drag cannot go earlier than 24 hours ago or later than now (5 minutes of slack). A sleep typed in from an older date is not pulled back; it can only be nudged.
+- **Date and time fields** (instead of time-only fields). Type or pick any date and time, so a sleep older than 24 hours is added by typing. If the end would be before the start, or the sleep over 12 hours, the other time is set to 1 hour from the one just typed.
 - **It opens on the 30 minutes that ended now.** After Add, it offers the same length in the next free space.
 - **Blocked, with a message and an orange arc:** a sleep that overlaps a logged one ("Overlaps a sleep already logged."), and a sleep that ends more than 5 minutes in the future ("That time has not happened yet."). A sleep that is still running counts as ending now.
 - **Saved as the same record as a live sleep:** `type: 'sleep'`, `t` and `end` in ms, `d: { source: 'manual' }`. The owner approved this field with feature 003. No other data change.
@@ -68,7 +70,7 @@ none
 - **An update waits** while the Sleep page is open, so a reload cannot lose a draft.
 - The Today list does not show sleeps yet. That is feature 008.
 
-**Files changed.** `src/pastsleep.js` (new: the rules), `src/pastsleep-ui.js` (new: drawing and saving), `src/sleep-ui.js`, `src/index.html`, `src/styles.css`, `src/sw.js`, `tests/pastsleep.test.mjs` (new: rules, run in six time zones), `tests/browser/pastsleep.test.mjs` (new), `tests/sleep.test.mjs` (a daylight-saving case now ends at 3:30 am so it is valid in every zone).
+**Files changed.** `src/pastsleep.js` (new: the rules; later: 24-hour limit, date-and-time typing, `partDay`), `src/records.js` (`dateLabel`, `dayName`), `src/pastsleep-ui.js` (new: drawing and saving), `src/sleep-ui.js`, `src/index.html`, `src/styles.css`, `src/sw.js`, `tests/pastsleep.test.mjs` (new: rules, run in six time zones), `tests/browser/pastsleep.test.mjs` (new), `tests/sleep.test.mjs` (a daylight-saving case now ends at 3:30 am so it is valid in every zone).
 
 **Test link.** https://oudam-meas.github.io/baby-log/test/
 
