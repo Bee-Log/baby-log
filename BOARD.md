@@ -17,7 +17,7 @@ Generated from the header of each `features/*/SIGNOFF.md`. Do not edit by hand.
 - none
 
 ## Testing
-- 001 Install and open the app (updated 2026-10-03) - `features/001-install-and-open-the-app/`
+- none
 
 ## Done
-- none
+- 001 Install and open the app (updated 2026-10-03) - `features/001-install-and-open-the-app/`
