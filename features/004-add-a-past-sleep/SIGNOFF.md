@@ -2,7 +2,7 @@
 id: 004
 name: Add a past sleep
 slug: add-a-past-sleep
-status: Testing
+status: Done
 updated: 2026-10-03
 ---
 
@@ -75,4 +75,4 @@ none
 **Test link.** https://oudam-meas.github.io/baby-log/test/
 
 ## Feedback
-(Filled in when someone tests it. Leave empty at sign-off.)
+- 2026-10-03: Tested OK on TEST by the owner ("looks good so far", then "Release all"). Released to LIVE on the owner's instruction, before the partner's own test.
