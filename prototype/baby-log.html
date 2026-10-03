@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Baby log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Figtree:wght@400..700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light dark;
+  --bg:#EEF1F7; --surface:#FFFFFF; --surface2:#F5F7FB; --ink:#182038; --muted:#58637E; --line:#D9DFEB;
+  --accent:#3447D4; --accent-ink:#FFFFFF; --danger:#BE2F46; --ok:#2E8B5B;
+  --pee:#C58A0A; --poop:#8D5E32; --feed:#D6446A; --sleep:#4D58CF; --cry:#1A8CA6; --growth:#2E8B5B;
+  --shadow:0 1px 2px rgba(24,32,56,.06), 0 10px 28px rgba(24,32,56,.07);
+  --display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --body:"Figtree","Segoe UI",system-ui,-apple-system,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10141E; --surface:#1A2030; --surface2:#222A3D; --ink:#EBEEF7; --muted:#9AA5BE; --line:#2C354A;
+    --accent:#8C9BFF; --accent-ink:#10141E; --danger:#FF7A8E; --ok:#5FC792;
+    --pee:#F2BE4A; --poop:#CC9765; --feed:#F2839E; --sleep:#949EF5; --cry:#5CC4DA; --growth:#5FC792;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10141E; --surface:#1A2030; --surface2:#222A3D; --ink:#EBEEF7; --muted:#9AA5BE; --line:#2C354A;
+  --accent:#8C9BFF; --accent-ink:#10141E; --danger:#FF7A8E; --ok:#5FC792;
+  --pee:#F2BE4A; --poop:#CC9765; --feed:#F2839E; --sleep:#949EF5; --cry:#5CC4DA; --growth:#5FC792;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.25);
+}
+html{ scroll-padding-top:env(safe-area-inset-top,0px); background:var(--bg); }
+*,*::before,*::after{ box-sizing:border-box; }
+body{ margin:0; background:var(--bg); color:var(--ink); font-family:var(--body); font-size:16px; line-height:1.4; -webkit-text-size-adjust:100%; }
+body.lock{ overflow:hidden; }
+button{ font:inherit; color:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+:focus-visible{ outline:3px solid var(--accent); outline-offset:2px; }
+.wrap{ max-width:600px; margin:0 auto; padding:18px 16px 96px; }
+
+/* header */
+.head{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; }
+h1{ font-family:var(--display); font-weight:700; font-size:34px; line-height:1.05; letter-spacing:-.02em; margin:0; }
+.sub{ margin:6px 0 0; color:var(--muted); font-size:15px; }
+.head-r{ display:flex; align-items:center; gap:8px; padding-top:4px; }
+.sync{ display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--muted); background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:5px 10px; }
+.sync::before{ content:""; width:8px; height:8px; border-radius:50%; background:var(--muted); }
+.sync.shared::before{ background:var(--ok); }
+.sync.local::before{ background:var(--pee); }
+.sync.error::before{ background:var(--danger); }
+.icon-btn{ width:44px; height:44px; display:grid; place-items:center; border-radius:14px; border:1px solid var(--line); background:var(--surface); color:var(--ink); }
+
+/* tiles */
+.tiles{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.tile{
+  position:relative; text-align:left; display:flex; flex-direction:column; gap:2px; min-height:140px; padding:14px 14px 12px;
+  border-radius:22px; border:1.5px solid color-mix(in srgb, var(--c) 30%, var(--line));
+  background:color-mix(in srgb, var(--c) 13%, var(--surface)); box-shadow:var(--shadow);
+  transition:transform .12s ease;
+}
+.tile:active{ transform:scale(.97); }
+.tile.live{ background:color-mix(in srgb, var(--c) 26%, var(--surface)); border-color:var(--c); }
+.ico{ width:40px; height:40px; border-radius:50%; display:grid; place-items:center; font-size:21px; background:color-mix(in srgb, var(--c) 24%, var(--surface)); flex:none; }
+.ico.sm{ width:36px; height:36px; font-size:18px; }
+.tl{ font-weight:700; font-size:16px; margin-top:8px; }
+.big{ font-family:var(--display); font-weight:700; font-size:27px; letter-spacing:-.02em; line-height:1.1; }
+.big small{ font-family:var(--body); font-weight:500; font-size:14px; letter-spacing:0; color:var(--muted); margin-left:5px; }
+.sm{ color:var(--muted); font-size:14px; line-height:1.3; }
+.plus{ position:absolute; top:12px; right:12px; width:30px; height:30px; border-radius:50%; display:grid; place-items:center; font-size:20px; font-weight:600; line-height:1; background:var(--c); color:var(--surface); }
+
+/* log section */
+.section-title{ font-family:var(--display); font-weight:700; font-size:22px; margin:30px 0 12px; letter-spacing:-.01em; }
+.daynav{ display:flex; align-items:center; gap:8px; }
+.daynav .lbl{ flex:1; text-align:center; font-weight:600; font-size:17px; }
+.nav-btn{ width:44px; height:44px; border-radius:14px; border:1px solid var(--line); background:var(--surface); display:grid; place-items:center; color:var(--ink); }
+.nav-btn[disabled]{ opacity:.35; cursor:default; }
+.today-btn{ height:44px; padding:0 14px; border-radius:14px; border:1px solid var(--line); background:var(--surface); font-weight:600; }
+.stats{ display:grid; grid-template-columns:repeat(5,1fr); gap:4px; margin-top:12px; padding:12px 6px; background:var(--surface); border:1px solid var(--line); border-radius:18px; }
+.stat{ text-align:center; min-width:0; }
+.stat b{ display:block; font-family:var(--display); font-size:19px; font-weight:700; letter-spacing:-.01em; white-space:nowrap; }
+.stat span{ font-size:12.5px; color:var(--muted); }
+.filters{ display:flex; gap:8px; overflow-x:auto; padding:14px 2px 4px; scrollbar-width:none; }
+.filters::-webkit-scrollbar{ display:none; }
+.fchip{ flex:none; height:38px; padding:0 14px; border-radius:999px; border:1px solid var(--line); background:var(--surface); font-size:15px; font-weight:500; }
+.fchip.on{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
+
+.list{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+.row{ display:flex; align-items:center; gap:12px; text-align:left; width:100%; padding:10px 12px; background:var(--surface); border:1px solid var(--line); border-radius:16px; }
+.row .r-main{ flex:1; min-width:0; display:flex; flex-direction:column; }
+.r-title{ font-weight:700; }
+.r-detail{ color:var(--muted); font-size:14.5px; overflow-wrap:anywhere; }
+.r-note{ font-size:14px; color:var(--ink); opacity:.85; font-style:italic; overflow-wrap:anywhere; }
+.r-time{ text-align:right; font-size:14px; color:var(--muted); white-space:nowrap; display:flex; flex-direction:column; }
+.r-by{ font-size:12.5px; }
+.empty{ margin:18px 4px; color:var(--muted); text-align:center; }
+
+/* sheet */
+#sheet-root{ position:fixed; inset:0; z-index:50; pointer-events:none; }
+#sheet-root.open{ pointer-events:auto; }
+.scrim{ position:absolute; inset:0; background:rgba(8,11,20,.5); opacity:0; transition:opacity .2s ease; }
+#sheet-root.open .scrim{ opacity:1; }
+.sheet{
+  position:absolute; left:0; right:0; bottom:0; margin:0 auto; max-width:600px; max-height:92dvh; display:flex; flex-direction:column;
+  background:var(--surface); border-radius:26px 26px 0 0; box-shadow:0 -12px 40px rgba(0,0,0,.25);
+  transform:translateY(100%); transition:transform .24s cubic-bezier(.2,.8,.2,1);
+}
+#sheet-root.open .sheet{ transform:translateY(0); }
+.sheet:focus{ outline:none; }
+.sheet-head{ display:flex; align-items:center; gap:12px; padding:16px 16px 8px; }
+.sheet-head h2{ flex:1; margin:0; font-family:var(--display); font-weight:700; font-size:23px; letter-spacing:-.01em; }
+.sheet-body{ overflow-y:auto; padding:4px 16px 12px; overscroll-behavior:contain; }
+.sheet-foot{ padding:10px 16px calc(14px + env(safe-area-inset-bottom,0px)); border-top:1px solid var(--line); display:flex; flex-direction:column; gap:8px; }
+.foot-btns{ display:flex; gap:10px; }
+.btn{ flex:1; height:52px; border-radius:16px; border:1.5px solid var(--line); background:var(--surface2); font-weight:700; font-size:17px; }
+.btn.primary{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+.btn.danger{ flex:none; padding:0 18px; color:var(--danger); border-color:color-mix(in srgb, var(--danger) 45%, var(--line)); background:transparent; }
+.btn.danger.armed{ background:var(--danger); color:var(--surface); border-color:var(--danger); }
+.err{ color:var(--danger); font-size:14.5px; min-height:0; margin:0; }
+
+.field{ margin:16px 0; }
+.label{ font-weight:600; font-size:15px; margin-bottom:8px; }
+.label em{ font-style:normal; font-weight:400; color:var(--muted); }
+.chips{ display:flex; flex-wrap:wrap; gap:8px; }
+.chip{ min-height:42px; padding:0 15px; border-radius:999px; border:1.5px solid var(--line); background:var(--surface2); font-size:16px; font-weight:500; display:inline-flex; align-items:center; gap:8px; }
+.chips.small .chip{ min-height:36px; padding:0 12px; font-size:14.5px; }
+.chip.on{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+.sw{ width:14px; height:14px; border-radius:50%; border:1.5px solid color-mix(in srgb, var(--ink) 30%, transparent); flex:none; }
+.input, textarea.input{ width:100%; margin-top:10px; padding:11px 12px; font:inherit; font-size:16px; color:var(--ink); background:var(--surface2); border:1.5px solid var(--line); border-radius:12px; }
+textarea.input{ margin-top:0; resize:vertical; min-height:64px; }
+.stepper{ display:flex; align-items:center; gap:10px; }
+.stepper button{ width:48px; height:48px; border-radius:14px; border:1.5px solid var(--line); background:var(--surface2); font-size:24px; font-weight:600; line-height:1; flex:none; }
+.num{ flex:1; display:flex; align-items:center; gap:8px; height:48px; padding:0 14px; background:var(--surface2); border:1.5px solid var(--line); border-radius:12px; }
+.num input{ flex:1; min-width:0; border:0; background:transparent; font:inherit; font-size:20px; font-weight:700; color:var(--ink); padding:0; text-align:right; }
+.num input:focus-visible{ outline:none; }
+.num:focus-within{ border-color:var(--accent); }
+.num span{ color:var(--muted); min-width:28px; }
+.hint{ color:var(--muted); font-size:14px; margin:6px 0 0; }
+.switch{ display:flex; align-items:center; justify-content:space-between; width:100%; padding:12px 14px; border-radius:14px; border:1.5px solid var(--line); background:var(--surface2); font-weight:600; font-size:16px; text-align:left; }
+.switch i{ width:46px; height:28px; border-radius:999px; background:var(--line); position:relative; flex:none; transition:background .15s; }
+.switch i::after{ content:""; position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%; background:#fff; transition:transform .15s; }
+.switch[aria-checked="true"] i{ background:var(--accent); }
+.switch[aria-checked="true"] i::after{ transform:translateX(18px); }
+.cfg-note{ color:var(--muted); font-size:14.5px; margin:8px 0 0; }
+
+/* toast */
+#toast{ position:fixed; left:0; right:0; bottom:calc(16px + env(safe-area-inset-bottom,0px)); z-index:60; display:flex; justify-content:center; padding:0 16px; pointer-events:none; }
+.toast{ pointer-events:auto; display:flex; align-items:center; gap:14px; background:var(--ink); color:var(--bg); padding:12px 12px 12px 18px; border-radius:16px; font-weight:600; box-shadow:0 10px 30px rgba(0,0,0,.3); }
+.toast button{ background:transparent; border:1.5px solid color-mix(in srgb, var(--bg) 50%, transparent); color:var(--bg); border-radius:10px; padding:6px 12px; font-weight:700; }
+
+@media (prefers-reduced-motion: reduce){
+  .tile, .scrim, .sheet, .switch i, .switch i::after{ transition:none; }
+}
+@media (min-width:480px){
+  .big{ font-size:30px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="head" id="head"></header>
+  <main>
+    <div class="tiles" id="tiles" aria-label="Quick log"></div>
+    <h2 class="section-title">Log</h2>
+    <div class="daynav" id="daynav"></div>
+    <div class="stats" id="stats"></div>
+    <div class="filters" id="filters" role="group" aria-label="Filter by type"></div>
+    <div class="list" id="list"></div>
+  </main>
+</div>
+<div id="sheet-root" aria-hidden="true"></div>
+<div id="toast" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- constants ---------- */
+var TYPES = {
+  feed:  {label:'Feed',  icon:'\uD83C\uDF7C', c:'--feed'},
+  sleep: {label:'Sleep', icon:'\uD83C\uDF19', c:'--sleep'},
+  pee:   {label:'Pee',   icon:'\uD83D\uDCA7', c:'--pee'},
+  poop:  {label:'Poop',  icon:'\uD83D\uDCA9', c:'--poop'},
+  cry:   {label:'Cried', icon:'\uD83D\uDE22', c:'--cry'},
+  growth:{label:'Growth',icon:'\uD83D\uDCCF', c:'--growth'}
+};
+var ORDER = ['feed','sleep','pee','poop','cry','growth'];
+var POOP_COLOURS = [
+  {v:'Black',l:'Black',sw:'#1d1b19'},{v:'Dark green',l:'Dark green',sw:'#3b4a2a'},{v:'Green',l:'Green',sw:'#6f9a3a'},
+  {v:'Yellow',l:'Yellow',sw:'#e3b92f'},{v:'Brown',l:'Brown',sw:'#8a5a2b'},{v:'Pale',l:'Pale',sw:'#e9e3d2'},{v:'Red',l:'Red',sw:'#c0392b'}
+];
+var HELPED = ['Feed','Nappy change','Cuddle','Rocking','Burping','Dummy','Skin-to-skin','Nothing worked'];
+var MIN = 60000, DAY = 86400000;
+
+/* ---------- helpers ---------- */
+function $(s){ return document.querySelector(s); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+var ls = {
+  get:function(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set:function(k,v){ try{ localStorage.setItem(k,v); }catch(e){} },
+  json:function(k,d){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } }
+};
+function getPath(o,p){ return p.split('.').reduce(function(a,k){ return a==null?a:a[k]; },o); }
+function setPath(o,p,v){ var ks=p.split('.'),a=o; for(var i=0;i<ks.length-1;i++){ a[ks[i]]=a[ks[i]]||{}; a=a[ks[i]]; } a[ks[ks.length-1]]=v; }
+function newId(){ return 'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function startOfDay(ms){ var d=new Date(ms); return new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime(); }
+function nextDay(ms){ var d=new Date(ms); return new Date(d.getFullYear(),d.getMonth(),d.getDate()+1).getTime(); }
+function prevDay(ms){ var d=new Date(ms); return new Date(d.getFullYear(),d.getMonth(),d.getDate()-1).getTime(); }
+function pad(n){ return (n<10?'0':'')+n; }
+function toLocalInput(ms){ var d=new Date(ms); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes()); }
+function timeStr(ms){ return new Date(ms).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}); }
+function dayLabel(ms){
+  var t=startOfDay(Date.now());
+  if(ms===t) return 'Today';
+  if(ms===prevDay(t)) return 'Yesterday';
+  return new Date(ms).toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'});
+}
+function dur(ms){
+  var m=Math.floor(ms/MIN);
+  if(m<1) return '<1m';
+  if(m<60) return m+'m';
+  var h=Math.floor(m/60), mm=m%60;
+  if(h<24) return h+'h'+(mm?' '+mm+'m':'');
+  var d=Math.floor(h/24), hh=h%24;
+  return d+'d'+(hh?' '+hh+'h':'');
+}
+function fmtMin(min){ return min<=0?'0m':dur(min*MIN); }
+function fmtG(n){ return Number(n).toLocaleString()+' g'; }
+function num(v){ if(v==null||v==='') return null; var n=parseFloat(String(v).replace(',','.')); return isFinite(n)?n:null; }
+function clean(d){
+  var o={}; Object.keys(d||{}).forEach(function(k){
+    var v=d[k]; if(v==null||v===''||(Array.isArray(v)&&!v.length)) return; o[k]=v;
+  }); return o;
+}
+
+/* ---------- state ---------- */
+var S = { events:[], config:{}, ready:false, mode:'connecting', day:startOfDay(Date.now()), filter:'all', me:ls.get('nb-me')||'', dl:null };
+var backend=null, draft=null, isEdit=false, sheetMode=null, toastTimer=null, lastUndoId=null;
+
+/* ---------- storage backends ---------- */
+function dbBackend(db){
+  var evCol=db.collection('events'), cfgDoc=db.doc('config/baby');
+  return {
+    subscribe:function(onEvents,onConfig,onError){
+      evCol.onSnapshot(function(snap){
+        onEvents(snap.docs.map(function(d){ var o=d.data()||{}; o.id=d.id; return o; }));
+      }, onError);
+      cfgDoc.onSnapshot(function(s){ onConfig(s.exists?(s.data()||{}):{}); }, onError);
+    },
+    save:function(evt){ var o=JSON.parse(JSON.stringify(evt)); var id=o.id; delete o.id; return evCol.doc(id).set(o); },
+    remove:function(id){ return evCol.doc(id).delete(); },
+    saveConfig:function(c){ return cfgDoc.set(c); }
+  };
+}
+function localBackend(){
+  var list=ls.json('nb-events',[]), cbE=null, cbC=null;
+  function persist(){ ls.set('nb-events',JSON.stringify(list)); }
+  return {
+    subscribe:function(onEvents,onConfig){ cbE=onEvents; cbC=onConfig; onEvents(list.slice()); onConfig(ls.json('nb-config',{})); },
+    save:function(evt){ var i=list.findIndex(function(e){ return e.id===evt.id; }); var c=JSON.parse(JSON.stringify(evt)); if(i>=0) list[i]=c; else list.push(c); persist(); cbE(list.slice()); return Promise.resolve(); },
+    remove:function(id){ list=list.filter(function(e){ return e.id!==id; }); persist(); cbE(list.slice()); return Promise.resolve(); },
+    saveConfig:function(c){ ls.set('nb-config',JSON.stringify(c)); cbC(c); return Promise.resolve(); }
+  };
+}
+async function initBackend(){
+  var db=null, c=window.claude;
+  try{ if(c && c.use) db=await c.use('db'); }catch(e){ db=null; }
+  try{ if(c && c.use) S.dl=await c.use('downloads'); }catch(e){ S.dl=null; }
+  backend = db ? dbBackend(db) : localBackend();
+  S.mode = db ? 'shared' : 'local';
+  backend.subscribe(
+    function(list){ S.events=list; S.ready=true; renderAll(); },
+    function(cfg){ S.config=cfg||{}; renderHead(); },
+    function(){ S.mode='error'; renderHead(); }
+  );
+}
+
+/* ---------- derived data ---------- */
+function lastOf(type){
+  var best=null; S.events.forEach(function(e){ if(e.type===type && (!best || e.t>best.t)) best=e; }); return best;
+}
+function activeSleep(){
+  var best=null; S.events.forEach(function(e){ if(e.type==='sleep' && e.end==null && (!best || e.t>best.t)) best=e; }); return best;
+}
+function lastSleepDone(){
+  var best=null; S.events.forEach(function(e){ if(e.type==='sleep' && e.end!=null && (!best || e.end>best.end)) best=e; }); return best;
+}
+function prevWeight(e){
+  var best=null; S.events.forEach(function(x){ if(x.type==='growth' && x.d && x.d.weight!=null && x.t<e.t && (!best || x.t>best.t)) best=x; });
+  return best?best.d.weight:null;
+}
+function detail(e){
+  var d=e.d||{}, b=[];
+  switch(e.type){
+    case 'pee': if(d.amount) b.push(d.amount); break;
+    case 'poop': ['colour','texture','size'].forEach(function(k){ if(d[k]) b.push(d[k]); }); break;
+    case 'feed':
+      if(d.kind==='Breast'){ b.push('Breast'); if(d.side) b.push(d.side); if(d.min!=null) b.push(d.min+' min'); }
+      else if(d.kind==='Bottle'){ b.push('Bottle'); if(d.milk) b.push(d.milk); if(d.ml!=null) b.push(d.ml+' ml'); }
+      break;
+    case 'sleep': b.push(e.end==null?'Still asleep':dur(e.end-e.t)); if(d.place) b.push(d.place); break;
+    case 'cry':
+      if(d.min!=null) b.push(d.min+' min'); if(d.level) b.push(d.level);
+      if(d.helped && d.helped.length) b.push('helped: '+d.helped.join(', ').toLowerCase());
+      break;
+    case 'growth':
+      if(d.weight!=null){ var w=fmtG(d.weight), p=prevWeight(e); if(p!=null){ var df=d.weight-p; w+=' ('+(df>=0?'+':'\u2212')+Math.abs(df)+' g)'; } b.push(w); }
+      if(d.height!=null) b.push(d.height+' cm');
+      if(d.head!=null) b.push('head '+d.head+' cm');
+      break;
+  }
+  return b.join(', ');
+}
+function ageText(){
+  var b=S.config.birth; if(!b) return 'Add a birth date in settings';
+  var p=b.split('-'); if(p.length<3) return '';
+  var birth=new Date(+p[0],+p[1]-1,+p[2]).getTime();
+  var days=Math.round((startOfDay(Date.now())-birth)/DAY);
+  if(days<0) return 'Due '+new Date(birth).toLocaleDateString(undefined,{day:'numeric',month:'short'});
+  if(days===0) return 'Born today';
+  if(days===1) return '1 day old';
+  if(days<14) return days+' days old';
+  var w=Math.floor(days/7), d=days%7;
+  return w+' weeks'+(d?', '+d+' days':'')+' old';
+}
+
+/* ---------- rendering: page ---------- */
+var SYNC_TXT={connecting:'Connecting',shared:'Synced',local:'This device only',error:'Sync problem'};
+function renderHead(){
+  $('#head').innerHTML =
+    '<div><h1>'+esc(S.config.name||'Baby')+'</h1><p class="sub">'+esc(ageText())+'</p></div>'+
+    '<div class="head-r"><span class="sync '+S.mode+'">'+SYNC_TXT[S.mode]+'</span>'+
+    '<button class="icon-btn" data-action="settings" aria-label="Settings"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></button></div>';
+}
+function tileHTML(t){
+  var T=TYPES[t], now=Date.now(), big='\u2014', word='', small='Nothing logged yet', cls='';
+  if(!S.ready){ small='Loading'; }
+  else if(t==='sleep'){
+    var a=activeSleep();
+    if(a){ big=dur(now-a.t); word='asleep'; small='Tap when baby wakes'; cls=' live'; }
+    else { var ls_=lastSleepDone(); if(ls_){ big=dur(now-ls_.end); word='awake'; small='Last sleep '+dur(ls_.end-ls_.t); } }
+  } else if(t==='growth'){
+    var g=lastOf('growth');
+    if(g){
+      var d=g.d||{};
+      if(d.weight!=null){ big=Number(d.weight).toLocaleString(); word='g'; }
+      else if(d.height!=null){ big=String(d.height); word='cm'; }
+      small=(d.weight!=null && d.height!=null ? d.height+' cm, ' : '')+'measured '+dur(now-g.t)+' ago';
+    }
+  } else {
+    var l=lastOf(t);
+    if(l){ big=(now-l.t<MIN)?'Just now':dur(now-l.t); word=(now-l.t<MIN)?'':'ago'; small=detail(l)||'Logged'; }
+  }
+  return '<button class="tile'+cls+'" style="--c:var('+T.c+')" data-action="log" data-type="'+t+'" aria-label="Log '+T.label.toLowerCase()+'">'+
+    '<span class="ico">'+T.icon+'</span><span class="plus" aria-hidden="true">+</span>'+
+    '<span class="tl">'+T.label+'</span>'+
+    '<span class="big">'+esc(big)+(word?'<small>'+word+'</small>':'')+'</span>'+
+    '<span class="sm">'+esc(small)+'</span></button>';
+}
+function renderTiles(){ $('#tiles').innerHTML=ORDER.map(tileHTML).join(''); }
+
+function dayStats(start,end){
+  var now=Date.now(), r={feed:0,pee:0,poop:0,cry:0,sleep:0};
+  S.events.forEach(function(e){
+    if(e.t>=start && e.t<end){
+      if(e.type==='feed') r.feed++;
+      else if(e.type==='pee') r.pee++;
+      else if(e.type==='poop') r.poop++;
+      else if(e.type==='cry') r.cry+=(e.d&&e.d.min)||0;
+    }
+    if(e.type==='sleep'){
+      var a=Math.max(start,e.t), b=Math.min(end,e.end==null?now:e.end);
+      if(b>a) r.sleep+=b-a;
+    }
+  });
+  return r;
+}
+function renderLog(){
+  var start=S.day, end=nextDay(start), isToday=start===startOfDay(Date.now());
+  $('#daynav').innerHTML =
+    '<button class="nav-btn" data-action="day-prev" aria-label="Previous day"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>'+
+    '<div class="lbl">'+esc(dayLabel(start))+'</div>'+
+    (isToday?'':'<button class="today-btn" data-action="day-today">Today</button>')+
+    '<button class="nav-btn" data-action="day-next" aria-label="Next day"'+(isToday?' disabled':'')+'><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>';
+
+  var st=dayStats(start,end);
+  $('#stats').innerHTML =
+    '<div class="stat"><b>'+st.feed+'</b><span>Feeds</span></div>'+
+    '<div class="stat"><b>'+(st.sleep?dur(st.sleep):'0m')+'</b><span>Sleep</span></div>'+
+    '<div class="stat"><b>'+st.pee+'</b><span>Pee</span></div>'+
+    '<div class="stat"><b>'+st.poop+'</b><span>Poop</span></div>'+
+    '<div class="stat"><b>'+fmtMin(st.cry)+'</b><span>Cried</span></div>';
+
+  $('#filters').innerHTML = ['all'].concat(ORDER).map(function(k){
+    var lab=k==='all'?'All':TYPES[k].icon+' '+TYPES[k].label;
+    return '<button class="fchip'+(S.filter===k?' on':'')+'" data-action="filter" data-k="'+k+'" aria-pressed="'+(S.filter===k)+'">'+lab+'</button>';
+  }).join('');
+
+  var all=S.events.filter(function(e){ return e.t>=start && e.t<end; }).sort(function(a,b){ return b.t-a.t; });
+  var items=all.filter(function(e){ return S.filter==='all' || e.type===S.filter; });
+  if(!items.length){
+    $('#list').innerHTML='<p class="empty">'+(all.length?'Nothing of this type on this day.':(isToday?'Nothing logged yet today. Tap a tile above to start.':'Nothing was logged on this day.'))+'</p>';
+    return;
+  }
+  $('#list').innerHTML = items.map(function(e){
+    var T=TYPES[e.type]; if(!T) return '';
+    var when = e.type==='sleep' ? timeStr(e.t)+' \u2013 '+(e.end!=null?timeStr(e.end):'now') : timeStr(e.t);
+    return '<button class="row" style="--c:var('+T.c+')" data-action="edit" data-id="'+esc(e.id)+'">'+
+      '<span class="ico sm">'+T.icon+'</span>'+
+      '<span class="r-main"><span class="r-title">'+T.label+'</span>'+
+      (detail(e)?'<span class="r-detail">'+esc(detail(e))+'</span>':'')+
+      (e.note?'<span class="r-note">'+esc(e.note)+'</span>':'')+'</span>'+
+      '<span class="r-time"><span>'+when+'</span>'+(e.by?'<span class="r-by">'+esc(e.by)+'</span>':'')+'</span></button>';
+  }).join('');
+}
+function renderAll(){ renderHead(); renderTiles(); renderLog(); }
+
+/* ---------- toast ---------- */
+function toast(msg,undoId){
+  var el=$('#toast'); clearTimeout(toastTimer);
+  el.innerHTML='<div class="toast"><span>'+esc(msg)+'</span>'+(undoId?'<button data-action="undo">Undo</button>':'')+'</div>';
+  lastUndoId=undoId||null;
+  toastTimer=setTimeout(function(){ el.innerHTML=''; lastUndoId=null; },6000);
+}
+
+/* ---------- sheet: fields ---------- */
+function chipGroup(path,opts,o){
+  o=o||{}; var cur=getPath(draft,path);
+  return '<div class="chips" role="group">'+opts.map(function(x){
+    var v=typeof x==='string'?x:x.v, l=typeof x==='string'?x:x.l;
+    var on=o.multi?(cur||[]).indexOf(v)>=0:cur===v;
+    return '<button type="button" class="chip'+(on?' on':'')+'" aria-pressed="'+on+'" data-chip="'+path+'" data-multi="'+(o.multi?1:0)+'" data-req="'+(o.req?1:0)+'" data-val="'+esc(v)+'">'+
+      (x.sw?'<span class="sw" style="background:'+x.sw+'"></span>':'')+esc(l)+'</button>';
+  }).join('')+'</div>';
+}
+function stepper(path,o){
+  var v=getPath(draft,path);
+  return '<div class="stepper"><button type="button" data-step="'+path+'" data-by="-'+o.step+'" data-def="'+o.def+'" data-min="'+(o.min||0)+'" aria-label="Decrease">\u2212</button>'+
+    '<label class="num"><input inputmode="decimal" data-num="'+path+'" value="'+(v==null?'':v)+'" placeholder="'+(o.ph||'')+'" aria-label="'+esc(o.aria||'')+'"><span>'+o.unit+'</span></label>'+
+    '<button type="button" data-step="'+path+'" data-by="'+o.step+'" data-def="'+o.def+'" data-min="'+(o.min||0)+'" aria-label="Increase">+</button></div>';
+}
+function timeField(key,label,chips){
+  chips=chips||[0,5,15,30,60];
+  return '<div class="field"><div class="label">'+label+'</div><div class="chips small">'+chips.map(function(m){
+    return '<button type="button" class="chip" data-time="'+key+'" data-ago="'+m+'">'+(m===0?'Now':(m<60?m+' min ago':'1 hour ago'))+'</button>';
+  }).join('')+'</div><input type="datetime-local" class="input" data-dt="'+key+'" value="'+toLocalInput(draft[key])+'" aria-label="'+esc(label)+'"></div>';
+}
+function field(label,html,opt){ return '<div class="field"><div class="label">'+label+(opt?' <em>optional</em>':'')+'</div>'+html+'</div>'; }
+
+function formFor(){
+  var t=draft.type, h='';
+  if(t==='pee'){
+    h+=timeField('t','When');
+    h+=field('How wet',chipGroup('d.amount',['Small','Normal','Heavy']),true);
+  } else if(t==='poop'){
+    h+=timeField('t','When');
+    h+=field('Colour',chipGroup('d.colour',POOP_COLOURS),true);
+    h+=field('Texture',chipGroup('d.texture',['Runny','Soft','Firm']),true);
+    h+=field('Amount',chipGroup('d.size',['Small','Medium','Large']),true);
+  } else if(t==='feed'){
+    h+=timeField('t','Started');
+    h+=field('Type',chipGroup('d.kind',['Breast','Bottle'],{req:true}));
+    if(draft.d.kind==='Bottle'){
+      h+=field('Milk',chipGroup('d.milk',['Breast milk','Formula']),true);
+      h+=field('Amount',stepper('d.ml',{step:10,def:60,unit:'ml',ph:'0',aria:'Amount in millilitres'}),true);
+    } else {
+      h+=field('Side',chipGroup('d.side',['Left','Right','Both']),true);
+      h+=field('How long',stepper('d.min',{step:5,def:10,unit:'min',ph:'0',aria:'Minutes'}),true);
+    }
+  } else if(t==='sleep'){
+    h+=timeField('t','Fell asleep');
+    h+='<div class="field"><button type="button" class="switch" role="switch" aria-checked="'+draft.ongoing+'" data-toggle="ongoing">Still asleep<i></i></button></div>';
+    if(!draft.ongoing){
+      h+=timeField('end','Woke up',[0,5,15,30]);
+      var ok=draft.end>draft.t;
+      h+='<p class="hint" id="sleep-dur">'+(ok?'Sleep length: '+dur(draft.end-draft.t):'')+'</p>';
+    }
+    h+=field('Where',chipGroup('d.place',['Cot','Held','Pram or car','Other']),true);
+  } else if(t==='cry'){
+    h+=timeField('t','Started');
+    h+=field('How long',stepper('d.min',{step:5,def:5,unit:'min',ph:'0',aria:'Minutes'}),true);
+    h+=field('How upset',chipGroup('d.level',['Fussy','Crying','Very upset']),true);
+    h+=field('What helped',chipGroup('d.helped',HELPED,{multi:true}),true);
+  } else if(t==='growth'){
+    var g=lastOf('growth')||{d:{}};
+    h+=timeField('t','When measured');
+    h+=field('Weight',stepper('d.weight',{step:10,def:g.d.weight||3400,min:0,unit:'g',ph:'0',aria:'Weight in grams'})+'<p class="hint" id="kg-hint">'+kgHint()+'</p>',true);
+    h+=field('Length or height',stepper('d.height',{step:0.5,def:g.d.height||50,unit:'cm',ph:'0',aria:'Height in centimetres'}),true);
+    h+=field('Head size',stepper('d.head',{step:0.5,def:g.d.head||35,unit:'cm',ph:'0',aria:'Head circumference in centimetres'}),true);
+  }
+  h+='<div class="field"><div class="label">Note <em>optional</em></div><textarea class="input" data-text="note" rows="2" placeholder="Anything worth remembering">'+esc(draft.note||'')+'</textarea></div>';
+  return h;
+}
+function kgHint(){ var w=draft.d&&draft.d.weight; return w?'= '+(w/1000).toFixed(2)+' kg':''; }
+
+/* ---------- sheet: open / close / render ---------- */
+function newDraft(type){
+  var d={id:null,type:type,t:Date.now(),end:null,ongoing:type==='sleep',d:{},note:''};
+  if(type==='feed'){ var l=lastOf('feed'); d.d.kind=(l&&l.d&&l.d.kind)||'Breast'; if(d.d.kind==='Bottle'&&l.d.milk) d.d.milk=l.d.milk; }
+  return d;
+}
+function openLog(type){
+  if(!S.ready){ toast('Still connecting. Try again in a moment.'); return; }
+  if(type==='sleep'){ var a=activeSleep(); if(a){ openEdit(a.id,true); return; } }
+  draft=newDraft(type); isEdit=false; sheetMode='log'; showSheet();
+}
+function openEdit(id,wake){
+  var e=S.events.find(function(x){ return x.id===id; }); if(!e) return;
+  draft=JSON.parse(JSON.stringify(e)); draft.d=draft.d||{}; draft.note=draft.note||'';
+  draft.ongoing=e.type==='sleep' && e.end==null;
+  if(wake){ draft.ongoing=false; draft.end=Date.now(); draft.wake=true; }
+  isEdit=true; sheetMode='log'; showSheet();
+}
+function openSettings(){ draft=null; sheetMode='settings'; showSheet(); }
+function showSheet(){
+  var root=$('#sheet-root');
+  root.innerHTML='<div class="scrim" data-action="close"></div><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" tabindex="-1"></div>';
+  renderSheet();
+  document.body.classList.add('lock');
+  root.setAttribute('aria-hidden','false');
+  requestAnimationFrame(function(){ root.classList.add('open'); var s=root.querySelector('.sheet'); if(s) s.focus(); });
+}
+function closeSheet(){
+  var root=$('#sheet-root'); root.classList.remove('open'); root.setAttribute('aria-hidden','true');
+  document.body.classList.remove('lock'); draft=null; sheetMode=null;
+  setTimeout(function(){ if(!sheetMode) root.innerHTML=''; },260);
+}
+function renderSheet(){
+  var sheet=$('#sheet-root .sheet'); if(!sheet) return;
+  var prev=sheet.querySelector('.sheet-body'), top=prev?prev.scrollTop:0, html='';
+  if(sheetMode==='settings'){
+    html=
+      '<div class="sheet-head"><h2 id="sheet-title">Settings</h2><button class="icon-btn" data-action="close" aria-label="Close">\u2715</button></div>'+
+      '<div class="sheet-body">'+
+      '<div class="field"><div class="label">Baby\u2019s name</div><input class="input" id="cfg-name" value="'+esc(S.config.name||'')+'" placeholder="Baby" autocomplete="off"></div>'+
+      '<div class="field"><div class="label">Birth date</div><input type="date" class="input" id="cfg-birth" value="'+esc(S.config.birth||'')+'"></div>'+
+      '<div class="field"><div class="label">Your name on this phone</div><input class="input" id="cfg-me" value="'+esc(S.me)+'" placeholder="For example: Mum" autocomplete="off"><p class="cfg-note">Shown next to each entry you log, so you can see who did what.</p></div>'+
+      '<div class="field"><div class="label">Export</div>'+
+      (S.dl?'<button class="btn" data-action="export" type="button" style="width:100%">Download all entries (CSV)</button><p class="cfg-note">One row per entry. Ready for analysis later.</p>':'<p class="cfg-note">Export is not available in this view.</p>')+'</div>'+
+      '<div class="field"><div class="label">Sync</div><p class="cfg-note">'+(S.mode==='shared'?'Entries are saved online. To log together, share this page with your partner as a Contributor.':(S.mode==='local'?'Entries are saved on this device only.':SYNC_TXT[S.mode]+'.'))+'</p></div>'+
+      '</div>'+
+      '<div class="sheet-foot"><p class="err" id="err" role="alert"></p><div class="foot-btns"><button class="btn primary" data-action="save-settings" type="button">Save</button></div></div>';
+  } else if(draft){
+    var T=TYPES[draft.type];
+    var title=draft.wake?'Baby woke up':(isEdit?'Edit '+T.label.toLowerCase():'Log '+T.label.toLowerCase());
+    if(draft.type==='sleep' && !isEdit) title='Log sleep';
+    html=
+      '<div class="sheet-head" style="--c:var('+T.c+')"><span class="ico">'+T.icon+'</span><h2 id="sheet-title">'+title+'</h2><button class="icon-btn" data-action="close" aria-label="Close">\u2715</button></div>'+
+      '<div class="sheet-body">'+formFor()+'</div>'+
+      '<div class="sheet-foot"><p class="err" id="err" role="alert"></p><div class="foot-btns">'+
+      (isEdit?'<button class="btn danger'+(draft._del?' armed':'')+'" data-action="delete" type="button">'+(draft._del?'Tap again to delete':'Delete')+'</button>':'')+
+      '<button class="btn primary" data-action="save" type="button">Save</button></div></div>';
+  }
+  sheet.innerHTML=html;
+  var b=sheet.querySelector('.sheet-body'); if(b) b.scrollTop=top;
+}
+
+/* ---------- save / delete ---------- */
+function validate(){
+  var now=Date.now(), d=draft;
+  if(d.t>now+5*MIN) return 'That time is in the future.';
+  if(d.type==='sleep' && !d.ongoing){
+    if(d.end==null||isNaN(d.end)) return 'Choose when baby woke up.';
+    if(d.end<=d.t) return 'Wake time must be after the sleep time.';
+    if(d.end>now+5*MIN) return 'Wake time is in the future.';
+  }
+  if(d.type==='growth'){
+    var g=d.d; if(g.weight==null && g.height==null && g.head==null) return 'Add at least one measurement.';
+  }
+  return null;
+}
+async function saveDraft(){
+  var err=validate(), el=$('#err');
+  if(err){ if(el) el.textContent=err; return; }
+  var d=draft, evt={
+    id:d.id||newId(), type:d.type, t:d.t, d:clean(d.d), note:(d.note||'').trim(),
+    by:isEdit?(d.by||S.me||''):(S.me||''), at:d.at||Date.now()
+  };
+  if(d.type==='sleep') evt.end=d.ongoing?null:d.end;
+  var wasEdit=isEdit, label=TYPES[d.type].label;
+  try{ await backend.save(evt); }
+  catch(e){ if(el) el.textContent='Could not save. You may have view-only access, or the connection dropped.'; return; }
+  closeSheet();
+  if(!wasEdit) toast(d.type==='sleep'&&d.ongoing?'Sleep started':label+' logged',evt.id);
+  else toast('Changes saved');
+}
+async function deleteDraft(){
+  if(!draft._del){ draft._del=true; renderSheet(); return; }
+  var id=draft.id;
+  try{ await backend.remove(id); }catch(e){ var el=$('#err'); if(el) el.textContent='Could not delete.'; return; }
+  closeSheet(); toast('Entry deleted');
+}
+async function saveSettings(){
+  var name=$('#cfg-name').value.trim(), birth=$('#cfg-birth').value, me=$('#cfg-me').value.trim();
+  S.me=me; ls.set('nb-me',me);
+  try{ await backend.saveConfig({name:name,birth:birth}); }
+  catch(e){ $('#err').textContent='Could not save settings. You may have view-only access.'; return; }
+  closeSheet();
+}
+
+/* ---------- export ---------- */
+function csvCell(v){ v=v==null?'':String(v); return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+async function exportCSV(){
+  if(!S.dl) return;
+  var cols=['date','time','start_iso','type','duration_min','pee_amount','poop_colour','poop_texture','poop_size','feed_kind','feed_side','feed_milk','feed_ml','feed_minutes','sleep_place','cry_level','cry_helped','weight_g','height_cm','head_cm','note','logged_by'];
+  var rows=[cols.join(',')];
+  S.events.slice().sort(function(a,b){ return a.t-b.t; }).forEach(function(e){
+    var d=e.d||{}, dt=new Date(e.t), dmin='';
+    if(e.type==='sleep' && e.end!=null) dmin=Math.round((e.end-e.t)/MIN);
+    else if((e.type==='feed'||e.type==='cry') && d.min!=null) dmin=d.min;
+    var r=[
+      dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate()), pad(dt.getHours())+':'+pad(dt.getMinutes()), dt.toISOString(), e.type, dmin,
+      d.amount, d.colour, d.texture, d.size,
+      d.kind, d.side, d.milk, d.ml, e.type==='feed'?d.min:'',
+      d.place, d.level, (d.helped||[]).join('; '),
+      d.weight, d.height, d.head, e.note, e.by
+    ];
+    if(e.type==='pee') r[5]=d.amount;
+    rows.push(r.map(csvCell).join(','));
+  });
+  var n=new Date(), name='baby-log-'+n.getFullYear()+'-'+pad(n.getMonth()+1)+'-'+pad(n.getDate())+'.csv';
+  try{ await S.dl.save({filename:name,data:rows.join('\n')}); }
+  catch(e){ if(e && e.code!=='declined'){ var el=$('#err'); if(el) el.textContent='Could not export.'; } }
+}
+
+/* ---------- events ---------- */
+var actions={
+  log:function(ds){ openLog(ds.type); },
+  edit:function(ds){ openEdit(ds.id,false); },
+  settings:function(){ openSettings(); },
+  close:function(){ closeSheet(); },
+  save:function(){ saveDraft(); },
+  delete:function(){ deleteDraft(); },
+  'save-settings':function(){ saveSettings(); },
+  export:function(){ exportCSV(); },
+  'day-prev':function(){ S.day=prevDay(S.day); renderLog(); },
+  'day-next':function(){ if(S.day<startOfDay(Date.now())){ S.day=nextDay(S.day); renderLog(); } },
+  'day-today':function(){ S.day=startOfDay(Date.now()); renderLog(); },
+  filter:function(ds){ S.filter=ds.k; renderLog(); },
+  undo:function(){
+    if(!lastUndoId) return; var id=lastUndoId; lastUndoId=null; clearTimeout(toastTimer); $('#toast').innerHTML='';
+    backend.remove(id).then(function(){ toast('Removed'); }).catch(function(){ toast('Could not undo.'); });
+  }
+};
+document.addEventListener('click',function(ev){
+  var el=ev.target.closest('button,[data-action]'); if(!el) return;
+  var ds=el.dataset;
+  if(ds.action){ if(actions[ds.action]) actions[ds.action](ds,el); return; }
+  if(!draft) return;
+  if(ds.chip){
+    var path=ds.chip, cur=getPath(draft,path);
+    if(ds.multi==='1'){ var arr=(cur||[]).slice(), i=arr.indexOf(ds.val); if(i>=0) arr.splice(i,1); else arr.push(ds.val); setPath(draft,path,arr); }
+    else if(ds.req==='1'){ setPath(draft,path,ds.val); }
+    else { setPath(draft,path,cur===ds.val?null:ds.val); }
+    renderSheet();
+  } else if(ds.step){
+    var c=getPath(draft,ds.step), by=parseFloat(ds.by), mn=parseFloat(ds.min), def=parseFloat(ds.def);
+    var n=(c==null)?def:c+by; if(n<mn) n=mn; n=Math.round(n*10)/10;
+    setPath(draft,ds.step,n);
+    var inp=$('#sheet-root [data-num="'+ds.step+'"]'); if(inp) inp.value=n;
+    var kh=$('#kg-hint'); if(kh) kh.textContent=kgHint();
+  } else if(ds.time){
+    draft[ds.time]=Date.now()-Number(ds.ago)*MIN; renderSheet();
+  } else if(ds.toggle==='ongoing'){
+    draft.ongoing=!draft.ongoing;
+    if(!draft.ongoing && (draft.end==null||draft.end<=draft.t)) draft.end=Math.max(Date.now(),draft.t+MIN);
+    renderSheet();
+  }
+});
+document.addEventListener('input',function(ev){
+  var el=ev.target; if(!draft) return;
+  if(el.dataset.num){ setPath(draft,el.dataset.num,num(el.value)); var kh=$('#kg-hint'); if(kh) kh.textContent=kgHint(); }
+  else if(el.dataset.text){ draft[el.dataset.text]=el.value; }
+});
+document.addEventListener('change',function(ev){
+  var el=ev.target; if(!draft || !el.dataset.dt) return;
+  var ms=new Date(el.value).getTime(); if(isNaN(ms)) return;
+  draft[el.dataset.dt]=ms; renderSheet();
+});
+document.addEventListener('keydown',function(ev){ if(ev.key==='Escape' && sheetMode) closeSheet(); });
+
+/* ---------- start ---------- */
+renderAll();
+initBackend();
+setInterval(function(){
+  var today=startOfDay(Date.now());
+  renderTiles();
+  if(S.day===today) renderLog();
+},30000);
+})();
+</script>
+</body>
+</html>
