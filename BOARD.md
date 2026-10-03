@@ -11,7 +11,7 @@ Generated from the header of each `features/*/SIGNOFF.md`. Do not edit by hand.
 - 010 Track growth against WHO (updated 2026-10-03) - `features/010-track-growth-against-who/`
 
 ## Building
-- none
+- 011 Edit an entry (updated 2026-10-03) - `features/011-edit-an-entry/`
 
 ## Testing
 - 006 Log a breast feed (updated 2026-10-03) - `features/006-log-a-breast-feed/`
