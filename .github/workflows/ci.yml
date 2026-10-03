@@ -19,3 +19,19 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
+
+  # Opens the app in a real browser: install, tabs, offline, and updates from an older version.
+  # A fresh install hid an update bug once, so this runs on every pull request.
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright (test tool only, pinned, not part of the app)
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Browser tests
+        run: npm run test:browser

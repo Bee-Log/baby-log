@@ -53,6 +53,9 @@ then open the app again (twice). A fresh install hides update bugs.
 ## Checks
 - **CI** (`.github/workflows/ci.yml`) runs `npm test` and `npm run build` on every pull request. Merge only when it passes.
 - Local: `npm test`, then `npm run build` (writes `dist/test` and `dist/live`).
+- **Browser** (CI job `browser`) runs `npm run test:browser`: it opens the app in Chromium and checks install, tabs, offline,
+  live and test side by side, and an update from an older version. Locally it needs Playwright; in a Claude Code cloud
+  session use `NODE_PATH=/opt/node-tools/node_modules npm run test:browser`.
 
 ## One-time setup (owner)
 - Repository **Settings → Pages → Build and deployment → Source: GitHub Actions**.

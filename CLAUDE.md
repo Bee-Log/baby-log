@@ -41,7 +41,7 @@ To build, the owner says "build feature 001" or names the signoff. Find it in `f
 - Full rules and the record format: `.claude/skills/build-feature/references/app-rules.md`.
 
 ## Commands
-- `npm test` runs the tests. `npm run build` builds both flavours. CI runs both on every pull request.
+- `npm test` runs the tests. `npm run build` builds both flavours. `npm run test:browser` checks the app in a real browser, including updates (see `DEPLOY.md`). CI runs all three on every pull request.
 - TEST: https://oudam-meas.github.io/baby-log/test/ . LIVE: https://oudam-meas.github.io/baby-log/ . Details in `DEPLOY.md`.
 - Text files in `src/` may use build tokens such as `__APP_ENV__`; `scripts/build.mjs` fills them in and fails on unknown ones.
 
