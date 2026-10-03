@@ -1,7 +1,7 @@
 // Records: the portable entry format from app-rules.md, plus small pure helpers.
 // No browser APIs here, so tests can load this file directly.
 (function (root) {
-  var TYPES = ['feed', 'sleep', 'pee', 'poop', 'cry', 'growth'];
+  var TYPES = ['feed', 'sleep', 'pee', 'poop', 'cry', 'growth', 'profile'];
   var DAY_START_HOUR = 6;                  // "Today" runs 6 am to 6 am (feature 008)
   var NAPPY_PAIR_MS = 2 * 60 * 1000;       // a wee and a poo this close are one nappy
 

@@ -14,6 +14,7 @@
   <script src="nav.js"></script>
   <script src="icons.js"></script>
   <script src="records.js"></script>
+  <script src="profile.js"></script>
   <script src="store.js"></script>
   <script src="feed.js"></script>
   <script src="sleep.js"></script>
@@ -22,12 +23,17 @@
   <script src="edit-ui.js"></script>
   <script src="pastsleep-ui.js"></script>
   <script src="sleep-ui.js"></script>
+  <script src="profile-ui.js"></script>
 </head>
 <body>
   <div id="test-banner" class="test-banner" hidden>TEST version. Data here is kept apart from the real app.</div>
 
   <main>
     <section class="view" id="view-today" data-tab="today" aria-labelledby="h-today">
+      <a class="baby-head" id="baby-head" href="#profile" aria-label="Open baby profile">
+        <span class="baby-photo" id="bh-photo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg></span>
+        <span class="baby-text"><span class="baby-sub" id="bh-sub"></span><span class="baby-name" id="bh-name">[Nickname]</span></span>
+      </a>
       <div class="last-feed" id="last-feed">
         <span class="last-feed-label">Last feed</span>
         <span class="last-feed-big" id="lf-big">…</span>
@@ -258,6 +264,51 @@
       <ol class="timeline" id="sleep-list"></ol>
       <p class="empty" id="sleep-empty" hidden>No sleeps logged yet.</p>
     </div>
+  </section>
+
+  <section class="screen" id="screen-profile" aria-labelledby="h-profile" hidden>
+    <header class="screen-head">
+      <a class="round-btn" href="#today" aria-label="Back">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+      </a>
+      <h1 id="h-profile">Baby profile</h1>
+      <span class="round-spacer"></span>
+    </header>
+    <div class="pf-top">
+      <div class="pf-frame">
+        <svg class="pf-sky" width="240" height="200" viewBox="0 0 240 200" aria-hidden="true">
+          <path d="M28 40l3.5 7 7.5 1-5.5 5 1.5 7.5-7-3.5-7 3.5 1.5-7.5-5.5-5 7.5-1z" fill="#f2c14e"></path>
+          <path d="M214 30a12 12 0 1 1-12-14 9.5 9.5 0 0 0 12 14z" fill="#b9aee3"></path>
+          <circle cx="206" cy="150" r="7" fill="#9dbce8"></circle>
+          <circle cx="222" cy="128" r="4" fill="#f4b98f"></circle>
+          <path d="M22 150c0-6 5-10 11-10 2-6 8-9 14-7 3-4 9-4 12 0 5 0 8 4 8 9H22z" fill="#ffffff" stroke="#e4ded5" stroke-width="1.5"></path>
+          <circle cx="44" cy="96" r="3.5" fill="#9dbce8"></circle>
+          <path d="M196 84l2 4 4.5.6-3.3 3 .9 4.4-4.1-2.1-4.1 2.1.9-4.4-3.3-3 4.5-.6z" fill="#f2c14e"></path>
+        </svg>
+        <label class="pf-photo" id="pf-photo-label">
+          <input class="pf-file" id="pf-file" type="file" accept="image/*">
+          <img id="pf-img" alt="Baby photo" hidden>
+          <span class="pf-empty" id="pf-empty"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg><strong>Add a photo</strong><small>Tap to choose</small></span>
+        </label>
+        <span class="pf-plus" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></span>
+      </div>
+      <div class="pf-name" id="pf-name">[Nickname]</div>
+      <div class="pf-age" id="pf-age"></div>
+    </div>
+    <div class="pf-card">
+      <div class="pf-field"><label for="pf-nickname">Nickname</label><input id="pf-nickname" type="text" maxlength="20" placeholder="What do you call them?" autocomplete="off"></div>
+      <div class="pf-field"><label for="pf-dob">Date of birth</label><input id="pf-dob" type="date"></div>
+      <div class="pf-field">
+        <span id="pf-sex-label" class="pf-label">Gender</span>
+        <div class="seg" role="group" aria-labelledby="pf-sex-label">
+          <button type="button" id="pf-girl" aria-pressed="false">Girl</button>
+          <button type="button" id="pf-boy" aria-pressed="false">Boy</button>
+        </div>
+        <span class="muted pf-note">Used to pick the WHO growth chart.</span>
+      </div>
+    </div>
+    <div class="screen-fill"></div>
+    <button type="button" class="save-btn" id="pf-save" disabled>Save profile</button>
   </section>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden>

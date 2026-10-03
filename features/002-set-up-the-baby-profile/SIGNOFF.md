@@ -2,7 +2,7 @@
 id: 002
 name: Set up the baby profile
 slug: set-up-the-baby-profile
-status: Ready
+status: Testing
 updated: 2026-10-03
 ---
 
@@ -54,7 +54,21 @@ Save who the baby is, so other screens use the right name, age and WHO tables.
 - `artifacts/Main.dc.html` — Today screen (artboard "1 · Today (home)"): header with profile link, last feed card, sleep panel with Start / Wake toggle, Feed / Wee / Poo buttons, today's timeline, bottom navigation. For this feature: the header (photo spot, nickname, age line) that links to the profile. Design prototype from the "Simple Baby Log" canvas; it needs the canvas runtime (`support.js`) to run, so open it in the canvas or read it as a reference.
 
 ## Build notes
-(Filled in by the build step. Leave empty at sign-off.)
+**Built (2026-10-03).**
+- **Profile screen** (`#profile`, a full screen with a back button), as in `artifacts/Profile.dc.html`: the round photo spot with the stars, moon and cloud, the name and age under it, then Nickname (up to 20 characters), Date of birth and a Girl / Boy switch. **Save profile** stays off until the nickname, date of birth and gender are all set. The photo is optional. The name and age update as you type.
+- **Today header** (top of Today), as in `artifacts/Main.dc.html`: the photo spot, a line like "Sat 3 Oct · 3 weeks old", and the nickname. It opens the profile. Before a profile is saved it shows "[Nickname]".
+- **Age text:** "Born today", "5 days old", "3 weeks old" (up to 7 weeks), then months, then years.
+- Leaving with the back button saves nothing. An app update waits while the profile is open.
+
+**How it is stored (the open question).** The profile is one record of a new type, `profile`, with the fixed id `profile`. It uses the same merge rule as every other entry (newest `updatedAt` wins), so it will sync with the rest (ADR-001) with no special case. The photo is cut to a centred square, shrunk to 256 pixels and kept as a small JPEG inside the record (about 20 KB). The owner approved this on 2026-10-03 ("build these first"). `app-rules.md` has the field list.
+
+**Open questions answered.** One baby only in this version. The photo is shrunk, so there is no size limit for the file you pick.
+
+**Not built.** The "Share with partner" button in the Today design (it needs sync). Several babies. Backup and export.
+
+**Files changed.** `src/profile.js` (new: the record, the age text), `src/profile-ui.js` (new: the screen and the header), `src/records.js` (the `profile` type), `src/nav.js`, `src/app.js`, `src/index.html`, `src/styles.css`, `src/sw.js`, `tests/profile.test.mjs` and `tests/browser/profile.test.mjs` (new).
+
+**Test link.** https://oudam-meas.github.io/baby-log/test/
 
 ## Feedback
 (Filled in when someone tests it. Leave empty at sign-off.)

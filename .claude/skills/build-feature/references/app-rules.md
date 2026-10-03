@@ -15,7 +15,7 @@ One record per entry, stored as plain JSON:
 
 ```
 id          unique string (client generated)
-type        feed | sleep | pee | poop | cry | growth
+type        feed | sleep | pee | poop | cry | growth | profile
 t           start time, milliseconds since 1970 (UTC)
 end         end time in ms, or null (sleep only)
 d           object with the type-specific fields from the signoff
@@ -25,6 +25,8 @@ deviceId    id of the phone that last wrote the record
 updatedAt   ms time of the last change
 deleted     true if the entry was removed (a "tombstone"), otherwise absent
 ```
+
+Profile (feature 002): one record with `type: 'profile'` and the fixed `id: 'profile'`, so it merges like every other entry (newest `updatedAt` wins). `d` has `nickname` (up to 20 characters), `dateOfBirth` (`YYYY-MM-DD`), `sex` (`'girl'` or `'boy'`, picks the WHO tables) and `photo` (a small square JPEG as a `data:` URL, or an empty string). `t` is when it was first saved. It is not a log entry, so lists and totals ignore it.
 
 Feed details inside `d` (features 006, 007, 012):
 - Breast: `kind: 'Breast'`, `side: 'Left' | 'Right' | 'Both'`, `min` (total whole minutes), and optional `leftMin` and `rightMin` (whole minutes per side). When the per-side fields are present, `min = leftMin + rightMin`. Entries saved before feature 012 have only `side` and `min`.
