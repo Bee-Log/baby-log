@@ -127,18 +127,22 @@
 
   function update(next) { state = next; render(); }
 
-  function pointer(ev) {
+  // Where a touch is. The ring shows 12 hours, so the touch fits many clock times. `ref` is the minute the finger
+  // was last at: the time chosen is the one nearest to it, so a drag carries on over the 12 and 6 borders.
+  function pointer(ev, ref) {
     var r = $('ps-clock').getBoundingClientRect();
     var k = 300 / r.width;
     var x = (ev.clientX - r.left) * k - P.CX, y = (ev.clientY - r.top) * k - P.CY;
     var deg = ((Math.atan2(x, -y) * 180 / Math.PI) % 360 + 360) % 360;
-    var m12 = deg / 360 * P.HALF_DAY, range = P.rangeOf(state);
-    return { dist: Math.sqrt(x * x + y * y), x: x + P.CX, y: y + P.CY, minutes: range.from + (((m12 - range.from) % P.HALF_DAY) + P.HALF_DAY) % P.HALF_DAY };
+    var m12 = deg / 360 * P.HALF_DAY;
+    var diff = ((m12 - ref) % P.HALF_DAY + P.HALF_DAY) % P.HALF_DAY;      // 0 to 12 hours ahead of ref
+    if (diff > P.HALF_DAY / 2) diff -= P.HALF_DAY;                          // or up to 6 hours behind
+    return { dist: Math.sqrt(x * x + y * y), x: x + P.CX, y: y + P.CY, minutes: ref + diff };
   }
 
   function onDown(ev) {
     if (!state) return;
-    var hit = P.grab(state, env(), pointer(ev));
+    var hit = P.grab(state, env(), pointer(ev, (state.draft.start + state.draft.end) / 2));
     if (!hit.what) return;
     ev.preventDefault();
     if (ev.currentTarget.setPointerCapture) { try { ev.currentTarget.setPointerCapture(ev.pointerId); } catch (e) { /* not a real pointer */ } }
@@ -147,7 +151,9 @@
   }
   function onMove(ev) {
     if (!drag || !state) return;
-    update(P.drag(state, env(), drag.what, drag.grabOffset, pointer(ev).minutes));
+    var d = state.draft;
+    var ref = drag.what === 'start' ? d.start : drag.what === 'end' ? d.end : d.start + drag.grabOffset;
+    update(P.drag(state, env(), drag.what, drag.grabOffset, pointer(ev, ref).minutes));
   }
   function onUp() { if (drag) { drag = null; render(); } }
 

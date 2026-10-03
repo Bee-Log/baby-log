@@ -145,6 +145,33 @@ test('dragging the start dot changes the start; dragging the arc moves the whole
   await context.close();
 });
 
+test('dragging the arc over the 12 border carries on into the morning part', async () => {
+  const { context, page, errors } = await start();
+  // The middle of 1:30 to 2:00 pm is 1:45, at 52.5 degrees. Drag it counter-clockwise up to 12 o'clock (0 degrees).
+  const from = await ringPoint(page, 52.5, 118);
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  for (const deg of [40, 25, 10, 0, 350, 340]) {
+    const p = await ringPoint(page, deg, 118);
+    await page.mouse.move(p.x, p.y, { steps: 3 });
+    if (deg === 0) {
+      assert.equal(await page.inputValue('#ps-from'), '11:45', 'the sleep is over the border');
+      assert.equal(await page.inputValue('#ps-to'), '12:15');
+      assert.equal(await page.getAttribute('.ps-part[data-part="0"]', 'aria-pressed'), 'true', 'the morning joins');
+      assert.equal(await page.getAttribute('.ps-part[data-part="1"]', 'aria-pressed'), 'true');
+    }
+  }
+  await page.mouse.up();
+  assert.equal(await page.inputValue('#ps-from'), '11:05', 'and it keeps going');
+  assert.equal(await page.getAttribute('.ps-part[data-part="1"]', 'aria-pressed'), 'false', 'the afternoon leaves again');
+  await page.click('#ps-add');
+  await page.waitForFunction(() => document.querySelectorAll('#sleep-list .row').length === 1);
+  const [r] = await sleeps(page);
+  assert.deepEqual([r.t, r.end], [at(11, 5), at(11, 35)]);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
 test('the card fits narrow phones (no sideways scrolling)', async () => {
   const { context, page, errors } = await start();
   for (const width of [320, 360, 390]) {

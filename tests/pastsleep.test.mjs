@@ -131,7 +131,7 @@ test('duration limits: at least 5 minutes, at most 12 hours, and past 6 hours th
 });
 
 // ---- Moving the ends ----
-test('moving an end snaps to 5 minutes, to the edge of a logged sleep within 10 minutes, and stays in range', () => {
+test('moving an end snaps to 5 minutes, to the edge of a logged sleep within 10 minutes, and cannot stretch past 12 hours', () => {
   const logged = [{ t: at(13, 0), end: at(14, 0) }];
   const e = env(at(16, 0), logged);
   const s = P.init({ ...e, now: at(15, 0) });
@@ -142,18 +142,62 @@ test('moving an end snaps to 5 minutes, to the edge of a logged sleep within 10 
   assert.equal(P.formatClock(P.setEnd(early, e, 'end', P.fromInput('12:56')).draft.end), '1:00 pm', 'snaps to the start of the logged sleep');
   assert.equal(P.setEnd(base, e, 'end', 0).draft.end, base.draft.start + 5, 'the end cannot go before the start');
   assert.equal(P.setEnd(base, e, 'start', 9999).draft.start, base.draft.end - 5, 'the start cannot pass the end');
-  assert.equal(P.setEnd(base, e, 'end', 99999).draft.end, 1080, 'nor leave the range');
+  assert.equal(P.setEnd(base, e, 'end', 99999).draft.end, 1440, 'the end stops after two parts (here at midnight)');
+  assert.deepEqual(plain(P.setEnd(base, e, 'end', 99999).parts), [1, 2]);
 });
 
-test('moving the whole sleep keeps its length and stays inside the range', () => {
+test('moving the whole sleep keeps its length', () => {
   const e = env(at(17, 0));
   const s = { ...P.init(e), parts: [1], base: P.baseFor(e.now, 720), draft: { start: P.fromInput('15:00'), end: P.fromInput('15:45') } };
   const moved = P.moveTo(s, e, P.fromInput('16:20'));
   assert.deepEqual(clockOf(moved), ['4:20 pm', '5:05 pm']);
-  const far = P.moveTo(s, e, 99999);
-  assert.equal(far.draft.end, 1080);
-  assert.equal(far.draft.end - far.draft.start, 45);
-  assert.equal(P.moveTo(s, e, -99999).draft.start, 720);
+  assert.deepEqual(plain(moved.parts), [1]);
+});
+
+test('a sleep can be dragged across the 6-hour borders: the parts follow it', () => {
+  const e = env(at(23, 0));
+  const s = { ...P.init(e), parts: [1], base: P.baseFor(e.now, 720), draft: { start: P.fromInput('13:00'), end: P.fromInput('13:45') } };
+  const noon = P.moveTo(s, e, P.fromInput('11:50'));
+  assert.deepEqual(clockOf(noon), ['11:50 am', '12:35 pm']);
+  assert.deepEqual(plain(noon.parts), [0, 1], 'across 12');
+  const evening = P.moveTo(s, e, P.fromInput('17:45'));
+  assert.deepEqual(clockOf(evening), ['5:45 pm', '6:30 pm']);
+  assert.deepEqual(plain(evening.parts), [1, 2], 'across 6 pm');
+  const back = P.moveTo(evening, e, P.fromInput('14:00'));
+  assert.deepEqual(plain(back.parts), [1], 'back inside one part');
+  const t = P.draftTimes(evening);
+  assert.deepEqual([t.t, t.end], [at(17, 45), at(18, 30)], 'real times are right');
+});
+
+test('dragging before 6 am or past midnight keeps the real day', () => {
+  const e = env(at(14, 0));
+  const morning = { ...P.init(e), parts: [0], base: P.baseFor(e.now, 360), draft: { start: P.fromInput('06:30'), end: P.fromInput('07:15') } };
+  const before = P.moveTo(morning, e, 330); // 5:30 am of the same day (fromInput would mean the next morning)
+  assert.deepEqual(clockOf(before), ['5:30 am', '6:15 am']);
+  assert.deepEqual(plain(before.parts), [3, 0]);
+  const t = P.draftTimes(before);
+  assert.deepEqual([t.t, t.end], [at(5, 30), at(6, 15)], 'still 3 Oct');
+  const night = { ...P.init(e), parts: [2], base: P.baseFor(e.now, 1080), draft: { start: P.fromInput('22:00'), end: P.fromInput('22:45') } };
+  const over = P.moveTo(night, e, P.fromInput('23:50'));
+  assert.deepEqual(plain(over.parts), [2, 3], 'across midnight');
+  const t2 = P.draftTimes(over);
+  assert.deepEqual([t2.t, t2.end], [at(23, 50, 2), at(0, 35, 3)], 'night of 2 Oct into 3 Oct');
+});
+
+test('an end can be dragged across a border too, but a sleep stops at two parts', () => {
+  const e = env(at(23, 0));
+  const s = { ...P.init(e), parts: [1], base: P.baseFor(e.now, 720), draft: { start: P.fromInput('17:30'), end: P.fromInput('17:45') } };
+  const longer = P.setEnd(s, e, 'end', P.fromInput('18:30'));
+  assert.deepEqual(clockOf(longer), ['5:30 pm', '6:30 pm']);
+  assert.deepEqual(plain(longer.parts), [1, 2]);
+  const shorter = P.setEnd(longer, e, 'end', P.fromInput('17:50'));
+  assert.deepEqual(plain(shorter.parts), [1]);
+  const earlier = P.setEnd(s, e, 'start', P.fromInput('11:00'));
+  assert.deepEqual(plain(earlier.parts), [0, 1], 'the start crossed 12');
+  assert.equal(earlier.draft.end - earlier.draft.start, 405);
+  assert.equal(P.setEnd(longer, e, 'start', P.fromInput('11:00')).draft.start, 720, 'three parts are too many: it stops at 12');
+  const wide = P.setEnd(s, e, 'start', 300); // 5:00 am would touch three parts
+  assert.equal(wide.draft.start, 360, 'it stops at 6 am, two parts back');
 });
 
 // ---- Typed times ----
