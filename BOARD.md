@@ -4,12 +4,11 @@ Generated from the header of each `features/*/SIGNOFF.md`. Do not edit by hand.
 
 ## Ready
 - 002 Set up the baby profile (updated 2026-10-03) - `features/002-set-up-the-baby-profile/`
-- 008 See today at a glance (updated 2026-10-03) - `features/008-see-today-at-a-glance/`
 - 009 See the daily summary (updated 2026-10-03) - `features/009-see-the-daily-summary/`
 - 010 Track growth against WHO (updated 2026-10-03) - `features/010-track-growth-against-who/`
 
 ## Building
-- none
+- 008 See today at a glance (updated 2026-10-03) - `features/008-see-today-at-a-glance/`
 
 ## Testing
 - 003 Log sleep live (updated 2026-10-03) - `features/003-log-sleep-live/`

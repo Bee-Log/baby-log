@@ -2,7 +2,7 @@
 id: 008
 name: See today at a glance
 slug: see-today-at-a-glance
-status: Ready
+status: Building
 updated: 2026-10-03
 ---
 
