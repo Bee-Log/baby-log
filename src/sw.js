@@ -18,6 +18,8 @@ var SHELL = [
   'feed-ui.js',
   'sleep.js',
   'sleep-ui.js',
+  'pastsleep.js',
+  'pastsleep-ui.js',
   'edit-ui.js',
   'styles.css',
   'manifest.webmanifest',

@@ -90,7 +90,7 @@ test('the time range, with the date for a sleep that began before today (6 am to
   assert.equal(S.rangeLabel({ t: at(13, 40), end: at(15, 30) }, now), '1:40 pm – 3:30 pm');
   assert.equal(S.rangeLabel({ t: at(2, 10), end: at(3, 5) }, now), 'Sat 3 Oct, 2:10 am – 3:05 am', 'after midnight but before 6 am is the day before, so it shows the date');
   assert.equal(S.rangeLabel({ t: at(23, 50, 2), end: at(2, 10) }, now), 'Fri 2 Oct, 11:50 pm – 2:10 am');
-  assert.equal(S.rangeLabel({ t: at(23, 50, 3), end: at(2, 10, 4) }, at(23, 55)), '11:50 pm – 2:10 am', 'across midnight, still today');
+  assert.equal(S.rangeLabel({ t: at(23, 50, 3), end: at(3, 30, 4) }, at(23, 55)), '11:50 pm – 3:30 am', 'across midnight, still today (3:30, because 2:10 am on 4 Oct does not exist in Melbourne: the clocks go forward)');
 });
 
 test('#sleep opens the Sleep screen', () => {

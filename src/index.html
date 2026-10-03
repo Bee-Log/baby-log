@@ -16,8 +16,10 @@
   <script src="store.js"></script>
   <script src="feed.js"></script>
   <script src="sleep.js"></script>
+  <script src="pastsleep.js"></script>
   <script src="feed-ui.js"></script>
   <script src="edit-ui.js"></script>
+  <script src="pastsleep-ui.js"></script>
   <script src="sleep-ui.js"></script>
 </head>
 <body>
@@ -199,6 +201,50 @@
         <span class="sleep-text"><span class="sleep-sub" id="pc-sub">…</span><span class="sleep-big" id="pc-big">…</span></span>
       </div>
       <button type="button" class="sleep-btn" id="pc-btn" aria-pressed="false"><svg class="ico-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path></svg><svg class="ico-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg><span class="sleep-btn-label">Start sleep</span></button>
+    </div>
+    <div class="ps-card" id="ps-card">
+      <h2 class="section-title ps-title">Add a past sleep</h2>
+      <div class="ps-steps">
+        <button type="button" class="ps-step" data-add="5">+5m</button>
+        <button type="button" class="ps-step" data-add="10">+10m</button>
+        <button type="button" class="ps-step" data-add="20">+20m</button>
+        <button type="button" class="ps-step" data-add="60">+1h</button>
+        <button type="button" class="ps-minus" id="ps-minus">−5m</button>
+        <button type="button" class="ps-reset" id="ps-reset" aria-label="Reset duration to 30 minutes"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v5h5"></path></svg></button>
+      </div>
+      <div class="ps-parts">
+          <button type="button" class="ps-part" data-part="0" aria-label="Morning, 6 am to 12 pm" aria-pressed="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19h18"></path><path d="M7 19a5 5 0 0 1 10 0"></path><path d="M12 7v3M5.5 11.5l1.5 1.5M18.5 11.5L17 13"></path></svg><span>6a–12p</span></button>
+          <button type="button" class="ps-part" data-part="1" aria-label="Afternoon, 12 pm to 6 pm" aria-pressed="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg><span>12p–6p</span></button>
+          <button type="button" class="ps-part" data-part="2" aria-label="Night, 6 pm to 12 am" aria-pressed="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path></svg><span>6p–12a</span></button>
+          <button type="button" class="ps-part" data-part="3" aria-label="After midnight, 12 am to 6 am" aria-pressed="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4l1.6 3.4 3.7.5-2.7 2.6.7 3.7L10 12.4l-3.3 1.8.7-3.7-2.7-2.6 3.7-.5z"></path><path d="M18 14l.8 1.7 1.8.3-1.3 1.3.3 1.8-1.6-.9-1.6.9.3-1.8-1.3-1.3 1.8-.3z"></path></svg><span>12a–6a</span></button>
+      </div>
+      <div class="ps-clock-wrap">
+        <svg id="ps-clock" width="300" height="300" viewBox="0 0 300 300" role="img" aria-label="Sleep clock">
+          <circle cx="150" cy="150" r="118" fill="none" stroke="#ece7df" stroke-width="32"></circle>
+          <path id="ps-window" fill="none" stroke="#f1eef9" stroke-width="32"></path>
+          <circle cx="150" cy="150" r="100" fill="#f6f3ee"></circle>
+          <path id="ps-face0"></path><path id="ps-face1"></path>
+          <g id="ps-icon0" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path transform="scale(0.8)"></path></g>
+          <g id="ps-icon1" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path transform="scale(0.8)"></path></g>
+          <path id="ps-ticks" fill="none" stroke="#c9c2b6" stroke-width="2" stroke-linecap="round"></path>
+          <g id="ps-numbers" font-size="15" font-weight="700" fill="#1e2227" text-anchor="middle"></g>
+          <path id="ps-logged" fill="none" stroke="#cfc8e2" stroke-width="22"></path>
+          <path id="ps-draft" fill="none" stroke-width="22"></path>
+          <line id="ps-tick-start" stroke="#2b2550" stroke-width="4" stroke-linecap="round"></line>
+          <line id="ps-tick-end" stroke="#c99a22" stroke-width="4" stroke-linecap="round"></line>
+          <circle id="ps-dot-start" r="9" fill="#2b2550" stroke="#fff" stroke-width="2"></circle>
+          <circle id="ps-dot-end" r="9" fill="#f2c14e" stroke="#fff" stroke-width="2"></circle>
+          <g id="ps-grip"><rect x="-13" y="-8" width="26" height="16" rx="8" fill="#fff"></rect><circle cx="-6" cy="0" r="1.8"></circle><circle cx="0" cy="0" r="1.8"></circle><circle cx="6" cy="0" r="1.8"></circle></g>
+          <text id="ps-len" x="150" y="146" text-anchor="middle" font-family="Bricolage Grotesque, system-ui, sans-serif" font-size="30" font-weight="700" fill="#1e2227"></text>
+          <text id="ps-range" x="150" y="170" text-anchor="middle" font-size="13" fill="#3c4248"></text>
+        </svg>
+      </div>
+      <div class="ps-times">
+        <label>Fell asleep<input type="time" step="300" id="ps-from"></label>
+        <label>Woke up<input type="time" step="300" id="ps-to"></label>
+      </div>
+      <div class="ps-hint" id="ps-hint" role="status" hidden></div>
+      <button type="button" class="ps-add" id="ps-add">Add sleep</button>
     </div>
     <div>
       <h2 class="section-title">Logged sleeps</h2>

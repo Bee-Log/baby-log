@@ -4,6 +4,7 @@
   var R = root.BABYLOG_RECORDS;
   var S = root.BABYLOG_SLEEP;
   var store = root.BABYLOG_STORE;
+  var PS = root.BABYLOG_PASTSLEEP_UI;
 
   var ctx = null;          // { toast } from app.js
   var records = [];        // the last entries read, shared by both cards
@@ -65,6 +66,7 @@
   function renderPage() {
     renderCard('pc', true);
     renderList();
+    PS.refresh(records);
   }
 
   // Today gives its entries here every time it draws, so the card is always current.
@@ -101,6 +103,7 @@
     store.all().then(function (all) {
       if (screen.hidden) return; // the parent already left this screen
       records = all;
+      PS.show(all);
       renderPage();
       stopTick();
       // The running time and "Awake ..." count on, once a second.
@@ -116,6 +119,7 @@
 
   function hide() {
     pageOpen = false;
+    PS.hide();
     stopTick();
     $('screen-sleep').hidden = true;
     $('screen-sleep').removeAttribute('data-ready');
@@ -125,6 +129,7 @@
     ctx = context;
     $('tc-btn').addEventListener('click', toggle);
     $('pc-btn').addEventListener('click', toggle);
+    PS.init(context, function (all) { records = all; renderToday(all); });
   }
 
   root.BABYLOG_SLEEP_UI = { init: init, show: show, hide: hide, renderToday: renderToday };
