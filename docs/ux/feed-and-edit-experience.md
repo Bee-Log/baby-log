@@ -86,3 +86,10 @@ A feed is saved as: kind (`Breast` or `Bottle`), the time, a note; for breast th
 - **Delete** is a trash icon. The first tap turns it into a red "Tap again to delete" button for 4 seconds. The second tap deletes. There is no Undo.
 - The messages are the same as on the add card: "Woke up must be after fell asleep.", "A sleep can be 12 hours at most.", "That time has not happened yet.", "Overlaps a sleep already logged."
 - On the add-a-sleep clock, only the two dots and the arc can be dragged. The rest of the clock scrolls the page.
+
+## Parts of the day on the add-a-sleep card (2026-10-04)
+- Two circles side by side: **AM** and **PM**. Each is cut into two half circles.
+- AM: left half **Dawn (12a–6a)**, right half **Morning (6a–12p)**. PM: left half **Afternoon (12p–6p)**, right half **Night (6p–12a)**. So they read left to right in time order.
+- Note for design: on the big clock below, 12–6 is on the right side. If the circles should match the clock, the two halves of each circle swap places. That is a one-line change.
+- Each half shows its icon, its hours and Today or Yesterday. Picked halves are dark. One part or two neighbours can be picked, as before.
+- The step buttons (+5m to −5m) now shrink their text on narrow phones, so they never overlap.
