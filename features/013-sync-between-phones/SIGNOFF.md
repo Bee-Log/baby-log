@@ -16,7 +16,7 @@ Both parents see each other's entries, and the data survives a lost phone, using
 
 - The plan is `docs/adr/ADR-001-data-storage-and-sync.md` (accepted 2026-10-03). One shared Google account. Each phone writes only its own `.jsonl` file in the hidden app-data folder. Every phone reads all the files and merges them. The newest `updatedAt` wins. On a tie, the higher `deviceId` wins.
 - This feature has **no Claude Design signoff**. The owner asked for it to be built with placeholders first. The screen is plain and may be restyled later.
-- Until the owner puts a real Google client ID in `src/config.js`, sync is switched off and the app says so.
+- Sync is switched on by the public Google client ID in `src/config.js` (added 2026-10-04, project `project-45070-beelog`). With an empty or `PLACEHOLDER` value it stays off and the app says so.
 
 ## How it works
 
@@ -42,14 +42,14 @@ No new fields. Sync carries the existing records (and the `profile` record from 
 - Does Google keep the sign-in alive for more than 7 days while the Google Cloud project is in "Testing" mode? Check when the project is created. If not, publish the OAuth app (the `drive.appdata` scope should need no Google review).
 
 ## Build notes
-**Built (2026-10-03), with a placeholder client ID. Not yet tried against real Google.**
+**Built (2026-10-03). The real client ID was added on 2026-10-04. Not yet tried against real Google: the first sign-in on a phone is the first real test.**
 - `src/sync.js` (new): file names, JSONL, compaction, the push and pull engine. It talks to a small backend interface, so the store of the files can change later.
 - `src/drive.js` (new): the Google Drive backend (REST calls to the app-data folder).
 - `src/google-auth.js` (new): Google sign-in. Memory-only token. Sync stays off while the client ID starts with `PLACEHOLDER`.
 - `src/csv.js` (new): the CSV export.
 - `src/sync-ui.js` (new) and the `#sync` screen: status, sign-in, Sync now, export buttons, and the background work.
 - `src/store.js`: `mergeIn()` (apply received entries with the merge rule, in one transaction) and `onChange()` (so sync knows when to send). `src/records.js`: `isNewer()`, the merge rule with the tie-break.
-- `src/config.js`: `googleClientId: 'PLACEHOLDER'`.
+- `src/config.js`: `googleClientId` (a placeholder at first; the real public client ID was added on 2026-10-04).
 - **Tests:** unit tests for the engine, merge rule, JSONL, Drive calls and CSV (against a fake Drive, `tests/fake-drive.mjs`). Browser tests with two phones, a stub of Google's sign-in script and the fake Drive: sign in, send, receive, no network, a refused token, a quiet sign-in after restart, and the exports.
 - **What the tests cannot show:** how real Google behaves (the sign-in window, the token life, Drive limits). That is the first thing to check once the client ID exists.
 

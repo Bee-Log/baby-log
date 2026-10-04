@@ -28,12 +28,11 @@ const GOOGLE_STUB = `window.google = { accounts: { oauth2: { initTokenClient(cfg
 async function startPhone(fake, { configured = true } = {}) {
   const p = await phone(browser);
   await p.context.clock.setFixedTime(NOW);
-  if (configured) {
-    await p.context.addInitScript(() => {
-      let cfg;
-      Object.defineProperty(window, 'BABYLOG_CONFIG', { configurable: true, get: () => cfg, set: (v) => { cfg = { ...v, googleClientId: 'test-client.apps.googleusercontent.com' }; } });
-    });
-  }
+  // The build holds the real client ID. Tests use a made-up one (so no real Google sign-in is tried), or the placeholder (sync off).
+  await p.context.addInitScript((clientId) => {
+    let cfg;
+    Object.defineProperty(window, 'BABYLOG_CONFIG', { configurable: true, get: () => cfg, set: (v) => { cfg = { ...v, googleClientId: clientId }; } });
+  }, configured ? 'test-client.apps.googleusercontent.com' : 'PLACEHOLDER');
   p.googleCalls = [];
   await p.context.route('https://accounts.google.com/gsi/client', (r) => r.fulfill({ contentType: 'text/javascript', body: GOOGLE_STUB }));
   await p.context.route('https://www.googleapis.com/**', async (route) => {
