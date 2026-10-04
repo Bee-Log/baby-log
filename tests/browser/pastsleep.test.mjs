@@ -175,7 +175,9 @@ test('dragging the arc over the 12 border carries on into the morning part', asy
 test('each part says Today or Yesterday; an older sleep is added by typing its date', async () => {
   const { context, page, errors } = await start();
   const days = await page.$$eval('.ps-part .ps-day', (els) => els.map((e) => e.textContent));
-  assert.deepEqual(days, ['Today', 'Today', 'Yesterday', 'Today'], 'at 2 pm, the evening part is last night');
+  assert.deepEqual(days, ['Today', 'Today', 'Today', 'Yesterday'], 'at 2 pm, the evening part is last night');
+  const order = await page.$$eval('.ps-part', (els) => els.map((e) => e.getAttribute('aria-label').split(',')[0]));
+  assert.deepEqual(order, ['Dawn', 'Morning', 'Afternoon', 'Night'], 'dawn, morning (AM), then afternoon, night (PM)');
 
   await page.fill('#ps-from', '2026-09-28T18:50');
   await page.fill('#ps-to', '2026-09-28T20:20');
@@ -248,14 +250,15 @@ test('touch: a swipe that starts on the clock but not on a handle scrolls the pa
 
 test('touch: a finger on a dot adjusts it and the page stays still', async () => {
   const { context, page, errors, client } = await touchPhone();
-  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.locator('#ps-clock').scrollIntoViewIfNeeded();
+  const scrolled = await page.evaluate(() => window.scrollY);
   const startDot = await ringPoint(page, 45, 142);            // 1:30 pm
   const earlier = await ringPoint(page, 30, 142);             // 1:00 pm
   await touchDrag(client, startDot, earlier);
   await page.waitForTimeout(200);
   assert.equal(await page.inputValue('#ps-from'), '2026-10-03T13:00', 'the start moved');
   assert.equal(await page.inputValue('#ps-to'), '2026-10-03T14:00', 'the end stayed');
-  assert.equal(await page.evaluate(() => window.scrollY), 0, 'the page did not scroll');
+  assert.equal(await page.evaluate(() => window.scrollY), scrolled, 'the page did not scroll');
   assert.deepEqual(errors, []);
   await context.close();
 });
@@ -266,6 +269,8 @@ test('the card fits narrow phones (no sideways scrolling)', async () => {
     await page.setViewportSize({ width, height: 844 });
     const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     assert.ok(over <= 0, `no sideways scrolling at ${width}px`);
+    const clipped = await page.$$eval('.ps-step, .ps-minus, .ps-part span, .ps-part .ps-day', (els) => els.filter((e) => e.scrollWidth > e.clientWidth + 1).map((e) => e.textContent));
+    assert.deepEqual(clipped, [], `no button text spills out at ${width}px`);
   }
   assert.deepEqual(errors, []);
   await context.close();

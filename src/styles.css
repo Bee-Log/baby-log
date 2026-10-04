@@ -208,16 +208,27 @@ body.on-screen .toast { bottom: auto; top: calc(12px + env(safe-area-inset-top))
 /* ---- Add a past sleep (feature 004) ---- */
 .ps-card { background: var(--surface); border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
 .ps-title { margin: 0; }
-.ps-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) 60px 44px; align-items: center; gap: 5px; }
+.ps-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) 52px 44px; align-items: center; gap: 5px; }
 .ps-step, .ps-minus, .ps-reset, .ps-part, .ps-add { font: inherit; cursor: pointer; }
-.ps-step, .ps-minus { min-height: 44px; padding: 0; border-radius: 22px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 14px; }
+.ps-step, .ps-minus { min-height: 44px; min-width: 0; padding: 0; border-radius: 22px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: clamp(11px, 3.4vw, 14px); white-space: nowrap; }
 .ps-step[aria-pressed="true"] { background: #2b2550; border-color: #2b2550; color: #fff; font-weight: 700; }
 .ps-minus { border: none; background: #efeaf8; color: #2b2550; font-weight: 700; }
 .ps-reset { min-width: 44px; min-height: 44px; border-radius: 22px; border: none; background: transparent; color: var(--muted); display: flex; align-items: center; justify-content: center; }
-.ps-parts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
-.ps-part { min-height: 72px; padding: 0; border-radius: 14px; border: 2px solid var(--line); background: var(--surface); color: #3c4248; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
-.ps-part span { font-size: 12px; }
-.ps-day { font-size: 11px; opacity: 0.8; }
+/* Parts of the day: two circles, AM and PM, each cut into two half circles (dawn | morning, afternoon | night). */
+.ps-parts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.ps-circle-group { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+.ps-circle { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; width: 100%; max-width: 150px; aspect-ratio: 1; }
+.ps-circle-name { font-size: 13px; font-weight: 700; color: #3c4248; letter-spacing: 0.04em; }
+.ps-part { min-width: 0; padding: 0; border: 2px solid transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; line-height: 1.15; }
+.ps-left { border-radius: 100vmax 0 0 100vmax; padding-left: 6px; }
+.ps-right { border-radius: 0 100vmax 100vmax 0; padding-right: 6px; }
+.ps-part span { font-size: 12px; font-weight: 700; white-space: nowrap; }
+.ps-day { font-size: 11px; opacity: 0.85; white-space: nowrap; }
+/* Each half has the tint of its part, the same as the face of the clock below. Picked: dark. */
+.ps-part[data-part="3"] { background: #dce7f6; color: #2f5da8; }
+.ps-part[data-part="0"] { background: #ffebd6; color: #a3520f; }
+.ps-part[data-part="1"] { background: #fff5cc; color: #7a5c00; }
+.ps-part[data-part="2"] { background: #e4e0f6; color: #4a3f86; }
 .ps-part[aria-pressed="true"] { background: #2b2550; border-color: #2b2550; color: #fff; }
 .ps-clock-wrap { display: flex; justify-content: center; }
 .ps-clock-wrap svg { max-width: 100%; height: auto; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
