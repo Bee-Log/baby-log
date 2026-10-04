@@ -24,8 +24,8 @@ Both parents see each other's entries, and the data survives a lost phone, using
 - **Send:** a few seconds after any change, and when the network comes back. The phone adds its new and changed entries to its own file (one line per entry).
 - **Receive:** when the app opens, when the phone comes back online, when the app comes back to the front, and every 3 minutes. A new or reset phone reads all files, which restores everything.
 - **Status** (a link at the bottom of Today, and the **Sync and data** screen `#sync`): *Sync is not set up yet*, *Sign in to sync*, *Syncing…*, *Synced · 3:02 pm*, *Waiting for network*, *Could not sync*.
-- **Sign-in** is Google's token sign-in. The token is kept in memory only, never stored. A phone that signed in before renews quietly when the app opens. If that fails, the status asks for a tap on **Sign in with Google**.
-- **No endless waiting (added 2026-10-04, after the first real sign-in).** A quiet sign-in renewal that Google does not answer gives up after 15 seconds and asks for a tap on Sign in. A sync that has not finished after a minute is treated as failed and can be tried again. The Sync screen shows a small "Details: ..." line with the technical reason, so a failure can be reported exactly.
+- **Sign-in** is Google's token sign-in. The token is kept in memory only, never stored. **Google's window opens only when someone taps "Sign in"** (changed 2026-10-04). On a phone, a "quiet" renewal also opens Google's window, and doing it by itself caused a loop: the window opened and closed again and again, and the status stayed on "Syncing…". Now a newly opened app shows "Sign in to sync". After one tap it syncs by itself (after changes, on coming back to the app, and every 3 minutes) until the sign-in runs out after about an hour. Then it shows "Sign in to sync" again.
+- **No endless waiting (added 2026-10-04).** The sign-in window gives up after 3 minutes. A sync that has not finished after a minute is treated as failed and can be tried again. The Sync screen shows a small "Details: ..." line with the technical reason, so a failure can be reported exactly.
 - **Export** (on the same screen): **Download CSV** (the prototype's 22 columns, then `feed_left_min`, `feed_right_min`, `sleep_source`) and **Download JSONL** (every entry, removed ones too).
 
 ## Data it captures
@@ -39,6 +39,8 @@ No new fields. Sync carries the existing records (and the `profile` record from 
 - A real Google account: see "Turn on sync" in `DEPLOY.md`.
 
 ## Open questions
+
+- Signing in about once an hour is the cost of keeping the token in memory only, with no server. Making it last longer needs an owner decision (for example LIVE on its own web address so a token may be stored, or a different sync service).
 
 - Does Google keep the sign-in alive for more than 7 days while the Google Cloud project is in "Testing" mode? Check when the project is created. If not, publish the OAuth app (the `drive.appdata` scope should need no Google review).
 

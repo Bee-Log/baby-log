@@ -94,6 +94,9 @@ test('breast feed: two compact rows; start, switch sides, pause, add a note, sav
 
 test('both sides timed: the minutes of each side are saved, and the total is their sum', async () => {
   const { context, page, errors } = await phone(browser);
+  // A fixed clock at noon: with the real clock, a feed that began 20 minutes before a time just after 6 am
+  // belongs to yesterday's 6 am to 6 am day, and is not on Today.
+  await context.clock.setFixedTime(new Date(2026, 9, 3, 12, 0));
   await install(page, url());
   // A timer that started 20 minutes ago: Left for 8 minutes, then Right for the last 12 (still running).
   await page.evaluate(() => new Promise((resolve, reject) => {

@@ -15,22 +15,17 @@ const at = (h, m = 0) => new Date(2026, 9, 3, h, m).getTime();
 const rec = (id, type, t, extra = {}) => ({ id, type, t, end: null, d: {}, note: '', by: '', deviceId: 'seed', updatedAt: t, ...extra });
 const text = (page, sel) => page.textContent(sel).then((s) => s.trim());
 
-// Google's sign-in script, as a stub. It remembers a sign-in in localStorage (Google would remember it in its own cookies).
-const GOOGLE_STUB = `window.google = { accounts: { oauth2: { initTokenClient(cfg) { return { requestAccessToken(opts) {
-  setTimeout(() => {
-    if (opts.prompt === '' ) localStorage.setItem('stub-google', '1');
-    if (localStorage.getItem('stub-google')) cfg.callback({ access_token: window.__stubToken || 'good-token', expires_in: 3600 });
-    else cfg.error_callback({ type: 'popup_closed' });
-  }, 5);
+// Google's sign-in script, as a stub. Every call is one opening of Google's window on a real phone: it is counted
+// in window.__googleWindows, so the tests can check that the app never opens it by itself.
+const GOOGLE_STUB = `window.__googleWindows = 0;
+window.google = { accounts: { oauth2: { initTokenClient(cfg) { return { requestAccessToken(opts) {
+  window.__googleWindows++;
+  setTimeout(() => cfg.callback({ access_token: window.__stubToken || 'good-token', expires_in: 3600 }), 5);
 } }; } } } };`;
-
-// A stub that never answers a quiet renewal (this is what a blocked sign-in window looks like to the app).
-const GOOGLE_STUB_NEVER_ANSWERS = `window.google = { accounts: { oauth2: { initTokenClient(cfg) { return { requestAccessToken(opts) {
-  if (opts.prompt === '') setTimeout(() => cfg.callback({ access_token: 'good-token', expires_in: 3600 }), 5);
-} }; } } } };`;
+const googleWindows = (page) => page.evaluate(() => window.__googleWindows || 0);
 
 // A phone that talks to the fake Drive. `configured: false` leaves the placeholder client ID in place.
-async function startPhone(fake, { configured = true, running = false, silent = null, driveSilent = false } = {}) {
+async function startPhone(fake, { configured = true, running = false, driveSilent = false } = {}) {
   const p = await phone(browser);
   if (running) await p.context.clock.install({ time: NOW });     // a clock that can be moved forward
   else await p.context.clock.setFixedTime(NOW);
@@ -40,7 +35,7 @@ async function startPhone(fake, { configured = true, running = false, silent = n
     Object.defineProperty(window, 'BABYLOG_CONFIG', { configurable: true, get: () => cfg, set: (v) => { cfg = { ...v, googleClientId: clientId }; } });
   }, configured ? 'test-client.apps.googleusercontent.com' : 'PLACEHOLDER');
   p.googleCalls = [];
-  await p.context.route('https://accounts.google.com/gsi/client', (r) => r.fulfill({ contentType: 'text/javascript', body: silent === 'never' ? GOOGLE_STUB_NEVER_ANSWERS : GOOGLE_STUB }));
+  await p.context.route('https://accounts.google.com/gsi/client', (r) => r.fulfill({ contentType: 'text/javascript', body: GOOGLE_STUB }));
   await p.context.route('https://www.googleapis.com/**', async (route) => {
     const req = route.request();
     p.googleCalls.push(req.method());
@@ -156,6 +151,7 @@ test('when Google refuses the sign-in, the status asks to sign in again, and not
   await a.page.click('#sy-now');
   await waitStatus(a.page, 'Sign in to sync');
   assert.equal(await a.page.isVisible('#sy-signin'), true);
+  assert.equal(await googleWindows(a.page), 1, 'Google\'s window did not open again by itself');
   await a.page.evaluate(() => { window.__stubToken = 'a-different-token'; });
   await a.page.click('#sy-signin');
   await waitStatus(a.page, 'Synced');
@@ -163,12 +159,14 @@ test('when Google refuses the sign-in, the status asks to sign in again, and not
   await a.context.close();
 });
 
-test('after a restart the phone signs in quietly if it signed in before; the token is not stored', async () => {
+test('after a restart the app asks for a tap to sign in, opens nothing by itself, and the token was not stored', async () => {
   const fake = createFakeDrive();
   const a = await startPhone(fake);
   await signInAndSync(a.page);
   await a.page.reload();
-  await waitStatus(a.page, 'Synced');
+  await waitStatus(a.page, 'Sign in to sync');
+  await a.page.waitForTimeout(500);
+  assert.equal(await googleWindows(a.page), 0, 'no Google window on opening the app');
   const stored = await a.page.evaluate(async () => {
     const keys = Object.keys(localStorage).concat(Object.keys(sessionStorage));
     const meta = await new Promise((resolve) => {
@@ -201,28 +199,39 @@ test('the CSV and JSONL downloads hold the entries', async () => {
   await a.context.close();
 });
 
-// This phone signed in before: the app will try a quiet renewal as soon as it opens.
-async function markSignedInBefore(page) {
-  await page.evaluate(() => new Promise((resolve) => {
-    const req = indexedDB.open('test-baby-log');
-    req.onsuccess = () => { const tx = req.result.transaction('meta', 'readwrite'); tx.objectStore('meta').put(true, 'syncSignedIn'); tx.oncomplete = () => { req.result.close(); resolve(); }; };
-  }));
-}
-
-test('if Google never answers the quiet renewal, the app does not stay on "Syncing…": it asks to sign in, with the reason', async () => {
+// The loop seen on a real phone: Google's window opened, closing it brought the app back to the front, and that
+// started a sync that opened the window again. Now nothing opens it except a tap.
+test('the app never opens Google\'s window by itself: not on opening, not on coming back to it, not on the timer', async () => {
   const fake = createFakeDrive();
-  const a = await startPhone(fake, { running: true, silent: 'never' });
-  await markSignedInBefore(a.page);
-  await a.page.reload();
-  await a.page.waitForFunction(() => document.getElementById('sync-link').textContent === 'Syncing…');
-  await a.page.clock.fastForward(20000);
+  const a = await startPhone(fake, { running: true });
   await waitStatus(a.page, 'Sign in to sync');
+  for (let i = 0; i < 5; i++) {
+    await a.page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));   // leaving and coming back
+    await a.page.evaluate(() => window.dispatchEvent(new Event('online')));
+  }
+  await a.page.clock.fastForward(10 * 60 * 1000);                                         // the 3-minute timer, three times
+  assert.equal(await googleWindows(a.page), 0);
+  assert.equal(await a.page.textContent('#sync-link'), 'Sign in to sync');
+  assert.equal(fake.requests.length, 0, 'and nothing was sent to Drive');
+  assert.deepEqual(a.errors, []);
+  await a.context.close();
+});
+
+test('while signed in, coming back to the app syncs without opening Google; after about an hour it asks for a tap again', async () => {
+  const fake = createFakeDrive();
+  const a = await startPhone(fake, { running: true });
   await a.page.click('#sync-link');
-  await a.page.waitForSelector('#sy-signin', { state: 'visible', timeout: 5000 });     // the sign-in button is back
-  assert.match(await text(a.page, '#sy-error'), /^Details: auth: Google did not answer/);
-  await a.page.click('#sy-signin');                                   // the sign-in window works this time
+  await a.page.click('#sy-signin');
   await a.page.clock.fastForward(100);
   await waitStatus(a.page, 'Synced');
+  const before = fake.requests.length;
+  await a.page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+  await a.page.clock.fastForward(100);
+  await waitStatus(a.page, 'Synced');
+  assert.ok(fake.requests.length > before, 'coming back synced again');
+  await a.page.clock.fastForward(60 * 60 * 1000);                                         // the sign-in runs out
+  await waitStatus(a.page, 'Sign in to sync');
+  assert.equal(await googleWindows(a.page), 1, 'only the one tap opened Google\'s window');
   assert.deepEqual(a.errors, []);
   await a.context.close();
 });

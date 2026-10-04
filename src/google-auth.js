@@ -1,12 +1,13 @@
 // Google sign-in for the browser (Google Identity Services, "token" model).
 // The access token is kept in MEMORY ONLY: never in localStorage or IndexedDB. TEST, LIVE and every other page on
 // oudam-meas.github.io share one browser origin, so a stored token could be read by them (ADR-001 note, app-rules "Shared origin").
-// The cost is a quiet sign-in each time the app opens. Only the public client ID is used. There is no client secret.
+// Google's window opens ONLY when someone taps "Sign in". On a phone even a "quiet" renewal opens that window, and
+// doing it by itself made the app open and close it in a loop. A sign-in lasts about an hour; then the app asks again.
+// Only the public client ID is used. There is no client secret.
 (function (root) {
   var SCRIPT = 'https://accounts.google.com/gsi/client';
   var SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
   var EXPIRY_MARGIN_MS = 60000;
-  var SILENT_WAIT_MS = 15000;       // a quiet renewal that Google does not answer in this time counts as "sign-in needed"
   var SIGNIN_WAIT_MS = 180000;      // the sign-in window: time to pick an account and agree
 
   function fail(code, message) {
@@ -63,31 +64,32 @@
       });
     }
 
-    // prompt '' may show Google's sign-in window (call it from a tap). prompt 'none' never shows one: it only renews quietly.
-    // Google does not always answer (a blocked window gives no reply), so every request has a time limit. Only one is open at a time.
-    function request(prompt) {
+    // Opens Google's sign-in window. Call it only from a tap.
+    // Google does not always answer (a blocked window gives no reply), so the request has a time limit. Only one is open at a time.
+    function signIn() {
       return getClient().then(function (c) {
         return new Promise(function (resolve, reject) {
           if (pending) pending.reject(fail('auth', 'Replaced by a newer sign-in request'));
           var timer = setTimeout(function () {
             if (pending && pending.timer === timer) { pending = null; reject(fail('auth', 'Google did not answer the sign-in request')); }
-          }, prompt === 'none' ? SILENT_WAIT_MS : SIGNIN_WAIT_MS);
+          }, SIGNIN_WAIT_MS);
           pending = {
             timer: timer,
             resolve: function (t) { clearTimeout(timer); resolve(t); },
             reject: function (e) { clearTimeout(timer); reject(e); }
           };
-          c.requestAccessToken({ prompt: prompt });
+          c.requestAccessToken({ prompt: '' });
         });
       });
     }
 
-    function signIn() { return request(''); }
     function isSignedIn() { return !!token && Date.now() < expiresAt - EXPIRY_MARGIN_MS; }
-    // A good token, renewed quietly when it has run out. If that fails, the person has to tap "Sign in".
-    function getToken() { return isSignedIn() ? Promise.resolve(token) : request('none'); }
+    // The token, while it is good. It never asks Google by itself: without a good token the answer is "sign-in needed".
+    function getToken() { return isSignedIn() ? Promise.resolve(token) : Promise.reject(fail('auth', 'Sign-in needed')); }
+    // Google refused the token (for example it was taken back): drop it, so nothing keeps trying with it.
+    function forget() { token = null; expiresAt = 0; }
 
-    return { signIn: signIn, getToken: getToken, isSignedIn: isSignedIn };
+    return { signIn: signIn, getToken: getToken, isSignedIn: isSignedIn, forget: forget };
   }
 
   root.BABYLOG_GOOGLE_AUTH = { create: create, isConfigured: isConfigured, SCOPE: SCOPE };
