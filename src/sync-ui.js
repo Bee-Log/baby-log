@@ -11,6 +11,7 @@
   var SIGNED_IN_KEY = 'syncSignedIn';     // only a yes/no hint that this phone signed in before. The token itself is never stored.
   var PUSH_DELAY_MS = 3000;               // wait a moment after a change, so a burst of changes is sent once
   var PULL_EVERY_MS = 3 * 60 * 1000;
+  var SYNC_TIMEOUT_MS = 60000;            // a sync that has not finished in a minute is treated as failed, so it can be tried again
 
   var ctx = null;
   var cfg = root.BABYLOG_CONFIG;
@@ -18,6 +19,7 @@
   var state = 'off';          // 'off' (not set up), 'signin', 'syncing', 'synced', 'offline', 'error'
   var lastSynced = null;
   var running = false, again = false, timer = null;
+  var lastError = '';         // the technical reason of the last failure, shown on the screen so it can be reported
 
   function $(id) { return document.getElementById(id); }
 
@@ -41,6 +43,8 @@
     $('sy-signin').hidden = state !== 'signin';
     $('sy-now').hidden = state === 'off' || state === 'signin';
     $('sy-now').disabled = state === 'syncing';
+    $('sy-error').hidden = !lastError || state === 'synced';
+    $('sy-error').textContent = lastError ? 'Details: ' + lastError : '';
     $('sync-card').setAttribute('data-state', state);
   }
 
@@ -51,14 +55,19 @@
     if (!engine) return Promise.resolve();
     if (running) { again = true; return Promise.resolve(); }
     running = true;
+    lastError = '';
     setState('syncing');
-    return engine.sync().then(function (result) {
+    var limit = new Promise(function (resolve, reject) {
+      setTimeout(function () { reject(Object.assign(new Error('Sync took longer than a minute'), { code: 'timeout' })); }, SYNC_TIMEOUT_MS);
+    });
+    return Promise.race([engine.sync(), limit]).then(function (result) {
       lastSynced = Date.now();
       setState('synced');
       store.setMeta(SIGNED_IN_KEY, true);
       if (result.merged > 0) ctx.renderToday();      // entries came from the other phone
     }).catch(function (err) {
       console.warn('[baby-log] sync', err);
+      lastError = (err.code ? err.code + ': ' : '') + (err.message || String(err));
       setState(err.code === 'auth' ? 'signin' : err.code === 'offline' ? 'offline' : 'error');
     }).then(function () {
       running = false;
@@ -68,6 +77,7 @@
 
   function signIn() {
     auth.signIn().then(run).catch(function (err) {
+      lastError = (err.code ? err.code + ': ' : '') + (err.message || String(err));
       setState(err.code === 'offline' ? 'offline' : 'signin');
       ctx.toast(err.code === 'offline' ? 'No network. Try again when you are online.' : 'Sign-in did not finish. Please try again.');
     });
