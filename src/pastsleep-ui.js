@@ -4,6 +4,7 @@
   var R = root.BABYLOG_RECORDS;
   var P = root.BABYLOG_PASTSLEEP;
   var store = root.BABYLOG_STORE;
+  var BABY = root.BABYLOG_BABY;
   var NS = 'http://www.w3.org/2000/svg';
 
   var FACE_R = 100, ICON_R = 56;
@@ -172,12 +173,12 @@
     saving = true;
     render();
     var times = P.draftTimes(state);
-    Promise.all([store.all(), store.deviceId()]).then(function (r) {
+    Promise.all([BABY.records(), store.deviceId()]).then(function (r) {
       records = r[0];
       var e = env();
       if (P.problem(state, e)) { saving = false; render(); return null; }   // something changed while the screen was open
-      var rec = R.makeRecord({ id: crypto.randomUUID(), type: 'sleep', t: times.t, end: times.end, now: Date.now(), deviceId: r[1], d: { source: 'manual' } });
-      return store.put(rec).then(function () { return store.all(); }).then(function (all) {
+      var rec = R.makeRecord({ id: crypto.randomUUID(), type: 'sleep', babyId: BABY.id(), t: times.t, end: times.end, now: Date.now(), deviceId: r[1], d: { source: 'manual' } });
+      return store.put(rec).then(function () { return BABY.records(); }).then(function (all) {
         records = all;
         saving = false;
         update(P.afterAdd(state, env()));

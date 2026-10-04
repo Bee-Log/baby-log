@@ -22,7 +22,7 @@
   }
 
   function startSleep(o) {
-    return R.makeRecord({ id: o.id, type: 'sleep', t: o.now, end: null, now: o.now, deviceId: o.deviceId, d: { source: 'live' } });
+    return R.makeRecord({ id: o.id, type: 'sleep', babyId: o.babyId, t: o.now, end: null, now: o.now, deviceId: o.deviceId, d: { source: 'live' } });
   }
 
   // Wake up: the same record gets its end time and a newer updatedAt (the merge rule: newest updatedAt wins).

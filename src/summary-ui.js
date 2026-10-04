@@ -4,7 +4,7 @@
   var R = root.BABYLOG_RECORDS;
   var S = root.BABYLOG_SUMMARY;
   var Sl = root.BABYLOG_SLEEP;
-  var store = root.BABYLOG_STORE;
+  var BABY = root.BABYLOG_BABY;
   var BAR_MAX_PX = 90;          // the tallest bar
   var WEEKDAY_LETTER = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
@@ -62,7 +62,7 @@
   // The tab was opened: read the entries again and start on today.
   function show() {
     offset = 0;
-    store.all().then(function (all) {
+    BABY.records().then(function (all) {
       records = all;
       render();
     }).catch(function (err) {

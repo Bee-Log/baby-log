@@ -1,24 +1,26 @@
 // Features 006 and 007 in a real browser: the Feed screen, the breast timer, the bottle, and what gets saved.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { startSite, phone, open, install, todayRows, state } from './helpers.mjs';
+import { startSite, phone, open, install, todayRows, state, seed, TEST_BABY } from './helpers.mjs';
 
 let origin, site, browser, close;
 before(async () => ({ origin, site, browser, close } = await startSite({ 'test-v1': 'test', 'test-v2': 'test', 'live-v1': 'live' })));
 after(() => close?.());
 
+// The stored entries, without the test baby's profile.
 function storedRecords(page, dbName = 'test-baby-log') {
   return page.evaluate((name) => new Promise((resolve, reject) => {
     const req = indexedDB.open(name);
     req.onsuccess = () => {
       const db = req.result;
       const get = db.transaction('records').objectStore('records').getAll();
-      get.onsuccess = () => { db.close(); resolve(get.result); };
+      get.onsuccess = () => { db.close(); resolve(get.result.filter((r) => r.type !== 'profile')); };
       get.onerror = () => reject(get.error);
     };
     req.onerror = () => reject(req.error);
   }), dbName);
 }
+const TIMER_KEY = 'breastTimer:' + TEST_BABY;   // each baby has its own timer (feature 014)
 
 const url = () => `${origin}/baby-log/test/`;
 async function afterSave(page) {
@@ -99,18 +101,18 @@ test('both sides timed: the minutes of each side are saved, and the total is the
   await context.clock.setFixedTime(new Date(2026, 9, 3, 12, 0));
   await install(page, url());
   // A timer that started 20 minutes ago: Left for 8 minutes, then Right for the last 12 (still running).
-  await page.evaluate(() => new Promise((resolve, reject) => {
+  await page.evaluate((key) => new Promise((resolve, reject) => {
     const now = Date.now(), min = 60000;
     const req = indexedDB.open('test-baby-log');
     req.onsuccess = () => {
       const db = req.result, tx = db.transaction('meta', 'readwrite');
       tx.objectStore('meta').put({ startedAt: now - 20 * min, segments: [
         { side: 'Left', from: now - 20 * min, to: now - 12 * min },
-        { side: 'Right', from: now - 12 * min, to: null }] }, 'breastTimer');
+        { side: 'Right', from: now - 12 * min, to: null }] }, key);
       tx.oncomplete = () => { db.close(); resolve(); };
       tx.onerror = () => reject(tx.error);
     };
-  }));
+  }), TIMER_KEY);
   await page.reload();
   await page.click('a.quick-btn.feed');
   await ready(page);
@@ -134,20 +136,20 @@ test('a running timer survives closing the app, and keeps the right time', async
   await ready(page);
   await page.click('#btn-left');
   // Pretend the phone was away for 14 minutes: move the saved start back, as if the timer began then.
-  await page.evaluate(() => new Promise((resolve, reject) => {
+  await page.evaluate((key) => new Promise((resolve, reject) => {
     const req = indexedDB.open('test-baby-log');
     req.onsuccess = () => {
       const db = req.result, tx = db.transaction('meta', 'readwrite'), s = tx.objectStore('meta');
-      const get = s.get('breastTimer');
+      const get = s.get(key);
       get.onsuccess = () => {
         const t = get.result, shift = 14 * 60000;
         t.startedAt -= shift; t.segments.forEach((x) => { x.from -= shift; });
-        s.put(t, 'breastTimer');
+        s.put(t, key);
       };
       tx.oncomplete = () => { db.close(); resolve(); };
       tx.onerror = () => reject(tx.error);
     };
-  }));
+  }), TIMER_KEY);
   await page.reload(); // a full reload on #feed, like reopening the app
   await ready(page);
   await page.waitForFunction(() => /^14:0\d$/.test(document.getElementById('breast-timer').textContent));
@@ -297,12 +299,8 @@ test('the feed controls fit on a narrow phone: Left / Right rows and Expressed d
     const rowsFit = () => page.$$eval('#panel-breast .side-row', (rows) => rows.filter((r) => r.scrollWidth > r.clientWidth).map((r) => r.id));
     assert.deepEqual(await rowsFit(), [], `${width}px wide: a Left / Right row overflows while logging`);
     await page.click('#screen-feed a[aria-label="Close"]');
-    await page.evaluate(() => new Promise((resolve) => {
-      const req = indexedDB.open('test-baby-log');
-      req.onsuccess = () => { const db = req.result, tx = db.transaction('records', 'readwrite');
-        tx.objectStore('records').put({ id: 'w', type: 'feed', t: Date.now() - 60000, end: null, d: { kind: 'Breast', side: 'Both', min: 133, leftMin: 66, rightMin: 67 }, note: '', by: '', deviceId: 'x', updatedAt: 1 });
-        tx.oncomplete = () => { db.close(); resolve(); }; };
-    }));
+    const now = await page.evaluate(() => Date.now());
+    await seed(page, { id: 'w', type: 'feed', t: now - 60000, end: null, d: { kind: 'Breast', side: 'Both', min: 133, leftMin: 66, rightMin: 67 }, note: '', by: '', deviceId: 'x', updatedAt: 1 });
     await page.reload();
     await page.waitForSelector('#today-list .row-link');
     await page.locator('#today-list .row-link').first().click();
@@ -370,15 +368,8 @@ test('a feed without details (for example from another phone) does not break the
   site.test = 'test-v1';
   const { context, page, errors } = await phone(browser);
   await install(page, url());
-  await page.evaluate(() => new Promise((resolve, reject) => {
-    const req = indexedDB.open('test-baby-log');
-    req.onsuccess = () => {
-      const db = req.result, tx = db.transaction('records', 'readwrite');
-      tx.objectStore('records').put({ id: 'bare-1', type: 'feed', t: Date.now() - 60000, end: null, note: '', by: '', deviceId: 'other-phone', updatedAt: 1 });
-      tx.oncomplete = () => { db.close(); resolve(); };
-      tx.onerror = () => reject(tx.error);
-    };
-  }));
+  const now = await page.evaluate(() => Date.now());
+  await seed(page, { id: 'bare-1', type: 'feed', t: now - 60000, end: null, note: '', by: '', deviceId: 'other-phone', updatedAt: 1 });
   await page.reload();
   await page.waitForSelector('#today-list .row');
   assert.deepEqual(await todayRows(page), ['Feed · Breast']);

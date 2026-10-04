@@ -12,6 +12,7 @@ Generated from the header of each `features/*/SIGNOFF.md`. Do not edit by hand.
 - 002 Set up the baby profile (updated 2026-10-03) - `features/002-set-up-the-baby-profile/`
 - 009 See the daily summary (updated 2026-10-03) - `features/009-see-the-daily-summary/`
 - 013 Sync between phones (updated 2026-10-03) - `features/013-sync-between-phones/`
+- 014 More than one baby (updated 2026-10-04) - `features/014-more-than-one-baby/`
 
 ## Done
 - 001 Install and open the app (updated 2026-10-03) - `features/001-install-and-open-the-app/`

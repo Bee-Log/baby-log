@@ -40,6 +40,7 @@ To build, the owner says "build feature 001" or names the signoff. Find it in `f
 - The phone is the main store (IndexedDB). It must work fully offline.
 - Storage and sync: see `docs/adr/ADR-001-data-storage-and-sync.md` (one shared Google account, one append-only file per phone in the hidden app data folder, merge by id with the newest `updatedAt`).
 - Data is plain JSON with a CSV export, so it can move to another backend later.
+- Every entry belongs to one baby (feature 014, record format version 2: `v` and `babyId`). Entries without them are version 1 and belong to the baby `profile`. Unreadable entries are kept and synced, never deleted.
 - Data protection (owner decision, 2026-10-03): TEST, LIVE and every other GitHub Pages site of this account share one browser origin (`oudam-meas.github.io`), so they share storage. For now we keep that and protect real data in code (see "Shared origin" in app-rules). Moving LIVE to its own domain stays open for later.
 - Full rules and the record format: `.claude/skills/build-feature/references/app-rules.md`.
 

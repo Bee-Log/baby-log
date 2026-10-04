@@ -5,6 +5,7 @@
   var S = root.BABYLOG_SLEEP;
   var store = root.BABYLOG_STORE;
   var PS = root.BABYLOG_PASTSLEEP_UI;
+  var BABY = root.BABYLOG_BABY;
 
   var ctx = null;          // { toast } from app.js
   var records = [];        // the last entries read, shared by both cards
@@ -82,11 +83,11 @@
     if (saving) return;
     saving = true;
     var now = Date.now();
-    Promise.all([store.all(), store.deviceId()]).then(function (r) {
+    Promise.all([BABY.records(), store.deviceId()]).then(function (r) {
       var current = S.currentSleep(r[0]);
-      var rec = current ? S.wake(current, now, r[1]) : S.startSleep({ id: crypto.randomUUID(), now: now, deviceId: r[1] });
+      var rec = current ? S.wake(current, now, r[1]) : S.startSleep({ id: crypto.randomUUID(), babyId: BABY.id(), now: now, deviceId: r[1] });
       return store.put(rec);
-    }).then(function () { return store.all(); }).then(function (all) {
+    }).then(function () { return BABY.records(); }).then(function (all) {
       saving = false;
       renderToday(all);
     }).catch(function (err) {
@@ -101,7 +102,7 @@
     pageOpen = true;
     screen.hidden = false;
     screen.removeAttribute('data-ready');
-    store.all().then(function (all) {
+    BABY.records().then(function (all) {
       if (screen.hidden) return; // the parent already left this screen
       records = all;
       PS.show(all);

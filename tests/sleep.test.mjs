@@ -18,13 +18,13 @@ const at = (h, m = 0, day = 3) => new Date(2026, 9, day, h, m).getTime(); // loc
 const sleep = (id, t, end, extra = {}) => ({ id, type: 'sleep', t, end, d: { source: 'live' }, note: '', by: '', deviceId: 'p', updatedAt: end ?? t, ...extra });
 
 test('starting a sleep makes a record that is still running', () => {
-  const r = S.startSleep({ id: 's1', now: at(14, 15), deviceId: 'phone-A' });
-  assert.deepEqual(plain(r), { id: 's1', type: 'sleep', t: at(14, 15), end: null, d: { source: 'live' }, note: '', by: '', deviceId: 'phone-A', updatedAt: at(14, 15) });
+  const r = S.startSleep({ id: 's1', babyId: 'b', now: at(14, 15), deviceId: 'phone-A' });
+  assert.deepEqual(plain(r), { v: 2, id: 's1', type: 'sleep', babyId: 'b', t: at(14, 15), end: null, d: { source: 'live' }, note: '', by: '', deviceId: 'phone-A', updatedAt: at(14, 15) });
   assert.equal(S.currentSleep([r]).id, 's1');
 });
 
 test('waking up sets the end time in the same record, with a newer updatedAt', () => {
-  const r = S.startSleep({ id: 's1', now: at(14, 15), deviceId: 'phone-A' });
+  const r = S.startSleep({ id: 's1', babyId: 'b', now: at(14, 15), deviceId: 'phone-A' });
   const w = S.wake(r, at(16, 0), 'phone-B');
   assert.equal(w.id, 's1');
   assert.equal(w.t, at(14, 15), 'the start does not change');
@@ -36,7 +36,7 @@ test('waking up sets the end time in the same record, with a newer updatedAt', (
 });
 
 test('a clock that went backwards never gives a sleep that ends before it began', () => {
-  const r = S.startSleep({ id: 's1', now: at(14, 15), deviceId: 'p' });
+  const r = S.startSleep({ id: 's1', babyId: 'b', now: at(14, 15), deviceId: 'p' });
   const w = S.wake(r, at(13, 0), 'p');
   assert.equal(w.end, w.t);
   assert.ok(w.updatedAt > r.updatedAt, 'still newer, so it wins the merge');

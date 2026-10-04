@@ -6,7 +6,7 @@
 // and uses a fake Google for the sync screens, so no real account is needed.
 import { mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { startSite, phone, install, seed } from '../tests/browser/helpers.mjs';
+import { startSite, phone, install, seed, seedAsIs, fakeGoogle, TEST_BABY } from '../tests/browser/helpers.mjs';
 import { createFakeDrive } from '../tests/fake-drive.mjs';
 const { chromium } = createRequire(import.meta.url)('playwright'); // honours NODE_PATH, like the browser tests
 const OUT = process.argv[2];
@@ -17,8 +17,7 @@ const browser = await chromium.launch();
 const NOW = new Date(2026, 9, 3, 17, 17);
 const at = (h, m = 0, day = 3) => new Date(2026, 9, day, h, m).getTime();
 const r = (id, type, t, extra = {}) => ({ id, type, t, end: null, d: {}, note: '', by: '', deviceId: 'sample', updatedAt: t, ...extra });
-const DATA = [
-  r('profile', 'profile', at(9), { d: { nickname: 'Bean', dateOfBirth: '2026-09-12', sex: 'girl', photo: '' } }),
+const DATA = [                                                // for the test baby "Bean" (install() adds her)
   r('f1', 'feed', at(15, 2), { d: { kind: 'Breast', side: 'Both', min: 20, leftMin: 8, rightMin: 12 } }),
   r('f2', 'feed', at(11, 50), { d: { kind: 'Bottle', milk: 'Formula', ml: 90 } }),
   r('f3', 'feed', at(8, 10), { d: { kind: 'Breast', side: 'Left', min: 14, leftMin: 14, rightMin: 0 } }),
@@ -28,28 +27,19 @@ const DATA = [
   r('s3', 'sleep', at(23, 0, 2), { end: at(2, 10, 3), d: { source: 'manual' } }),
   ...[1, 2].map((d) => [8, 11, 14, 17, 20].slice(0, 3 + d).map((h, i) => r(`y${d}${i}`, 'feed', at(h, 0, 3 - d), { d: { kind: 'Breast', side: 'Left', min: 10 } }))).flat()
 ];
-const GOOGLE_STUB = `window.google = { accounts: { oauth2: { initTokenClient(cfg) { return { requestAccessToken() {
-  setTimeout(() => cfg.callback({ access_token: 'good-token', expires_in: 3600 }), 5); } }; } } } };`;
+const TIMER_KEY = 'breastTimer:' + TEST_BABY;
 
-async function newPhone({ width = 390, sync = false, data = DATA } = {}) {
+// `baby: false` is a new phone without a baby. `raw` entries are stored as given (for example from before feature 014).
+async function newPhone({ width = 390, sync = false, data = DATA, baby = true, raw = [] } = {}) {
   const p = await phone(browser);
   await p.page.setViewportSize({ width, height: 844 });
   await p.context.clock.setFixedTime(NOW);
-  if (sync) {
-    const fake = createFakeDrive();
-    await p.context.addInitScript(() => { let c; Object.defineProperty(window, 'BABYLOG_CONFIG', { configurable: true, get: () => c, set: (v) => { c = { ...v, googleClientId: 'sample.apps.googleusercontent.com' }; } }); });
-    await p.context.route('https://accounts.google.com/gsi/client', (x) => x.fulfill({ contentType: 'text/javascript', body: GOOGLE_STUB }));
-    await p.context.route('https://www.googleapis.com/**', async (route) => {
-      const q = route.request(), cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'authorization,content-type', 'access-control-allow-methods': 'GET,POST,PATCH,OPTIONS' };
-      if (q.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
-      const res = fake.handle(q.method(), q.url(), q.headers(), q.postData() || '');
-      return route.fulfill({ status: res.status, contentType: res.contentType, body: res.body, headers: cors });
-    });
-  }
-  await install(p.page, origin + '/baby-log/test/');
+  if (sync) await fakeGoogle(p, createFakeDrive());
+  await install(p.page, origin + '/baby-log/test/', { baby });
   for (const rec of data) await seed(p.page, rec);
+  for (const rec of raw) await seedAsIs(p.page, rec);
   await p.page.reload();
-  await p.page.waitForSelector('#today-list .row, #today-empty:not([hidden])');
+  await p.page.waitForSelector('#today-list .row, #today-empty:not([hidden]), #screen-babies[data-ready]');
   await p.page.addStyleTag({ content: '*{caret-color:transparent !important}' });
   return p;
 }
@@ -60,11 +50,11 @@ const pause = async (page) => { await page.evaluate(() => document.activeElement
 let p = await newPhone();
 await shot(p.page, '01-today');
 // Feed: breast timer running on Right
-await p.page.evaluate(() => new Promise((res) => { const q = indexedDB.open('test-baby-log'); q.onsuccess = () => { const tx = q.result.transaction('meta', 'readwrite'); const now = Date.now(), m = 60000;
-  tx.objectStore('meta').put({ startedAt: now - 11 * m, segments: [{ side: 'Left', from: now - 11 * m, to: now - 4 * m }, { side: 'Right', from: now - 4 * m, to: null }] }, 'breastTimer'); tx.oncomplete = () => { q.result.close(); res(); }; }; }));
+await p.page.evaluate((key) => new Promise((res) => { const q = indexedDB.open('test-baby-log'); q.onsuccess = () => { const tx = q.result.transaction('meta', 'readwrite'); const now = Date.now(), m = 60000;
+  tx.objectStore('meta').put({ startedAt: now - 11 * m, segments: [{ side: 'Left', from: now - 11 * m, to: now - 4 * m }, { side: 'Right', from: now - 4 * m, to: null }] }, key); tx.oncomplete = () => { q.result.close(); res(); }; }; }), TIMER_KEY);
 await p.page.click('a.quick-btn.feed'); await p.page.waitForSelector('#screen-feed[data-ready]'); await pause(p.page);
 await shot(p.page, '02-feed-breast-timer', { fullPage: true });
-await p.page.evaluate(() => new Promise((res) => { const q = indexedDB.open('test-baby-log'); q.onsuccess = () => { const tx = q.result.transaction('meta', 'readwrite'); tx.objectStore('meta').delete('breastTimer'); tx.oncomplete = () => { q.result.close(); res(); }; }; }));
+await p.page.evaluate((key) => new Promise((res) => { const q = indexedDB.open('test-baby-log'); q.onsuccess = () => { const tx = q.result.transaction('meta', 'readwrite'); tx.objectStore('meta').delete(key); tx.oncomplete = () => { q.result.close(); res(); }; }; }), TIMER_KEY);
 await p.page.goto(origin + '/baby-log/test/#today'); await p.page.waitForSelector('#today-list .row');
 await p.page.click('a.quick-btn.feed'); await p.page.waitForSelector('#screen-feed[data-ready]');
 await p.page.click('#mode-breast'); await p.page.click('#breast-manual'); await p.page.fill('#left-min', '8'); await p.page.fill('#right-min', '6'); await p.page.dispatchEvent('#right-min', 'change'); await pause(p.page);
@@ -120,6 +110,22 @@ p = await newPhone({ width: 320 });
 await shot(p.page, '20-today-320px');
 await p.page.goto(origin + '/baby-log/test/#sleep'); await p.page.waitForSelector('#screen-sleep[data-ready]'); await pause(p.page);
 await shot(p.page, '21-sleep-page-320px', { fullPage: true });
+await p.context.close();
+
+// Babies (feature 014): switching between two babies, a new phone, and a phone with entries from before 014
+const pip = { v: 2, id: 'baby-pip', type: 'profile', babyId: 'baby-pip', t: at(9), end: null, note: '', by: '', deviceId: 'sample', updatedAt: at(9),
+  d: { nickname: 'Pip', dateOfBirth: '2026-09-12', sex: 'boy', photo: '' } };
+p = await newPhone({ raw: [pip] });
+await p.page.click('#baby-head'); await p.page.waitForSelector('#screen-babies[data-ready]'); await pause(p.page);
+await shot(p.page, '22-babies-switch');
+await p.context.close();
+p = await newPhone({ baby: false, sync: true, data: [] }); await pause(p.page);
+await shot(p.page, '23-welcome-new-phone');
+await p.page.click('#bb-add'); await p.page.waitForSelector('#screen-profile[data-ready]'); await pause(p.page);
+await shot(p.page, '24-add-a-baby', { fullPage: true });
+await p.context.close();
+p = await newPhone({ baby: false, data: [], raw: DATA.slice(0, 6) }); await pause(p.page);
+await shot(p.page, '25-welcome-entries-from-before');
 await p.context.close();
 
 await browser.close(); await close();

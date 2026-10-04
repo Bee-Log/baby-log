@@ -330,3 +330,17 @@ body.on-screen .toast { bottom: auto; top: calc(12px + env(safe-area-inset-top))
 .head-delete:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .sleep-row { color: inherit; text-decoration: none; }
 .sync-error { margin: 0; font-size: 13px; color: #5b6168; overflow-wrap: anywhere; user-select: text; -webkit-user-select: text; }
+
+/* Babies screen (feature 014): choose a baby, add one, or sign in to load one */
+.baby-switch { flex-shrink: 0; color: var(--muted); }
+.bb-intro { margin: 0; font-size: 17px; color: #3c4248; }
+.bb-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.bb-list:empty { display: none; }
+.bb-row { display: flex; align-items: center; gap: 8px; background: var(--surface); border-radius: 20px; padding: 8px 8px 8px 12px; }
+.bb-pick { flex: 1; min-width: 0; min-height: 60px; display: flex; align-items: center; gap: 12px; background: none; border: 0; padding: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.bb-pick[aria-current] .bb-text strong::after { content: " ✓"; color: #2e7a57; }
+.bb-photo { width: 44px; height: 44px; }
+.bb-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bb-text strong { font-family: var(--display); font-size: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bb-text span { font-size: 14px; color: var(--muted); }
+.bb-edit { min-height: 44px; min-width: 56px; display: flex; align-items: center; justify-content: center; border-radius: 14px; border: 1px solid var(--line); color: var(--ink); font-weight: 700; text-decoration: none; }

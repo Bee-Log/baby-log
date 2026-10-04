@@ -21,21 +21,22 @@ const plain = (v) => JSON.parse(JSON.stringify(v)); // objects from the sandbox,
 const at = (h, m = 0, day = 3) => new Date(2026, 9, day, h, m).getTime(); // local time, 3 Oct 2026
 
 test('a new record has exactly the fields in app-rules.md', () => {
-  const r = R.makeRecord({ id: 'a1', type: 'pee', t: at(9), now: at(9), deviceId: 'phone-1' });
-  assert.deepEqual(plain(r), { id: 'a1', type: 'pee', t: at(9), end: null, d: {}, note: '', by: '', deviceId: 'phone-1', updatedAt: at(9) });
+  const r = R.makeRecord({ id: 'a1', type: 'pee', babyId: 'baby-1', t: at(9), now: at(9), deviceId: 'phone-1' });
+  assert.deepEqual(plain(r), { v: 2, id: 'a1', type: 'pee', babyId: 'baby-1', t: at(9), end: null, d: {}, note: '', by: '', deviceId: 'phone-1', updatedAt: at(9) });
   assert.ok(!('deleted' in r), 'live records have no deleted field');
 });
 
 test('bad records are refused', () => {
-  const ok = { id: 'a', type: 'poop', t: 1, now: 1, deviceId: 'p' };
+  const ok = { id: 'a', type: 'poop', babyId: 'b', t: 1, now: 1, deviceId: 'p' };
   assert.throws(() => R.makeRecord({ ...ok, type: 'nappy' }), /Unknown record type/);
   assert.throws(() => R.makeRecord({ ...ok, id: '' }), /id/);
   assert.throws(() => R.makeRecord({ ...ok, deviceId: undefined }), /deviceId/);
+  assert.throws(() => R.makeRecord({ ...ok, babyId: '' }), /babyId/, 'every entry belongs to a baby (feature 014)');
   assert.throws(() => R.makeRecord({ ...ok, t: NaN }), /ms/);
 });
 
 test('delete makes a tombstone; updatedAt always moves forward', () => {
-  const r = R.makeRecord({ id: 'a', type: 'pee', t: at(9), now: at(9), deviceId: 'p' });
+  const r = R.makeRecord({ id: 'a', type: 'pee', babyId: 'b', t: at(9), now: at(9), deviceId: 'p' });
   const gone = R.tombstone(r, at(9, 1));
   assert.equal(gone.deleted, true);
   assert.equal(gone.updatedAt, at(9, 1));

@@ -6,7 +6,7 @@
   var F = root.BABYLOG_FEED;
   var R = root.BABYLOG_RECORDS;
   var store = root.BABYLOG_STORE;
-  var TIMER_KEY = 'breastTimer'; // a running timer lives in the phone's meta store, so it survives closing the app
+  var BABY = root.BABYLOG_BABY;   // a running timer lives in the phone's meta store (one per baby), so it survives closing the app
 
   var ctx = null;               // { toast, renderToday, setBusy, commitEdit } from app.js
   var editing = null;           // the saved feed being edited, or null when logging a new one
@@ -102,7 +102,7 @@
     timer = F.tap(timer, side, Date.now());
     applyView();
     renderBreast();
-    store.setMeta(TIMER_KEY, timer).catch(function (err) {
+    store.setMeta(BABY.timerKey(), timer).catch(function (err) {
       console.error('[baby-log] timer save', err);
       ctx.toast('The timer could not be saved on this phone.');
     });
@@ -267,7 +267,7 @@
     saving = true;
     store.deviceId().then(function (deviceId) {
       var d = R.withFields({}, F.breastDetails(form.left, form.right, 'Left'), { kind: 'Breast' });
-      return store.put(R.makeRecord({ id: crypto.randomUUID(), type: 'feed', t: t, now: now, deviceId: deviceId, d: d, note: form.note.trim() }));
+      return store.put(R.makeRecord({ id: crypto.randomUUID(), type: 'feed', babyId: BABY.id(), t: t, now: now, deviceId: deviceId, d: d, note: form.note.trim() }));
     }).then(function () {
       saving = false;
       ctx.toast('Feed saved');
@@ -298,9 +298,9 @@
     }
     var wasBreast = form.mode === 'breast';
     store.deviceId().then(function (deviceId) {
-      var rec = R.makeRecord({ id: crypto.randomUUID(), type: 'feed', t: work.t, now: now, deviceId: deviceId, d: work.d, note: work.note });
+      var rec = R.makeRecord({ id: crypto.randomUUID(), type: 'feed', babyId: BABY.id(), t: work.t, now: now, deviceId: deviceId, d: work.d, note: work.note });
       // A breast feed and its draft timer are saved together, in one step.
-      return wasBreast ? store.putClearingMeta(rec, TIMER_KEY) : store.put(rec);
+      return wasBreast ? store.putClearingMeta(rec, BABY.timerKey()) : store.put(rec);
     }).then(function (rec) {
       timer = null;
       saving = false;
@@ -324,7 +324,7 @@
     screen.removeAttribute('data-ready');
     $('feed-save').disabled = true; // until the saved data has loaded
     setNote('');
-    var loading = [store.getMeta(TIMER_KEY), store.all()];
+    var loading = [store.getMeta(BABY.timerKey()), BABY.records()];
     if (editId) loading.push(store.getRecord(editId));
     Promise.all(loading).then(function (r) {
       if (screen.hidden) return; // the parent already left this screen

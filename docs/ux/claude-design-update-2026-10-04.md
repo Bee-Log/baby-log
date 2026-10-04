@@ -4,7 +4,7 @@ This note shows how the app looks and works **now**. Some screens changed from t
 Please use it to bring the designs up to date.
 
 - The first designs are the artboards in `features/*/artifacts/*.dc.html` ("1 · Today (home)", "3 · Daily summary", "5 · Baby profile", "6 · Sleep", and the Feed screen).
-- The screenshots are in the `screenshots/` folder of this pack. They are from the TEST app on a 390 px wide phone, with made-up sample data (a baby called "Bean"). They are not real data.
+- The screenshots are in the `screenshots/` folder of this pack. They are from the TEST app on a 390 px wide phone, with made-up sample data (babies called "Bean" and "Pip"). They are not real data.
 - The older note `docs/ux/feed-and-edit-experience.md` has more detail on the Feed screen.
 - The pack is `docs/ux/claude-design-update-2026-10-04.zip` (this note as README.md, and the screenshots). To make the screenshots again: `NODE_PATH=/opt/node-tools/node_modules node scripts/ux-screenshots.mjs <folder>`.
 
@@ -26,13 +26,14 @@ Screenshots: `01-today.png`, `16-today-asleep.png`, `19-today-footer-sync-status
 First design: artboard "1 · Today (home)".
 
 **Same as the design**
-- The header with the photo spot, the date and age ("Sat 3 Oct · 3 weeks old"), and the nickname. Tapping it opens the Baby profile.
+- The header with the photo spot, the date and age ("Sat 3 Oct · 3 weeks old"), and the nickname.
 - The **Last feed** card ("2h 15m ago", then the time and details).
 - The sleep card. When awake it is white, with "Awake since" and **Start sleep**. When asleep it is dark, with "Asleep since" and a gold **Wake up**.
 - The three big buttons: **Feed**, **Wee**, **Poo**.
 - The **Today** list, newest first.
 
 **Changed or added**
+- **Tapping the header opens the Babies screen** (section 10), not the profile. A small down arrow after the name shows that it switches.
 - **Poo icon:** a little poo shape, not a circle with a line. The owner asked for this.
 - **Sleeps in the list:** a finished sleep shows at the time the baby woke: "Woke up · slept 1h 40m". A sleep that is still running shows "Fell asleep · asleep now".
 - **Every row opens its edit screen,** including sleeps.
@@ -125,6 +126,8 @@ Screenshot: `14-profile.png`. First design: artboard "5 · Baby profile".
 
 **Built as designed.** One change: **Save profile** stays grey until the nickname, the date of birth and the gender are all filled in. The photo is cut to a square and made small.
 
+Since section 10 (more than one baby), the profile opens from **Edit** on the Babies screen. For a new baby it is empty, and the title says **Add a baby** (`24-add-a-baby.png`). The back button returns to the Babies screen.
+
 ## 8. Sync and data (new screen)
 
 Screenshots: `17-sync-sign-in.png`, `18-sync-synced.png`, `19-today-footer-sync-status.png`.
@@ -145,6 +148,21 @@ Screenshot: `15-growth-not-built-yet.png`. First design: the Growth artboard.
 
 **Not built yet.** It needs the official WHO growth tables. The design has values for weeks 0 to 3 only, and the baby is already older than that.
 
+## 10. Babies (new screens)
+
+Screenshots: `22-babies-switch.png`, `23-welcome-new-phone.png`, `24-add-a-baby.png`, `25-welcome-entries-from-before.png`.
+These screens are not in the first designs. The owner asked for them: every entry belongs to one baby, it is easy to switch, and one baby opens by itself.
+
+- **Babies screen** (`22`). It opens from the header on Today. Each baby is a row: photo, name, age, and an **Edit** button. A tick marks the baby on screen. Tap a row to switch. **Add a baby** is at the bottom.
+- **Welcome** (`23`). A phone without a baby always opens here, and nothing can be logged yet. It offers **Sign in with Google** (to load the baby from the other phone) and **Add a baby**. After signing in:
+  - one baby found → Today opens with that baby;
+  - two or more → "Which baby?" and the list;
+  - none → "No baby was found in the Google account. Add your baby to start."
+- **Entries from before** (`25`). A phone that was used before babies had names shows those entries as one row: "Entries from before · 6 entries · add your baby's details". Tapping it opens the profile. **Add a baby** is hidden until then.
+- Each baby has its own entries, sleep card and breast timer. Twins can sleep or feed at the same time.
+
+**For you to design:** the Babies screen and the welcome screen, and how the header shows that it switches babies.
+
 ---
 
 ## Questions for design, in one list
@@ -156,3 +174,4 @@ Screenshot: `15-growth-not-built-yet.png`. First design: the Growth artboard.
 5. A design for **Sync and data**.
 6. Ignore sleeps shorter than 1 minute?
 7. Older open questions: whether Undo comes back, and a dark look for night use.
+8. A design for the **Babies** and **welcome** screens, and the switch sign in the Today header.
