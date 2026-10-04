@@ -318,3 +318,4 @@ body.on-screen .toast { bottom: auto; top: calc(12px + env(safe-area-inset-top))
 .head-delete.armed .head-delete-text { display: inline; }
 .head-delete:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .sleep-row { color: inherit; text-decoration: none; }
+.sync-error { margin: 0; font-size: 13px; color: #5b6168; overflow-wrap: anywhere; user-select: text; -webkit-user-select: text; }

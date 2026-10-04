@@ -25,6 +25,7 @@ Both parents see each other's entries, and the data survives a lost phone, using
 - **Receive:** when the app opens, when the phone comes back online, when the app comes back to the front, and every 3 minutes. A new or reset phone reads all files, which restores everything.
 - **Status** (a link at the bottom of Today, and the **Sync and data** screen `#sync`): *Sync is not set up yet*, *Sign in to sync*, *Syncing…*, *Synced · 3:02 pm*, *Waiting for network*, *Could not sync*.
 - **Sign-in** is Google's token sign-in. The token is kept in memory only, never stored. A phone that signed in before renews quietly when the app opens. If that fails, the status asks for a tap on **Sign in with Google**.
+- **No endless waiting (added 2026-10-04, after the first real sign-in).** A quiet sign-in renewal that Google does not answer gives up after 15 seconds and asks for a tap on Sign in. A sync that has not finished after a minute is treated as failed and can be tried again. The Sync screen shows a small "Details: ..." line with the technical reason, so a failure can be reported exactly.
 - **Export** (on the same screen): **Download CSV** (the prototype's 22 columns, then `feed_left_min`, `feed_right_min`, `sleep_source`) and **Download JSONL** (every entry, removed ones too).
 
 ## Data it captures

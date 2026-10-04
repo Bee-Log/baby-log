@@ -6,6 +6,8 @@
   var SCRIPT = 'https://accounts.google.com/gsi/client';
   var SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
   var EXPIRY_MARGIN_MS = 60000;
+  var SILENT_WAIT_MS = 15000;       // a quiet renewal that Google does not answer in this time counts as "sign-in needed"
+  var SIGNIN_WAIT_MS = 180000;      // the sign-in window: time to pick an account and agree
 
   function fail(code, message) {
     var err = new Error(message);
@@ -62,10 +64,19 @@
     }
 
     // prompt '' may show Google's sign-in window (call it from a tap). prompt 'none' never shows one: it only renews quietly.
+    // Google does not always answer (a blocked window gives no reply), so every request has a time limit. Only one is open at a time.
     function request(prompt) {
       return getClient().then(function (c) {
         return new Promise(function (resolve, reject) {
-          pending = { resolve: resolve, reject: reject };
+          if (pending) pending.reject(fail('auth', 'Replaced by a newer sign-in request'));
+          var timer = setTimeout(function () {
+            if (pending && pending.timer === timer) { pending = null; reject(fail('auth', 'Google did not answer the sign-in request')); }
+          }, prompt === 'none' ? SILENT_WAIT_MS : SIGNIN_WAIT_MS);
+          pending = {
+            timer: timer,
+            resolve: function (t) { clearTimeout(timer); resolve(t); },
+            reject: function (e) { clearTimeout(timer); reject(e); }
+          };
           c.requestAccessToken({ prompt: prompt });
         });
       });
