@@ -9,8 +9,9 @@
     storagePrefix: env === 'test' ? 'test-' : '',
     // Drive app-data folder name for sync (ADR-001).
     driveFolder: env === 'test' ? 'baby-log-test' : 'baby-log',
-    // The public Google OAuth client ID. 'PLACEHOLDER' keeps sync switched off. Put the real one here when it is ready.
-    // It is public and safe to commit. The client secret must never be used or committed.
-    googleClientId: 'PLACEHOLDER'
+    // The public Google OAuth client ID (Google Cloud project project-45070-beelog, a Web application client for
+    // https://oudam-meas.github.io). It is public and safe to commit. The client secret must never be used or committed.
+    // If it is empty or starts with 'PLACEHOLDER', sync stays switched off.
+    googleClientId: '280371776054-ejcc7qlq4j2b9gsv001nrvo2d57gu1t2.apps.googleusercontent.com'
   };
 })(typeof self !== 'undefined' ? self : this);

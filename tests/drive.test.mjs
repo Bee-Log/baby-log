@@ -87,9 +87,12 @@ test('sync stays off with a placeholder client ID, and on with a real-looking on
   assert.equal(Auth.SCOPE, 'https://www.googleapis.com/auth/drive.appdata', 'only the hidden app-data folder');
 });
 
-test('the committed config keeps sync off until a real client ID is put in', () => {
+test('the committed config has a public client ID (never a secret), so sync is on', () => {
   const cfg = readFileSync(join(out, 'config.js'), 'utf8');
-  assert.match(cfg, /googleClientId: 'PLACEHOLDER'/);
+  const id = /googleClientId: '([^']*)'/.exec(cfg)[1];
+  assert.match(id, /^\d+-[a-z0-9]+\.apps\.googleusercontent\.com$/);
+  assert.equal(Auth.isConfigured(id), true);
+  assert.doesNotMatch(cfg, /GOCSPX-|client_secret/i, 'a client secret must never be in the code');
 });
 
 test('the sign-in token is never written to storage', () => {
