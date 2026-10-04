@@ -131,7 +131,7 @@ test('TEST sleeps never reach LIVE storage', async () => {
   await page.waitForSelector('#tc-card.asleep');
   await install(page, `${origin}/baby-log/`);
   assert.equal((await card(page, 'tc')).asleep, false, 'LIVE knows nothing about the TEST sleep');
-  assert.deepEqual(await sleeps(page).then(() => readRecords(page, 'baby-log')), []);
+  assert.deepEqual((await readRecords(page, 'baby-log')).filter((r) => r.type === 'sleep'), []);
   assert.equal((await readRecords(page, 'test-baby-log')).filter((r) => r.type === 'sleep').length, 1);
   assert.deepEqual(errors, []);
   await context.close();

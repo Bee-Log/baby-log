@@ -5,6 +5,7 @@
   var R = root.BABYLOG_RECORDS;
   var S = root.BABYLOG_SLEEP;
   var store = root.BABYLOG_STORE;
+  var BABY = root.BABYLOG_BABY;
   var ARM_MS = 4000;
 
   var ctx = null;                 // { toast, setBusy, commitEdit } from app.js
@@ -72,7 +73,7 @@
     screen.removeAttribute('data-ready');
     $('se-save').disabled = true;
     disarm();
-    Promise.all([store.getRecord(id), store.all()]).then(function (r) {
+    Promise.all([store.getRecord(id), BABY.records()]).then(function (r) {
       if (screen.hidden) return; // the parent already left this screen
       if (!r[0] || r[0].deleted || r[0].type !== 'sleep') {
         ctx.toast('That entry is not there any more.');

@@ -14,8 +14,10 @@ A newborn routine log for two parents (feeds, sleep, pee, poop, crying, growth).
 One record per entry, stored as plain JSON:
 
 ```
+v           format version: 2. An entry without v is version 1 (made before feature 014)
 id          unique string (client generated)
 type        feed | sleep | pee | poop | cry | growth | profile
+babyId      the baby it belongs to (the id of that baby's profile). Required from version 2
 t           start time, milliseconds since 1970 (UTC)
 end         end time in ms, or null (sleep only)
 d           object with the type-specific fields from the signoff
@@ -26,7 +28,12 @@ updatedAt   ms time of the last change
 deleted     true if the entry was removed (a "tombstone"), otherwise absent
 ```
 
-Profile (feature 002): one record with `type: 'profile'` and the fixed `id: 'profile'`, so it merges like every other entry (newest `updatedAt` wins). `d` has `nickname` (up to 20 characters), `dateOfBirth` (`YYYY-MM-DD`), `sex` (`'girl'` or `'boy'`, picks the WHO tables) and `photo` (a small square JPEG as a `data:` URL, or an empty string). `t` is when it was first saved. It is not a log entry, so lists and totals ignore it.
+Babies (feature 014): every entry belongs to one baby. Nothing can be logged until a baby is chosen, and screens show only the chosen baby's entries (`src/baby.js`; the choice is kept on the phone as meta `currentBaby`, not synced).
+- **Version 1 entries** (no `v`, no `babyId`) belong to the baby with the id `'profile'`, the one profile of feature 002. They are read with this rule and never rewritten. A phone that has such entries but no profile shows them as "Entries from before"; adding the details creates the profile `'profile'`.
+- **Unreadable entries** (`src/schema.js`): a version higher than this app's (`'newer'`), or a missing or wrong field (`'invalid'`). They are kept, synced and exported in JSONL as they are, but not shown and not in the CSV. The Sync screen counts them. Fields the app does not know are allowed and kept.
+- A change to the format raises `v` (in `records.js`) and teaches `schema.js` to read the older versions.
+
+Profile (feature 002): one record per baby with `type: 'profile'`. Its `id` is the baby's id (the first profile has `id: 'profile'`, later ones a random id) and its `babyId` is the same. It merges like every other entry (newest `updatedAt` wins). `d` has `nickname` (up to 20 characters), `dateOfBirth` (`YYYY-MM-DD`), `sex` (`'girl'` or `'boy'`, picks the WHO tables) and `photo` (a small square JPEG as a `data:` URL, or an empty string). `t` is when it was first saved. It is not a log entry, so lists and totals ignore it.
 
 Feed details inside `d` (features 006, 007, 012):
 - Breast: `kind: 'Breast'`, `side: 'Left' | 'Right' | 'Both'`, `min` (total whole minutes), and optional `leftMin` and `rightMin` (whole minutes per side). When the per-side fields are present, `min = leftMin + rightMin`. Entries saved before feature 012 have only `side` and `min`.
@@ -35,7 +42,7 @@ Feed details inside `d` (features 006, 007, 012):
 Sleep details inside `d` (features 003, 004): `source: 'live'` (tapped Start sleep / Wake up as it happened) or `'manual'` (added afterwards). A running sleep has `end: null`.
 
 - Never overwrite history silently. To remove an entry, set `deleted: true` and update `updatedAt`.
-- Keep a CSV export. One row per entry, with readable columns. The first version of the columns is in the earlier prototype's export; keep those names.
+- Keep a CSV export. One row per entry, with readable columns. The first version of the columns is in the earlier prototype's export; keep those names. New columns go at the end (`baby_id` and `baby` name each row's baby).
 - Do not store anything that would lock the data into one backend. The same JSON must be easy to move to another database later.
 
 ## Sync with Google Drive

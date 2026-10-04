@@ -7,6 +7,7 @@
   var Auth = root.BABYLOG_GOOGLE_AUTH;
   var Drive = root.BABYLOG_DRIVE;
   var Csv = root.BABYLOG_CSV;
+  var Sc = root.BABYLOG_SCHEMA;
   var store = root.BABYLOG_STORE;
   var PUSH_DELAY_MS = 3000;               // wait a moment after a change, so a burst of changes is sent once
   var PULL_EVERY_MS = 3 * 60 * 1000;
@@ -19,6 +20,7 @@
   var lastSynced = null;
   var running = false, again = false, timer = null;
   var lastError = '';         // the technical reason of the last failure, shown on the screen so it can be reported
+  var listeners = [];         // told about every change of state (the Babies screen shows it)
 
   function $(id) { return document.getElementById(id); }
 
@@ -47,7 +49,13 @@
     $('sync-card').setAttribute('data-state', state);
   }
 
-  function setState(next) { state = next; render(); }
+  function setState(next) {
+    state = next;
+    render();
+    listeners.forEach(function (fn) { fn(state); });
+  }
+  function onState(fn) { listeners.push(fn); }
+  function status() { return { state: state, label: LABEL[state] }; }
 
   // Sync runs only while the sign-in is good. It never opens Google's window by itself.
   function canRun() { return !!engine && auth.isSignedIn(); }
@@ -65,8 +73,8 @@
     });
     return Promise.race([engine.sync(), limit]).then(function (result) {
       lastSynced = Date.now();
+      if (result.merged > 0) ctx.dataChanged();      // entries came from the other phone
       setState('synced');
-      if (result.merged > 0) ctx.renderToday();      // entries came from the other phone
     }).catch(function (err) {
       console.warn('[baby-log] sync', err);
       if (err.code === 'auth') { auth.forget(); again = false; }
@@ -119,8 +127,19 @@
     });
   }
 
+  // Entries this app cannot show are kept and synced, but the parent should know they are there.
+  function renderUnreadable() {
+    store.all().then(function (records) {
+      var n = Sc.unreadable(records), parts = [];
+      if (n.newer) parts.push(n.newer + (n.newer === 1 ? ' entry comes' : ' entries come') + ' from a newer version of the app. Close the app and open it again to update.');
+      if (n.invalid) parts.push(n.invalid + (n.invalid === 1 ? ' entry' : ' entries') + ' could not be read.');
+      $('sy-unreadable').hidden = !parts.length;
+      $('sy-unreadable').textContent = parts.length ? parts.join(' ') + ' They are kept safe and are not shown.' : '';
+    }).catch(function (err) { console.error('[baby-log] check entries', err); });
+  }
+
   // ---- Screen ----
-  function show() { $('screen-sync').hidden = false; }
+  function show() { $('screen-sync').hidden = false; renderUnreadable(); }
   function hide() { $('screen-sync').hidden = true; }
 
   function init(context) {
@@ -149,5 +168,5 @@
     setInterval(tick, PULL_EVERY_MS);
   }
 
-  root.BABYLOG_SYNC_UI = { init: init, show: show, hide: hide };
+  root.BABYLOG_SYNC_UI = { init: init, show: show, hide: hide, signIn: signIn, onState: onState, status: status };
 })(typeof self !== 'undefined' ? self : this);

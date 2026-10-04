@@ -1,12 +1,17 @@
-// The baby profile screen (#profile) and the header on Today (feature 002).
-// The rules and the record are in profile.js. This file draws, listens, and saves.
+// The baby profile screen and the header on Today (feature 002). The rules and the record are in profile.js.
+// This file draws, listens, and saves. Feature 014 (more than one baby):
+//   #profile/new   adds a baby, with a new random id
+//   #profile/<id>  edits that baby (or adds the details of a baby known only from its entries)
+//   #profile       edits the current baby
 (function (root) {
   var R = root.BABYLOG_RECORDS;
   var Pr = root.BABYLOG_PROFILE;
   var store = root.BABYLOG_STORE;
+  var BABY = root.BABYLOG_BABY;
   var PHOTO_SIZE = 256;          // the photo is shrunk to a square of this size (about 20 KB), so it syncs like any other entry
 
   var ctx = null;                // { toast, setBusy } from app.js
+  var babyId = null;             // the baby on this screen (a new baby gets its random id when the screen opens)
   var existing = null;           // the saved profile record, or null
   var form = Pr.details(null);   // what is on the screen now
   var open = false;
@@ -21,9 +26,9 @@
   }
 
   // ---- Today header ----
-  // "Sat 3 Oct · 3 weeks old", and the nickname. Before a profile is saved: the date and "[Nickname]".
+  // "Sat 3 Oct · 3 weeks old", and the nickname of the current baby. Tapping it opens the Babies screen.
   function renderHead(records) {
-    var d = Pr.details(Pr.current(records));
+    var d = Pr.details(Pr.current(records, BABY.id()));
     var now = Date.now();
     var age = Pr.ageText(d.dateOfBirth, now);
     $('bh-sub').textContent = R.dateLabel(now) + (age ? ' · ' + age : '');
@@ -76,12 +81,17 @@
     if (saving || !Pr.isComplete(form)) return;
     saving = true;
     render();
+    var id = babyId;
+    var added = !existing;
     store.deviceId().then(function (deviceId) {
-      return store.put(Pr.toRecord(existing, form, Date.now(), deviceId));
+      return store.put(Pr.toRecord(existing, form, Date.now(), deviceId, id));
+    }).then(function () {
+      // A baby just added is the one to log for now. Editing another baby's details does not switch to it.
+      if (added) return BABY.choose(id);
     }).then(function () {
       saving = false;
       ctx.toast('Profile saved');
-      location.hash = '#today';
+      location.hash = id === BABY.id() ? '#today' : '#babies';
     }).catch(function (err) {
       saving = false;
       render();
@@ -90,14 +100,18 @@
     });
   }
 
-  function show() {
+  function show(arg) {
     var screen = $('screen-profile');
     screen.hidden = false;
     screen.removeAttribute('data-ready');
     if (!open) { open = true; ctx.setBusy(true); }      // an update waits while the form is open
+    var id;
+    try { id = decodeURIComponent(arg || ''); } catch (err) { id = 'new'; }   // a broken link adds a new baby
+    babyId = id === 'new' || !(id || BABY.id()) ? crypto.randomUUID() : id || BABY.id();
     store.all().then(function (records) {
       if (screen.hidden) return;
-      existing = Pr.current(records);
+      existing = Pr.current(records, babyId);
+      $('h-profile').textContent = existing ? 'Baby profile' : 'Add a baby';
       form = Pr.details(existing);
       $('pf-nickname').value = form.nickname;
       $('pf-dob').value = form.dateOfBirth;

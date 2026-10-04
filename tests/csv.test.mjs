@@ -9,7 +9,7 @@ import { build } from '../scripts/build.mjs';
 
 const out = build({ env: 'test', out: join(mkdtempSync(join(tmpdir(), 'baby-log-csv-')), 'test'), version: 't1' });
 const sandbox = { self: {} };
-vm.runInNewContext(readFileSync(join(out, 'csv.js'), 'utf8'), sandbox);
+for (const f of ['records.js', 'schema.js', 'csv.js']) vm.runInNewContext(readFileSync(join(out, f), 'utf8'), sandbox);
 const { BABYLOG_CSV: Csv } = sandbox.self;
 
 const at = (h, m = 0) => new Date(2026, 9, 3, h, m).getTime();
@@ -19,7 +19,7 @@ const lines = (records) => Csv.toCsv(records).trim().split('\n');
 test('the first 22 columns are the prototype\'s, in order, and new ones come after', () => {
   const header = lines([])[0].split(',');
   assert.equal(header.slice(0, 22).join(','), 'date,time,start_iso,type,duration_min,pee_amount,poop_colour,poop_texture,poop_size,feed_kind,feed_side,feed_milk,feed_ml,feed_minutes,sleep_place,cry_level,cry_helped,weight_g,height_cm,head_cm,note,logged_by');
-  assert.equal(header.slice(22).join(','), 'feed_left_min,feed_right_min,sleep_source');
+  assert.equal(header.slice(22).join(','), 'feed_left_min,feed_right_min,sleep_source,baby_id,baby');
 });
 
 test('one row per entry, oldest first; removed entries and the profile are left out', () => {
@@ -57,4 +57,20 @@ test('feed, sleep: the fields land in the right columns', () => {
 test('notes with commas, quotes and line breaks are quoted', () => {
   const row = Csv.toCsv([rec('a', 'pee', at(10), { note: 'wet, "a lot"\nnext line', by: 'Mum' })]);
   assert.match(row, /"wet, ""a lot""\nnext line",Mum/);
+});
+
+test('every row names its baby; entries from before feature 014 belong to the baby "profile"; unreadable entries are left out', () => {
+  const header = lines([])[0].split(',');
+  const col = (row, name) => row.split(',')[header.indexOf(name)];
+  const rows = lines([
+    rec('baby-2', 'profile', at(1), { v: 2, babyId: 'baby-2', d: { nickname: 'Pip' } }),
+    rec('profile', 'profile', at(1), { d: { nickname: 'Bean' } }),
+    rec('a', 'pee', at(9)),
+    rec('b', 'poop', at(10), { v: 2, babyId: 'baby-2' }),
+    rec('c', 'feed', at(11), { v: 3, babyId: 'baby-3' }),          // from a newer version of the app
+    rec('d', 'feed', 'noon')                                        // broken
+  ]);
+  assert.equal(rows.length, 3, 'a header and two rows');
+  assert.deepEqual([col(rows[1], 'baby_id'), col(rows[1], 'baby')], ['profile', 'Bean']);
+  assert.deepEqual([col(rows[2], 'baby_id'), col(rows[2], 'baby')], ['baby-2', 'Pip']);
 });

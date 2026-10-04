@@ -2,7 +2,7 @@
 // Google's sign-in script is replaced by a small stub, and the Drive calls are answered by tests/fake-drive.mjs.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { startSite, phone, install, seed, readRecords } from './helpers.mjs';
+import { startSite, phone, install, seed, readRecords, fakeGoogle } from './helpers.mjs';
 import { createFakeDrive } from '../fake-drive.mjs';
 
 let origin, browser, close;
@@ -15,38 +15,15 @@ const at = (h, m = 0) => new Date(2026, 9, 3, h, m).getTime();
 const rec = (id, type, t, extra = {}) => ({ id, type, t, end: null, d: {}, note: '', by: '', deviceId: 'seed', updatedAt: t, ...extra });
 const text = (page, sel) => page.textContent(sel).then((s) => s.trim());
 
-// Google's sign-in script, as a stub. Every call is one opening of Google's window on a real phone: it is counted
-// in window.__googleWindows, so the tests can check that the app never opens it by itself.
-const GOOGLE_STUB = `window.__googleWindows = 0;
-window.google = { accounts: { oauth2: { initTokenClient(cfg) { return { requestAccessToken(opts) {
-  window.__googleWindows++;
-  setTimeout(() => cfg.callback({ access_token: window.__stubToken || 'good-token', expires_in: 3600 }), 5);
-} }; } } } };`;
 const googleWindows = (page) => page.evaluate(() => window.__googleWindows || 0);
 
 // A phone that talks to the fake Drive. `configured: false` leaves the placeholder client ID in place.
-async function startPhone(fake, { configured = true, running = false, driveSilent = false } = {}) {
+async function startPhone(fake, { configured = true, running = false, driveSilent = false, baby = true } = {}) {
   const p = await phone(browser);
   if (running) await p.context.clock.install({ time: NOW });     // a clock that can be moved forward
   else await p.context.clock.setFixedTime(NOW);
-  // The build holds the real client ID. Tests use a made-up one (so no real Google sign-in is tried), or the placeholder (sync off).
-  await p.context.addInitScript((clientId) => {
-    let cfg;
-    Object.defineProperty(window, 'BABYLOG_CONFIG', { configurable: true, get: () => cfg, set: (v) => { cfg = { ...v, googleClientId: clientId }; } });
-  }, configured ? 'test-client.apps.googleusercontent.com' : 'PLACEHOLDER');
-  p.googleCalls = [];
-  await p.context.route('https://accounts.google.com/gsi/client', (r) => r.fulfill({ contentType: 'text/javascript', body: GOOGLE_STUB }));
-  await p.context.route('https://www.googleapis.com/**', async (route) => {
-    const req = route.request();
-    p.googleCalls.push(req.method());
-    const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'authorization,content-type', 'access-control-allow-methods': 'GET,POST,PATCH,OPTIONS' };
-    if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
-    if (fake.offline) return route.abort('failed');
-    if (driveSilent) return;                                    // Google never answers
-    const r = fake.handle(req.method(), req.url(), req.headers(), req.postData() || '');
-    return route.fulfill({ status: r.status, contentType: r.contentType, body: r.body, headers: cors });
-  });
-  await install(p.page, url());
+  await fakeGoogle(p, fake, { configured, driveSilent });
+  await install(p.page, url(), { baby });
   return p;
 }
 // An entry written by THIS phone (sync only sends a phone's own entries).
@@ -194,7 +171,7 @@ test('the CSV and JSONL downloads hold the entries', async () => {
   assert.doesNotMatch(csvText, /,pee,/, 'a removed entry is not in the CSV');
   const [jsonl] = await Promise.all([a.page.waitForEvent('download'), a.page.click('#sy-jsonl')]);
   const lines = (await (await import('node:fs/promises')).readFile(await jsonl.path(), 'utf8')).trim().split('\n').map((l) => JSON.parse(l));
-  assert.deepEqual(lines.map((l) => l.id).sort(), ['f1', 'x'], 'JSONL has every entry, removed ones too');
+  assert.deepEqual(lines.map((l) => l.id).sort(), ['baby-bean', 'f1', 'x'], 'JSONL has every entry: the baby\'s profile, and removed ones too');
   assert.deepEqual(a.errors, []);
   await a.context.close();
 });

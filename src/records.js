@@ -2,6 +2,7 @@
 // No browser APIs here, so tests can load this file directly.
 (function (root) {
   var TYPES = ['feed', 'sleep', 'pee', 'poop', 'cry', 'growth', 'profile'];
+  var VERSION = 2;                         // the record format version (schema.js). 2 added babyId (feature 014)
   var DAY_START_HOUR = 6;                  // "Today" runs 6 am to 6 am (feature 008)
   var NAPPY_PAIR_MS = 2 * 60 * 1000;       // a wee and a poo this close are one nappy
 
@@ -9,10 +10,13 @@
     if (TYPES.indexOf(o.type) < 0) throw new Error('Unknown record type: ' + o.type);
     if (!o.id) throw new Error('Record needs an id');
     if (!o.deviceId) throw new Error('Record needs a deviceId');
+    if (!o.babyId) throw new Error('Record needs a babyId');
     if (!isFinite(o.t) || !isFinite(o.now)) throw new Error('Record needs t and now in ms');
     return {
+      v: VERSION,
       id: String(o.id),
       type: o.type,
+      babyId: String(o.babyId),
       t: o.t,
       end: o.end == null ? null : o.end,
       d: o.d || {},
@@ -183,7 +187,7 @@
   }
 
   root.BABYLOG_RECORDS = {
-    TYPES: TYPES, NAPPY_PAIR_MS: NAPPY_PAIR_MS,
+    TYPES: TYPES, VERSION: VERSION, NAPPY_PAIR_MS: NAPPY_PAIR_MS,
     makeRecord: makeRecord, isNewer: isNewer, tombstone: tombstone, dayWindow: dayWindow,
     nappyRows: nappyRows, nappyLabel: nappyLabel, feedLabel: feedLabel, timelineRows: timelineRows, lastFeed: lastFeed, latestFeed: latestFeed, agoText: agoText,
     revise: revise, withFields: withFields, sameContent: sameContent, hhmm: hhmm, timeInDay: timeInDay,

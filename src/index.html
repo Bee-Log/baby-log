@@ -14,6 +14,7 @@
   <script src="nav.js"></script>
   <script src="icons.js"></script>
   <script src="records.js"></script>
+  <script src="schema.js"></script>
   <script src="summary.js"></script>
   <script src="sync.js"></script>
   <script src="csv.js"></script>
@@ -21,6 +22,7 @@
   <script src="google-auth.js"></script>
   <script src="profile.js"></script>
   <script src="store.js"></script>
+  <script src="baby.js"></script>
   <script src="feed.js"></script>
   <script src="sleep.js"></script>
   <script src="pastsleep.js"></script>
@@ -31,6 +33,7 @@
   <script src="sleep-ui.js"></script>
   <script src="profile-ui.js"></script>
   <script src="sync-ui.js"></script>
+  <script src="babies-ui.js"></script>
   <script src="summary-ui.js"></script>
 </head>
 <body>
@@ -38,9 +41,10 @@
 
   <main>
     <section class="view" id="view-today" data-tab="today" aria-labelledby="h-today">
-      <a class="baby-head" id="baby-head" href="#profile" aria-label="Open baby profile">
+      <a class="baby-head" id="baby-head" href="#babies" aria-label="Choose a baby">
         <span class="baby-photo" id="bh-photo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg></span>
         <span class="baby-text"><span class="baby-sub" id="bh-sub"></span><span class="baby-name" id="bh-name">[Nickname]</span></span>
+        <svg class="baby-switch" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
       </a>
       <div class="last-feed" id="last-feed">
         <span class="last-feed-label">Last feed</span>
@@ -324,7 +328,7 @@
 
   <section class="screen" id="screen-profile" aria-labelledby="h-profile" hidden>
     <header class="screen-head">
-      <a class="round-btn" href="#today" aria-label="Back">
+      <a class="round-btn" href="#babies" aria-label="Back">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
       </a>
       <h1 id="h-profile">Baby profile</h1>
@@ -387,7 +391,27 @@
       <p class="sync-detail">Download every entry from this phone. The files can be opened in a spreadsheet or kept as a backup.</p>
       <button type="button" class="sync-btn" id="sy-csv">Download CSV (spreadsheet)</button>
       <button type="button" class="sync-btn" id="sy-jsonl">Download JSONL (all entries)</button>
+      <p class="sync-error" id="sy-unreadable" hidden></p>
     </div>
+  </section>
+
+  <section class="screen" id="screen-babies" aria-labelledby="h-babies" hidden>
+    <header class="screen-head">
+      <a class="round-btn" id="bb-back" href="#today" aria-label="Back">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+      </a>
+      <h1 id="h-babies">Babies</h1>
+      <span class="round-spacer"></span>
+    </header>
+    <p class="bb-intro" id="bb-intro" hidden></p>
+    <div class="sync-card" id="bb-signin-card" hidden>
+      <h2 class="sync-state">Using Baby Log on another phone?</h2>
+      <p class="sync-detail">Sign in with the shared Google account to load your baby from there.</p>
+      <button type="button" class="sync-btn primary" id="bb-signin">Sign in with Google</button>
+      <p class="sync-detail" id="bb-sync-state" hidden></p>
+    </div>
+    <ul class="bb-list" id="bb-list"></ul>
+    <button type="button" class="sync-btn" id="bb-add">Add a baby</button>
   </section>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden>

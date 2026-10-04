@@ -1,13 +1,13 @@
 // Feature 005: log a wee or a poo with one tap, fix a wrong tap from the list, and keep TEST data apart from LIVE.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { startSite, phone, state, open, install, todayRows } from './helpers.mjs';
+import { startSite, phone, state, open, install, todayRows, TEST_BABY } from './helpers.mjs';
 
 let origin, site, browser, close;
 before(async () => ({ origin, site, browser, close } = await startSite({ 'test-v1': 'test', 'test-v2': 'test', 'live-v1': 'live' })));
 after(() => close?.());
 
-// Every record in this build's own database, read the way the app stores them.
+// Every entry in this build's own database, read the way the app stores them (without the test baby's profile).
 function storedRecords(page, dbName) {
   return page.evaluate((name) => new Promise((resolve, reject) => {
     const req = indexedDB.open(name);
@@ -15,7 +15,7 @@ function storedRecords(page, dbName) {
       const db = req.result;
       if (!db.objectStoreNames.contains('records')) { db.close(); resolve([]); return; }
       const get = db.transaction('records').objectStore('records').getAll();
-      get.onsuccess = () => { db.close(); resolve(get.result); };
+      get.onsuccess = () => { db.close(); resolve(get.result.filter((r) => r.type !== 'profile')); };
       get.onerror = () => reject(get.error);
     };
     req.onerror = () => reject(req.error);
@@ -45,8 +45,10 @@ test('one tap logs a wee or a poo; both together show as one nappy; it survives 
   const recs = await storedRecords(page, 'test-baby-log');
   assert.deepEqual(recs.map((r) => r.type).sort(), ['pee', 'poop'], 'two records, one per tap');
   for (const r of recs) {
-    assert.deepEqual(Object.keys(r).sort(), ['by', 'd', 'deviceId', 'end', 'id', 'note', 't', 'type', 'updatedAt']);
+    assert.deepEqual(Object.keys(r).sort(), ['babyId', 'by', 'd', 'deviceId', 'end', 'id', 'note', 't', 'type', 'updatedAt', 'v']);
     assert.equal(r.deviceId, recs[0].deviceId, 'one device id per phone');
+    assert.equal(r.babyId, TEST_BABY, 'it belongs to the baby on screen');
+    assert.equal(r.v, 2);
   }
 
   await open(page, url);

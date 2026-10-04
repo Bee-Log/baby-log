@@ -78,7 +78,7 @@ test('bottle: change the amount, milk, time and note; it works offline', async (
   assert.ok(saved.updatedAt > original.updatedAt, 'newer, so it wins the merge');
   assert.notEqual(saved.deviceId, 'other-phone', 'now this phone');
   assert.equal(saved.note, 'half asleep');
-  assert.equal((await readRecords(page)).length, 1, 'edited in place, not copied');
+  assert.equal((await readRecords(page)).filter((r) => r.type === 'feed').length, 1, 'edited in place, not copied');
 
   assert.deepEqual(errors, []);
   await context.close();

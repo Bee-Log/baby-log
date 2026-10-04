@@ -3,6 +3,8 @@
   var nav = self.BABYLOG_NAV;
   var R = self.BABYLOG_RECORDS;
   var store = self.BABYLOG_STORE;
+  var BABY = self.BABYLOG_BABY;
+  var Sc = self.BABYLOG_SCHEMA;
   var isTest = cfg.env === 'test';
 
   if (isTest) {
@@ -28,18 +30,20 @@
   var PROFILE_UI = self.BABYLOG_PROFILE_UI;
   var SYNC_UI = self.BABYLOG_SYNC_UI;
   var SUMMARY_UI = self.BABYLOG_SUMMARY_UI;
+  var BABIES_UI = self.BABYLOG_BABIES_UI;
+  var ALL_SCREENS = [FEED_UI, EDIT_UI, SLEEP_EDIT_UI, SLEEP_UI, PROFILE_UI, SYNC_UI, BABIES_UI];
+  var NO_BABY_NEEDED = ['babies', 'profile', 'sync'];   // the only screens that open before a baby is chosen (feature 014)
+
   // #edit/<ids>: a feed is edited on the Feed screen, a sleep on the Edit sleep screen, a nappy on its own small Edit screen.
   function openEdit(arg, hashAtStart) {
-    FEED_UI.hide();
-    EDIT_UI.hide();
-    SLEEP_EDIT_UI.hide();
     var first = String(arg).split('+')[0];
     try { first = decodeURIComponent(first); } catch (err) { /* a broken link just finds nothing */ }
     store.getRecord(first).then(function (rec) {
       if (location.hash !== hashAtStart) return; // the parent already moved on
+      if (rec && (Sc.problem(rec) || Sc.babyOf(rec) !== BABY.id())) rec = null;   // only the current baby's entries open
       if (rec && rec.type === 'feed') FEED_UI.show({ editId: rec.id });
       else if (rec && rec.type === 'sleep') SLEEP_EDIT_UI.show(rec.id);
-      else EDIT_UI.show(arg);
+      else EDIT_UI.show(rec ? arg : '');
     }).catch(function (err) {
       console.error('[baby-log] edit lookup', err);
       toast('Could not read saved entries. Close the app and open it again.');
@@ -48,25 +52,22 @@
 
   function route() {
     var screen = nav.screenFromHash(location.hash);
+    // Nothing is logged or shown without a baby: until one is chosen, every other screen goes to the Babies screen.
+    if (!BABY.id() && NO_BABY_NEEDED.indexOf(screen) < 0) { location.replace('#babies'); return; }
     document.body.classList.toggle('on-screen', !!screen);
+    ALL_SCREENS.forEach(function (ui) { ui.hide(); });
     if (screen) {
       var hidden = document.querySelectorAll('.view');
       for (var h = 0; h < hidden.length; h++) hidden[h].hidden = true;
-      FEED_UI.hide(); EDIT_UI.hide(); SLEEP_EDIT_UI.hide(); SLEEP_UI.hide(); PROFILE_UI.hide(); SYNC_UI.hide();
       if (screen === 'feed') FEED_UI.show();
       else if (screen === 'sleep') SLEEP_UI.show();
-      else if (screen === 'profile') PROFILE_UI.show();
+      else if (screen === 'profile') PROFILE_UI.show(nav.argFromHash(location.hash));
       else if (screen === 'sync') SYNC_UI.show();
+      else if (screen === 'babies') BABIES_UI.show();
       else openEdit(nav.argFromHash(location.hash), location.hash);
       window.scrollTo(0, 0);
       return;
     }
-    FEED_UI.hide();
-    EDIT_UI.hide();
-    SLEEP_EDIT_UI.hide();
-    SLEEP_UI.hide();
-    PROFILE_UI.hide();
-    SYNC_UI.hide();
     var tab = nav.tabFromHash(location.hash);
     var views = document.querySelectorAll('.view');
     for (var i = 0; i < views.length; i++) views[i].hidden = views[i].getAttribute('data-tab') !== tab;
@@ -122,7 +123,7 @@
   }
 
   function renderToday() {
-    return store.all().then(function (records) {
+    return BABY.records().then(function (records) {
       PROFILE_UI.renderHead(records); // the baby's photo and name at the top
       SLEEP_UI.renderToday(records); // the sleep card above the buttons
       feedRecord = R.latestFeed(records);
@@ -145,7 +146,7 @@
   function log(type) {
     var now = Date.now();
     store.deviceId().then(function (deviceId) {
-      var rec = R.makeRecord({ id: crypto.randomUUID(), type: type, t: now, now: now, deviceId: deviceId });
+      var rec = R.makeRecord({ id: crypto.randomUUID(), type: type, babyId: BABY.id(), t: now, now: now, deviceId: deviceId });
       return store.put(rec);
     }).then(function () {
       // Show the entry in the list first, then confirm, so the message never runs ahead of the screen.
@@ -180,15 +181,20 @@
     toastTimer = setTimeout(function () { toastEl.hidden = true; }, 3500);
   }
 
-  var shared = { toast: toast, renderToday: renderToday, setBusy: setBusy, commitEdit: commitEdit };
-  FEED_UI.init(shared);
-  EDIT_UI.init(shared);
-  SLEEP_UI.init(shared);
-  SLEEP_EDIT_UI.init(shared);
-  PROFILE_UI.init(shared);
-  SYNC_UI.init(shared);
-  SUMMARY_UI.init(shared);
-  route();
+  // Entries came from the other phone. The babies may have changed too (the first one loaded, or a new one), so read them again.
+  function dataChanged() {
+    return BABY.load().then(function () {
+      if (!BABY.id()) route();
+      else renderToday();
+    }).catch(function (err) { console.error('[baby-log] after sync', err); });
+  }
+
+  var shared = { toast: toast, renderToday: renderToday, setBusy: setBusy, commitEdit: commitEdit, dataChanged: dataChanged };
+  ALL_SCREENS.concat([SUMMARY_UI]).forEach(function (ui) { ui.init(shared); });
+  BABY.load().catch(function (err) {
+    console.error('[baby-log] start', err);
+    toast('Could not read saved entries. Close the app and open it again.');
+  }).then(route);
 
   // ---- Offline support ----
   var status = document.getElementById('status');
