@@ -49,7 +49,7 @@ Full reasoning and rejected options: `docs/adr/ADR-001-data-storage-and-sync.md`
 - **Push** after a change (short debounce) and when the network returns. **Pull** when the app opens, when the network returns, and every few minutes while open. A pull lists `devices/*.jsonl`, downloads the files that changed since the last pull, and merges each line into the phone store.
 - **Merge rule.** Match by `id`. The larger `updatedAt` wins. A tombstone wins over an older live record. If `updatedAt` is equal, the record whose `deviceId` sorts higher wins, so every phone reaches the same result.
 - **New or reset phone:** sign in, pull all files, merge, continue.
-- **Sign-in tokens** last about one hour. Renew them quietly. Show a small "Sign in again" button only if renewal fails.
+- **Sign-in tokens** last about one hour and live in memory only. Open Google's sign-in window **only from a tap**: on phones even a "quiet" renewal opens a window, and doing it automatically caused a loop (2026-10-04). Without a good token, show "Sign in to sync" and wait.
 - **Status shown to the user:** synced, waiting for network, or sign-in needed.
 - **Export.** Keep the CSV export (prototype column names) and add a JSONL export of all records. The hidden folder cannot be browsed, so the export buttons are the way to get the data out. DuckDB is for later analysis only, not used inside the app.
 

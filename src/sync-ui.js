@@ -8,7 +8,6 @@
   var Drive = root.BABYLOG_DRIVE;
   var Csv = root.BABYLOG_CSV;
   var store = root.BABYLOG_STORE;
-  var SIGNED_IN_KEY = 'syncSignedIn';     // only a yes/no hint that this phone signed in before. The token itself is never stored.
   var PUSH_DELAY_MS = 3000;               // wait a moment after a change, so a burst of changes is sent once
   var PULL_EVERY_MS = 3 * 60 * 1000;
   var SYNC_TIMEOUT_MS = 60000;            // a sync that has not finished in a minute is treated as failed, so it can be tried again
@@ -29,7 +28,7 @@
   };
   var DETAIL = {
     off: 'Your entries are saved on this phone. Sync will switch on when the shared Google account is ready.',
-    signin: 'Sign in with the shared Google account to send and receive entries.',
+    signin: 'Tap Sign in to send and receive entries. Your entries are safe on this phone. Google asks again about once an hour.',
     syncing: 'Sending and receiving entries.',
     synced: 'Entries from both phones are up to date.',
     offline: 'Your entries are safe on this phone. They will be sent when the network is back.',
@@ -50,9 +49,13 @@
 
   function setState(next) { state = next; render(); }
 
+  // Sync runs only while the sign-in is good. It never opens Google's window by itself.
+  function canRun() { return !!engine && auth.isSignedIn(); }
+
   // Send ours, read theirs. A change that arrives while this runs makes it run once more.
   function run() {
     if (!engine) return Promise.resolve();
+    if (!auth.isSignedIn()) { setState('signin'); return Promise.resolve(); }
     if (running) { again = true; return Promise.resolve(); }
     running = true;
     lastError = '';
@@ -63,15 +66,16 @@
     return Promise.race([engine.sync(), limit]).then(function (result) {
       lastSynced = Date.now();
       setState('synced');
-      store.setMeta(SIGNED_IN_KEY, true);
       if (result.merged > 0) ctx.renderToday();      // entries came from the other phone
     }).catch(function (err) {
       console.warn('[baby-log] sync', err);
+      if (err.code === 'auth') { auth.forget(); again = false; }
       lastError = (err.code ? err.code + ': ' : '') + (err.message || String(err));
       setState(err.code === 'auth' ? 'signin' : err.code === 'offline' ? 'offline' : 'error');
     }).then(function () {
       running = false;
-      if (again) { again = false; return run(); }
+      if (again && canRun()) { again = false; return run(); }
+      again = false;
     });
   }
 
@@ -83,8 +87,9 @@
     });
   }
 
+  // Something changed on this phone: send it soon, if signed in.
   function schedulePush() {
-    if (!engine || state === 'signin') return;
+    if (!canRun()) return;
     clearTimeout(timer);
     timer = setTimeout(run, PUSH_DELAY_MS);
   }
@@ -130,14 +135,18 @@
     var backend = Drive.create({ getToken: auth.getToken, fetch: root.fetch.bind(root) });
     store.deviceId().then(function (deviceId) {
       engine = Sync.create({ backend: backend, store: store, root: cfg.driveFolder, deviceId: deviceId });
-      return store.getMeta(SIGNED_IN_KEY);
-    }).then(function (signedBefore) {
-      if (signedBefore) run(); else setState('signin');   // signed in before: renew quietly now. Otherwise ask.
+      setState('signin');           // the sign-in lives in memory only, so a newly opened app always starts here
     });
     store.onChange(schedulePush);
-    root.addEventListener('online', run);
-    document.addEventListener('visibilitychange', function () { if (!document.hidden && state !== 'signin') run(); });
-    setInterval(function () { if (!document.hidden && state !== 'signin') run(); }, PULL_EVERY_MS);
+    // Coming back to the app, the network coming back, and every few minutes: sync if signed in, else just say so.
+    function tick() {
+      if (document.hidden || !engine) return;
+      if (canRun()) run();
+      else if (state !== 'signin' && state !== 'syncing') setState('signin');
+    }
+    root.addEventListener('online', tick);
+    document.addEventListener('visibilitychange', tick);
+    setInterval(tick, PULL_EVERY_MS);
   }
 
   root.BABYLOG_SYNC_UI = { init: init, show: show, hide: hide };
