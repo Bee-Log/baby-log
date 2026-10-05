@@ -3,7 +3,7 @@
 // serves everything offline and the phone's back button moves between them.
 (function (root) {
   var TABS = ['today', 'summary', 'growth'];
-  var SCREENS = ['feed', 'edit', 'sleep', 'profile', 'sync', 'babies']; // full screens: no tab bar. #edit/<ids> edits an entry (011), #sleep is the Sleep page (003), #profile/<id> is a baby profile (002), #sync is Sync and data, #babies chooses the baby (014)
+  var SCREENS = ['feed', 'edit', 'sleep', 'profile', 'sync', 'babies', 'measure']; // full screens: no tab bar. #edit/<ids> edits an entry (011), #sleep is the Sleep page (003), #profile/<id> is a baby profile (002), #sync is Sync and data, #babies chooses the baby (014), #measure adds a weight and length (010)
   var DEFAULT_TAB = 'today';
 
   function tabFromHash(hash) {

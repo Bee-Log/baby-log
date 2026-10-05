@@ -25,6 +25,8 @@ const DATA = [                                                // for the test ba
   r('s1', 'sleep', at(12, 0), { end: at(13, 40), d: { source: 'manual' } }),
   r('s2', 'sleep', at(9, 0), { end: at(9, 50), d: { source: 'live' } }),
   r('s3', 'sleep', at(23, 0, 2), { end: at(2, 10, 3), d: { source: 'manual' } }),
+  ...[[12, 3400, 50], [19, 3600, 51], [26, 3950, 52.5]].map(([day, weight, height], i) => r(`g${i}`, 'growth', new Date(2026, 8, day, 10).getTime(), { d: { weight, height } })),
+  r('g3', 'growth', at(10), { d: { weight: 4200, height: 54 } }),
   ...[1, 2].map((d) => [8, 11, 14, 17, 20].slice(0, 3 + d).map((h, i) => r(`y${d}${i}`, 'feed', at(h, 0, 3 - d), { d: { kind: 'Breast', side: 'Left', min: 10 } }))).flat()
 ];
 const TIMER_KEY = 'breastTimer:' + TEST_BABY;
@@ -86,8 +88,10 @@ await p.page.goto(origin + '/baby-log/test/#summary'); await p.page.waitForTimeo
 await shot(p.page, '13-summary');
 await p.page.goto(origin + '/baby-log/test/#profile'); await p.page.waitForSelector('#screen-profile[data-ready]'); await pause(p.page);
 await shot(p.page, '14-profile', { fullPage: true });
-await p.page.goto(origin + '/baby-log/test/#growth'); await pause(p.page);
-await shot(p.page, '15-growth-not-built-yet');
+await p.page.goto(origin + '/baby-log/test/#growth'); await p.page.waitForSelector('#gr-history .gr-row'); await pause(p.page);
+await shot(p.page, '15-growth');
+await p.page.goto(origin + '/baby-log/test/#measure'); await p.page.waitForSelector('#screen-measure[data-ready]'); await pause(p.page);
+await shot(p.page, '15b-add-measurement');
 await p.context.close();
 
 // Today while asleep (a sleep is running)

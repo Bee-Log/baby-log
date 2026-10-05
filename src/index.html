@@ -21,6 +21,8 @@
   <script src="drive.js"></script>
   <script src="google-auth.js"></script>
   <script src="profile.js"></script>
+  <script src="who-data.js"></script>
+  <script src="growth.js"></script>
   <script src="store.js"></script>
   <script src="baby.js"></script>
   <script src="feed.js"></script>
@@ -35,6 +37,7 @@
   <script src="sync-ui.js"></script>
   <script src="babies-ui.js"></script>
   <script src="summary-ui.js"></script>
+  <script src="growth-ui.js"></script>
 </head>
 <body>
   <div id="test-banner" class="test-banner" hidden>TEST version. Data here is kept apart from the real app.</div>
@@ -102,8 +105,39 @@
       </div>
     </section>
     <section class="view" id="view-growth" data-tab="growth" aria-labelledby="h-growth" hidden>
-      <h1 id="h-growth">Growth</h1>
-      <p class="lead">Weight and length will show here.</p>
+      <div class="gr-head">
+        <h1 id="h-growth">Growth</h1>
+        <a class="gr-add" href="#measure"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Add</a>
+      </div>
+      <div class="gr-standard">
+        <span>Using the WHO standard for <strong id="gr-sex">girls</strong>, from the baby profile</span>
+        <a href="#profile">Edit</a>
+      </div>
+      <div class="gr-cards">
+        <div class="gr-card"><div class="gr-card-name">Weight</div><div class="gr-big" id="gr-weight">—</div><div class="gr-change" id="gr-weight-change"></div><div class="gr-pct" id="gr-weight-pct" hidden></div></div>
+        <div class="gr-card"><div class="gr-card-name">Length</div><div class="gr-big" id="gr-length">—</div><div class="gr-change" id="gr-length-change"></div><div class="gr-pct" id="gr-length-pct" hidden></div></div>
+      </div>
+      <div class="gr-chart-card">
+        <div class="gr-chart-head">
+          <div><h2 id="gr-chart-title">Weight</h2><div class="gr-chart-sub" id="gr-chart-sub"></div></div>
+          <div class="seg gr-seg" role="group" aria-label="Chart">
+            <button type="button" id="gr-show-weight" aria-pressed="true">Weight</button>
+            <button type="button" id="gr-show-length" aria-pressed="false">Length</button>
+          </div>
+        </div>
+        <svg class="gr-chart" id="gr-chart" viewBox="0 0 326 196" role="img" aria-label=""></svg>
+        <div class="gr-legend">
+          <span><i class="gr-key-inner"></i>15th–85th</span>
+          <span><i class="gr-key-outer"></i>3rd–97th</span>
+          <span><i class="gr-key-median"></i>Median</span>
+          <span><i class="gr-key-baby"></i><span id="gr-baby-name">Baby</span></span>
+        </div>
+        <p class="gr-note" id="gr-note">WHO Child Growth Standards. A guide only. Ask your maternal and child health nurse if you are unsure.</p>
+      </div>
+      <h2 class="gr-history-title">History</h2>
+      <ol class="gr-history" id="gr-history"></ol>
+      <p class="empty" id="gr-empty" hidden>No measurements yet. Tap Add to log one.</p>
+      <p class="gr-credit">Growth data: WHO Child Growth Standards, © World Health Organization.</p>
     </section>
     <p class="status"><a href="#sync" id="sync-link" class="sync-link"></a> <span id="status">Checking offline support…</span> <span id="version"></span></p>
   </main>
@@ -393,6 +427,25 @@
       <button type="button" class="sync-btn" id="sy-jsonl">Download JSONL (all entries)</button>
       <p class="sync-error" id="sy-unreadable" hidden></p>
     </div>
+  </section>
+
+  <section class="screen" id="screen-measure" aria-labelledby="h-measure" hidden>
+    <header class="screen-head">
+      <a class="round-btn" href="#growth" aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+      </a>
+      <h1 id="h-measure">Add measurement</h1>
+      <span class="round-spacer"></span>
+    </header>
+    <div class="card">
+      <div class="card-row"><label for="ms-date">Date</label><input id="ms-date" type="date"></div>
+      <div class="card-row"><label for="ms-weight">Weight (kg)</label><input id="ms-weight" type="number" inputmode="decimal" min="0.3" max="40" step="0.01" placeholder="e.g. 4.20"></div>
+      <div class="card-row"><label for="ms-length">Length (cm)</label><input id="ms-length" type="number" inputmode="decimal" min="25" max="130" step="0.1" placeholder="e.g. 54"></div>
+    </div>
+    <p class="muted ms-hint">Fill in the weight, the length, or both. Length is measured lying down.</p>
+    <div class="screen-fill"></div>
+    <button type="button" class="save-btn" id="ms-save" disabled>Save measurement</button>
+    <button type="button" class="delete-btn" id="ms-delete" hidden>Delete this entry</button>
   </section>
 
   <section class="screen" id="screen-babies" aria-labelledby="h-babies" hidden>

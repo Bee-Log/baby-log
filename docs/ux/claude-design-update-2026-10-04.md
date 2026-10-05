@@ -142,9 +142,18 @@ This screen is not in the first designs. It opens from the sync line at the bott
 
 ## 9. Growth
 
-Screenshot: `15-growth-not-built-yet.png`. First design: the Growth artboard.
+Screenshots: `15-growth.png`, `15b-add-measurement.png`. First design: the Growth artboard.
 
-**Not built yet.** It needs the official WHO growth tables. The design has values for weeks 0 to 3 only, and the baby is already older than that.
+**Built as designed** (5 October), with the official WHO numbers for every day from birth to 2 years.
+
+**Changed or added**
+- **The chart grows with the baby.** It starts at birth and ends a little after the baby's age today: at least 4 weeks, at most 2 years. The labels are weeks ("Wk 1") up to 13 weeks, then months ("2 mo").
+- **"+250 g in 7 days"** compares the newest measurement with the one before it, and says how many days apart they are.
+- **The percentile label** is worked out with WHO's own formula, then rounded to 5 ("About 75th percentile"). Outside the lines it says "Below 3rd percentile" or "Above 97th percentile".
+- **Add measurement** (new, the design only had the button): a date, the weight in kg and the length in cm. One of the two is enough. Rows in History open the same form to edit or delete (two taps), like the other edit screens.
+- A small credit line at the bottom: "Growth data: WHO Child Growth Standards, © World Health Organization."
+
+**For you to design:** the Add measurement form.
 
 ## 10. Babies (new screens)
 

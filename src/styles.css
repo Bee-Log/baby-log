@@ -352,3 +352,40 @@ body.on-screen .toast { bottom: auto; top: calc(12px + env(safe-area-inset-top))
 .bb-text strong { font-family: var(--display); font-size: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bb-text span { font-size: 14px; color: var(--muted); }
 .bb-edit { min-height: 44px; min-width: 56px; display: flex; align-items: center; justify-content: center; border-radius: 14px; border: 1px solid var(--line); color: var(--ink); font-weight: 700; text-decoration: none; }
+
+/* Growth (feature 010): two cards, the WHO chart and the history. Green, as in the design. */
+.gr-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.gr-add { min-height: 44px; padding: 0 16px; border-radius: 22px; background: #2e7a57; color: #fff; font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 6px; text-decoration: none; }
+.gr-standard { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--surface); border-radius: 16px; padding: 4px 4px 4px 16px; font-size: 15px; color: #3c4248; margin-top: 8px; }
+.gr-standard strong { color: var(--ink); }
+.gr-standard a { min-height: 44px; min-width: 44px; padding: 0 14px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--accent); text-decoration: none; flex-shrink: 0; }
+.gr-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
+.gr-card { background: var(--surface); border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.gr-card-name { font-size: 14px; color: #2e7a57; font-weight: 700; }
+.gr-big { font-family: var(--display); font-size: clamp(28px, 9vw, 40px); font-weight: 700; line-height: 1; white-space: nowrap; }
+.gr-change { font-size: 14px; color: #3c4248; }
+.gr-pct { align-self: flex-start; font-size: 13px; font-weight: 700; color: #1f5a3f; background: #e0f1e8; border-radius: 999px; padding: 4px 10px; }
+.gr-chart-card { background: var(--surface); border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.gr-chart-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.gr-chart-head h2, .gr-history-title { margin: 0; font-family: var(--display); font-size: 18px; }
+.gr-chart-sub { font-size: 13px; color: var(--muted); }
+.gr-seg { background: #f0ece5; flex-shrink: 0; }
+.gr-chart { width: 100%; height: auto; display: block; }
+.gr-legend { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 13px; color: #3c4248; }
+.gr-legend > span { display: flex; align-items: center; gap: 6px; }
+.gr-legend i { display: inline-block; width: 14px; height: 10px; border-radius: 3px; }
+.gr-key-inner { background: #d9e8df; }
+.gr-key-outer { background: #eef3ef; border: 1px solid #d9e8df; }
+.gr-key-median { height: 0 !important; border-top: 2px dashed #6f8f7e; border-radius: 0 !important; }
+.gr-key-baby { width: 10px !important; border-radius: 5px !important; background: #2e7a57; }
+.gr-note { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.4; }
+.gr-history-title { margin-top: 20px; }
+.gr-history { list-style: none; margin: 4px 0 0; padding: 0; }
+.gr-history li + li { border-top: 1px solid var(--line); }
+.gr-row { display: grid; grid-template-columns: minmax(0, 1fr) 84px 64px; align-items: center; min-height: 48px; font-size: 16px; color: inherit; text-decoration: none; }
+.gr-row span:last-child { text-align: right; }
+.gr-row-weight { font-weight: 700; }
+.gr-row:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; border-radius: 8px; }
+.gr-credit { font-size: 12px; color: var(--muted); margin: 16px 0 0; }
+.ms-hint { margin: 0; }
+.card-row input[type="date"] { width: auto; font-weight: 700; cursor: pointer; }
