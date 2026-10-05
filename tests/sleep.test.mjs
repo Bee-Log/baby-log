@@ -152,3 +152,9 @@ test('revise can move the end of a sleep and keeps the merge rule (newer updated
   assert.equal(next.deviceId, 'phone-b');
   assert.equal(R.revise(rec, { t: at(7, 50) }, at(10, 0)).end, rec.end, 'the end stays when it is not changed');
 });
+
+test('a sleep shorter than a minute is too short to keep', () => {
+  const r = S.startSleep({ id: 's1', babyId: 'b', now: at(14, 15), deviceId: 'p' });
+  assert.equal(S.tooShort(r, at(14, 15) + 59000), true);
+  assert.equal(S.tooShort(r, at(14, 16)), false, 'one minute is kept');
+});

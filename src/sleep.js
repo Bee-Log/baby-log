@@ -25,6 +25,10 @@
     return R.makeRecord({ id: o.id, type: 'sleep', babyId: o.babyId, t: o.now, end: null, now: o.now, deviceId: o.deviceId, d: { source: 'live' } });
   }
 
+  // A sleep shorter than this is not kept: Wake up removes it instead (a Start sleep tapped by mistake).
+  var MIN_SLEEP_MS = 60000;
+  function tooShort(rec, now) { return now - rec.t < MIN_SLEEP_MS; }
+
   // Wake up: the same record gets its end time and a newer updatedAt (the merge rule: newest updatedAt wins).
   function wake(rec, now, deviceId) {
     var out = {};
@@ -100,7 +104,7 @@
   }
 
   root.BABYLOG_SLEEP = {
-    currentSleep: currentSleep, lastWake: lastWake, startSleep: startSleep, wake: wake,
+    currentSleep: currentSleep, lastWake: lastWake, startSleep: startSleep, wake: wake, tooShort: tooShort,
     formatLength: formatLength, formatElapsed: formatElapsed, sleepRows: sleepRows, rangeLabel: rangeLabel, timelineRows: timelineRows, check: check
   };
 })(typeof self !== 'undefined' ? self : this);

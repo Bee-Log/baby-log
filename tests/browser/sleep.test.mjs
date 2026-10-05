@@ -48,6 +48,7 @@ test('Today starts with no sleep logged; Start sleep makes the card dark and kee
 
 test('the card opens the Sleep page; the running time counts; Wake up ends the sleep and logs it', async () => {
   const { context, page, errors } = await phone(browser);
+  await context.clock.install();                            // a clock the test can move forward
   await install(page, url());
   await page.click('#tc-btn');
   await page.waitForSelector('#tc-card.asleep');
@@ -58,8 +59,9 @@ test('the card opens the Sleep page; the running time counts; Wake up ends the s
   assert.equal(asleep.asleep, true);
   assert.match(asleep.sub, /^Fell asleep at \d{1,2}:\d{2} [ap]m$/);
   assert.equal(await page.isVisible('#sleep-empty'), true, 'nothing is logged until the baby wakes');
-  await page.waitForTimeout(2300);
+  await page.clock.runFor(2300);
   assert.match(await page.textContent('#pc-big'), /^Asleep 00:00:0[2-4]$/, 'the time counts up');
+  await page.clock.runFor(2 * 60000);                       // a sleep shorter than a minute would be discarded
 
   await page.click('#pc-btn');                              // Wake up
   await page.waitForFunction(() => document.getElementById('pc-btn').getAttribute('aria-pressed') === 'false');
@@ -69,10 +71,10 @@ test('the card opens the Sleep page; the running time counts; Wake up ends the s
   assert.match(awake.big, /^Awake 0m$/);
   assert.equal(awake.button, 'Start sleep');
   const [r] = await sleeps(page);
-  assert.ok(r.end >= r.t + 2000, 'the same record now has its end time');
+  assert.ok(r.end >= r.t + 2 * 60000, 'the same record now has its end time');
   assert.ok(r.updatedAt > r.t);
   assert.equal(await page.locator('#sleep-list .row').count(), 1, 'it is in the Logged sleeps list');
-  assert.match(await page.locator('#sleep-list .row').first().textContent(), /\d{1,2}:\d{2} [ap]m – \d{1,2}:\d{2} [ap]m0m/);
+  assert.match(await page.locator('#sleep-list .row').first().textContent(), /\d{1,2}:\d{2} [ap]m – \d{1,2}:\d{2} [ap]m2m/);
 
   await page.click('#screen-sleep a[aria-label="Back"]');
   await page.waitForSelector('.tabbar', { state: 'visible' });
@@ -109,14 +111,31 @@ test('logged sleeps: newest first with their length; "Awake ..." counts from the
   await context.close();
 });
 
+test('a sleep shorter than a minute is discarded when the baby wakes, and the parent is told', async () => {
+  const { context, page, errors } = await phone(browser);
+  await install(page, url());
+  await page.click('#tc-btn');
+  await page.waitForSelector('#tc-card.asleep');
+  await page.click('#tc-btn');                              // Wake up straight away
+  await page.waitForFunction(() => document.getElementById('toast-text').textContent === 'Sleep discarded: shorter than 1 minute.');
+  assert.equal((await card(page, 'tc')).asleep, false);
+  const [r] = await sleeps(page);
+  assert.equal(r.deleted, true, 'removed (a tombstone, so sync carries the removal)');
+  assert.deepEqual(await page.$$eval('#today-list .row', (rows) => rows.length), 0, 'not in the Today list');
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
 test('Start sleep and Wake up work offline', async () => {
   const { context, page, errors } = await phone(browser);
+  await context.clock.install();
   await install(page, url());
   await context.setOffline(true);
   await open(page, `${url()}#sleep`);
   await page.waitForSelector('#screen-sleep[data-ready]');
   await page.click('#pc-btn');
   await page.waitForSelector('#pc-card.asleep');
+  await page.clock.fastForward(5 * 60000);
   await page.click('#pc-btn');
   await page.waitForFunction(() => !document.getElementById('pc-card').classList.contains('asleep'));
   assert.equal((await sleeps(page))[0].end !== null, true);

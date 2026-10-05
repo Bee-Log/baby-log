@@ -2,8 +2,8 @@
 id: 014
 name: More than one baby
 slug: more-than-one-baby
-status: Testing
-updated: 2026-10-04
+status: Done
+updated: 2026-10-05
 ---
 
 # 014 More than one baby
@@ -66,4 +66,4 @@ The record format becomes **version 2** (`app-rules.md`, "Data format"):
 **Test link.** https://oudam-meas.github.io/baby-log/test/
 
 ## Feedback
-(Filled in when someone tests it. Leave empty at sign-off.)
+- 2026-10-05: Released to LIVE on the owner's instruction ("Yes live"), at commit b9e42f0, the day after it reached TEST. Not tested on TEST by the partner yet.

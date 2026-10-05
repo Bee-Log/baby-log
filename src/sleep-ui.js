@@ -79,17 +79,22 @@
   }
 
   // Start or end a sleep. Reads the stored entries again first, so a double tap or a second tab cannot start two sleeps.
+  // A sleep shorter than a minute is removed instead of ended, and the parent is told.
   function toggle() {
     if (saving) return;
     saving = true;
     var now = Date.now();
+    var discarded = false;
     Promise.all([BABY.records(), store.deviceId()]).then(function (r) {
       var current = S.currentSleep(r[0]);
-      var rec = current ? S.wake(current, now, r[1]) : S.startSleep({ id: crypto.randomUUID(), babyId: BABY.id(), now: now, deviceId: r[1] });
+      discarded = !!current && S.tooShort(current, now);
+      var rec = !current ? S.startSleep({ id: crypto.randomUUID(), babyId: BABY.id(), now: now, deviceId: r[1] })
+        : discarded ? R.tombstone(current, now, r[1]) : S.wake(current, now, r[1]);
       return store.put(rec);
     }).then(function () { return BABY.records(); }).then(function (all) {
       saving = false;
       renderToday(all);
+      if (discarded) ctx.toast('Sleep discarded: shorter than 1 minute.');
     }).catch(function (err) {
       saving = false;
       console.error('[baby-log] sleep', err);
