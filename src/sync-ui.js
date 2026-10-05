@@ -151,6 +151,7 @@
     if (!Auth.isConfigured(cfg.googleClientId)) { setState('off'); return; }
 
     auth = Auth.create({ clientId: cfg.googleClientId });
+    auth.prepare();                 // load Google's script now, so the Sign in tap opens Google's window at once
     var backend = Drive.create({ getToken: auth.getToken, fetch: root.fetch.bind(root) });
     store.deviceId().then(function (deviceId) {
       engine = Sync.create({ backend: backend, store: store, root: cfg.driveFolder, deviceId: deviceId });

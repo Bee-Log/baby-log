@@ -187,6 +187,7 @@ test('the app never opens Google\'s window by itself: not on opening, not on com
     await a.page.evaluate(() => window.dispatchEvent(new Event('online')));
   }
   await a.page.clock.fastForward(10 * 60 * 1000);                                         // the 3-minute timer, three times
+  assert.equal(await a.page.evaluate(() => !!(window.google && window.google.accounts)), true, 'Google\'s script is ready before any tap, so one tap is enough');
   assert.equal(await googleWindows(a.page), 0);
   assert.equal(await a.page.textContent('#sync-link'), 'Sign in to sync');
   assert.equal(fake.requests.length, 0, 'and nothing was sent to Drive');
