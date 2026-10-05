@@ -31,10 +31,12 @@
   var SYNC_UI = self.BABYLOG_SYNC_UI;
   var SUMMARY_UI = self.BABYLOG_SUMMARY_UI;
   var BABIES_UI = self.BABYLOG_BABIES_UI;
-  var ALL_SCREENS = [FEED_UI, EDIT_UI, SLEEP_EDIT_UI, SLEEP_UI, PROFILE_UI, SYNC_UI, BABIES_UI];
+  var GROWTH_UI = self.BABYLOG_GROWTH_UI;
+  var ALL_SCREENS = [FEED_UI, EDIT_UI, SLEEP_EDIT_UI, SLEEP_UI, PROFILE_UI, SYNC_UI, BABIES_UI, GROWTH_UI];
   var NO_BABY_NEEDED = ['babies', 'profile', 'sync'];   // the only screens that open before a baby is chosen (feature 014)
 
-  // #edit/<ids>: a feed is edited on the Feed screen, a sleep on the Edit sleep screen, a nappy on its own small Edit screen.
+  // #edit/<ids>: a feed is edited on the Feed screen, a sleep on the Edit sleep screen, a measurement on its form,
+  // a nappy on its own small Edit screen.
   function openEdit(arg, hashAtStart) {
     var first = String(arg).split('+')[0];
     try { first = decodeURIComponent(first); } catch (err) { /* a broken link just finds nothing */ }
@@ -43,6 +45,7 @@
       if (rec && (Sc.problem(rec) || Sc.babyOf(rec) !== BABY.id())) rec = null;   // only the current baby's entries open
       if (rec && rec.type === 'feed') FEED_UI.show({ editId: rec.id });
       else if (rec && rec.type === 'sleep') SLEEP_EDIT_UI.show(rec.id);
+      else if (rec && rec.type === 'growth') GROWTH_UI.showForm({ editId: rec.id });
       else EDIT_UI.show(rec ? arg : '');
     }).catch(function (err) {
       console.error('[baby-log] edit lookup', err);
@@ -64,6 +67,7 @@
       else if (screen === 'profile') PROFILE_UI.show(nav.argFromHash(location.hash));
       else if (screen === 'sync') SYNC_UI.show();
       else if (screen === 'babies') BABIES_UI.show();
+      else if (screen === 'measure') GROWTH_UI.showForm();
       else openEdit(nav.argFromHash(location.hash), location.hash);
       window.scrollTo(0, 0);
       return;
@@ -78,6 +82,7 @@
     }
     if (tab === 'today') renderToday();
     if (tab === 'summary') SUMMARY_UI.show();
+    if (tab === 'growth') GROWTH_UI.show();
     window.scrollTo(0, 0);
   }
   window.addEventListener('hashchange', route);

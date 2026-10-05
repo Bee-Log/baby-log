@@ -39,6 +39,8 @@ Feed details inside `d` (features 006, 007, 012):
 - Breast: `kind: 'Breast'`, `side: 'Left' | 'Right' | 'Both'`, `min` (total whole minutes), and optional `leftMin` and `rightMin` (whole minutes per side). When the per-side fields are present, `min = leftMin + rightMin`. Entries saved before feature 012 have only `side` and `min`.
 - Bottle: `kind: 'Bottle'`, `milk: 'Formula' | 'Breast milk'`, `ml` (0 to 240).
 
+Growth details inside `d` (feature 010): `weight` (grams, a whole number) and `height` (length in cm, measured lying down, one decimal). A measurement has one or both. `t` is when it was measured (midday for a date that is not today). The WHO numbers are in `src/who-data.js` (made by `scripts/make-who-data.mjs`; see `docs/research/who-growth-standards.md`).
+
 Sleep details inside `d` (features 003, 004): `source: 'live'` (tapped Start sleep / Wake up as it happened) or `'manual'` (added afterwards). A running sleep has `end: null`.
 
 - Never overwrite history silently. To remove an entry, set `deleted: true` and update `updatedAt`.

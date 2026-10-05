@@ -6,10 +6,10 @@ Generated from the header of each `features/*/SIGNOFF.md`. Do not edit by hand.
 - none
 
 ## Building
-- 010 Track growth against WHO (updated 2026-10-05) - `features/010-track-growth-against-who/`
+- none
 
 ## Testing
-- none
+- 010 Track growth against WHO (updated 2026-10-05) - `features/010-track-growth-against-who/`
 
 ## Done
 - 001 Install and open the app (updated 2026-10-03) - `features/001-install-and-open-the-app/`

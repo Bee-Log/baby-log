@@ -33,7 +33,7 @@ test('editing a feed opens the Feed screen itself: same switch, same controls', 
   const { context, page, errors } = await start([rec('b1', 'feed', at(13), { kind: 'Bottle', milk: 'Formula', ml: 90 })]);
   await openFeed(page);
   assert.equal(await page.textContent('#h-feed'), 'Edit feed');
-  assert.equal(await page.isVisible('.seg'), true, 'the Breast / Bottle switch is there');
+  assert.equal(await page.isVisible('#screen-feed .seg'), true, 'the Breast / Bottle switch is there');
   assert.equal(await pressed(page, '#mode-bottle'), 'true', 'opens on the kind it was saved as');
   assert.equal(await page.isVisible('#bt-svg'), true, 'the same bottle');
   assert.equal(await page.textContent('#feed-save'), 'Save changes');
@@ -47,7 +47,7 @@ test('editing a feed opens the Feed screen itself: same switch, same controls', 
   await page.waitForSelector('#screen-feed[data-ready]');
   assert.equal(await page.textContent('#h-feed'), 'Feed');
   assert.equal(await page.isVisible('#feed-delete'), false);
-  assert.equal(await page.isVisible('.seg'), true);
+  assert.equal(await page.isVisible('#screen-feed .seg'), true);
   assert.deepEqual(errors, []);
   await context.close();
 });
