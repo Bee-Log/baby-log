@@ -116,7 +116,7 @@ Do these in one pull request. The owner must approve it, because it changes the 
 
 1. Create the shared Google account. Store the password and 2-step code in 1Password.
 2. Create a Google Cloud project and an OAuth client ID of type "Web application".
-   - Authorised JavaScript origin: `https://oudam-meas.github.io`
+   - Authorised JavaScript origin: `https://oudam-meas.github.io` (since 2026-10-05: `https://bee-log.github.io`, after the repository moved to the Bee-Log organisation)
    - Scope: `https://www.googleapis.com/auth/drive.appdata`
    - While the consent screen is in "Testing" mode, add the shared account as a test user.
 3. Give the client ID to the build session. It is public and may go in `src/config.js`. Never share the client secret.
