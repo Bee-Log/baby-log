@@ -29,7 +29,8 @@ deleted     true if the entry was removed (a "tombstone"), otherwise absent
 ```
 
 Babies (feature 014): every entry belongs to one baby. Nothing can be logged until a baby is chosen, and screens show only the chosen baby's entries (`src/baby.js`; the choice is kept on the phone as meta `currentBaby`, not synced).
-- **Version 1 entries** (no `v`, no `babyId`) belong to the baby with the id `'profile'`, the one profile of feature 002. They are read with this rule and never rewritten. A phone that has such entries but no profile shows them as "Entries from before"; adding the details creates the profile `'profile'`.
+- **An entry belongs to a baby only through its own `babyId`** (owner decision, 2026-10-05). Nothing is attached by guessing. A profile is its own baby (`babyId` = its `id`; the first profile of feature 002 has `id: 'profile'` and no `babyId`).
+- **Version 1 entries** (no `v`, no `babyId`) belong to no baby and are not shown under any baby. Today shows "N older entries have no baby"; on the Babies screen a parent adds them to the baby on screen (`R.linkToBaby`: an edit that sets `babyId` and `v: 2`, so sync carries it) or deletes them (tombstones).
 - **Unreadable entries** (`src/schema.js`): a version higher than this app's (`'newer'`), or a missing or wrong field (`'invalid'`). They are kept, synced and exported in JSONL as they are, but not shown and not in the CSV. The Sync screen counts them. Fields the app does not know are allowed and kept.
 - A change to the format raises `v` (in `records.js`) and teaches `schema.js` to read the older versions.
 

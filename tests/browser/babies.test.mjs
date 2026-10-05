@@ -122,43 +122,67 @@ test('adding a second baby from the Babies screen opens it; the first one is sti
   await context.close();
 });
 
-test('entries from before feature 014, with the first profile: the app opens straight on Today and shows them', async () => {
+test('entries without a baby (from before feature 014) are never shown under a baby by guessing; a parent adds them on purpose', async () => {
   const { context, page, errors } = await start({ baby: false });
+  // The first profile (feature 002) and two entries without a baby, for example test entries left from before.
   await seedAsIs(page, entry('profile', 'profile', at(1), { d: { nickname: 'Bean', dateOfBirth: '2026-09-12', sex: 'girl', photo: '' } }));
   await seedAsIs(page, entry('w1', 'pee', at(9)));
+  await seedAsIs(page, entry('f1', 'feed', at(10), { d: { kind: 'Bottle', ml: 60 } }));
   await open(page, url());
   await nameOnToday(page, 'Bean');
-  assert.deepEqual(await todayRows(page), ['Nappy · Wee']);
-  await page.click('[data-log="poop"]');
-  await page.waitForFunction(() => document.querySelectorAll('#today-list .row').length === 2);
+  assert.deepEqual(await todayRows(page), [], 'not shown: they do not name Bean');
+  assert.equal(await text(page, '#lf-big'), 'No feed yet');
+  assert.equal(await text(page, '#today-unlinked-text'), '2 older entries have no baby.');
+
+  await page.click('#today-unlinked');
+  await babiesReady(page);
+  assert.match(await text(page, '#bb-unlinked-text'), /^2 entries were logged before each entry had its baby\. They are not shown under any baby\./);
+  assert.equal(await text(page, '#bb-link'), 'Add them to Bean');
+  await page.click('#bb-link');
+  await page.waitForFunction(() => document.getElementById('toast-text').textContent === '2 entries added.');
+  await page.waitForSelector('#bb-unlinked', { state: 'hidden' });
   const records = await readRecords(page);
-  assert.equal(records.find((r) => r.type === 'poop').babyId, 'profile', 'a new entry joins the first baby');
-  assert.equal(records.find((r) => r.id === 'w1').babyId, undefined, 'old entries are not rewritten');
+  assert.deepEqual(records.filter((r) => r.type !== 'profile').map((r) => [r.id, r.babyId, r.v]).sort(), [['f1', 'profile', 2], ['w1', 'profile', 2]]);
+  await page.click('.bb-pick[data-id="profile"]');
+  await nameOnToday(page, 'Bean');
+  assert.deepEqual(await todayRows(page), ['Feed · Bottle 60 ml', 'Nappy · Wee']);
+  assert.equal(await page.isVisible('#today-unlinked'), false);
   assert.deepEqual(errors, []);
   await context.close();
 });
 
-test('entries from before feature 014, without a profile: the welcome screen asks for the baby\'s details, then shows them', async () => {
+test('a new baby starts empty even when old entries without a baby are on the phone; they can be deleted', async () => {
   const { context, page, errors } = await start({ baby: false });
   await seedAsIs(page, entry('w1', 'pee', at(9)));
-  await seedAsIs(page, entry('f1', 'feed', at(10), { d: { kind: 'Bottle', ml: 60 } }));
+  await seedAsIs(page, entry('f1', 'feed', at(10), { d: { kind: 'Breast', side: 'Both', min: 10, leftMin: 5, rightMin: 5 } }));
   await open(page, url());
   await babiesReady(page);
-  assert.equal(await text(page, '#bb-intro'), 'Your entries from before are here. Add your baby’s details to keep using them.');
-  assert.deepEqual(await rowNames(page), ['Entries from before']);
-  assert.equal(await text(page, '.bb-pick .bb-text span'), '2 entries · add your baby’s details');
-  assert.equal(await page.isVisible('#bb-add'), false, 'the old entries get their baby first, not a second baby');
-  await page.click('.bb-pick');
+  assert.equal(await text(page, '#bb-intro'), 'Welcome. Add your baby to start.');
+  assert.deepEqual(await rowNames(page), [], 'old entries make no baby');
+  assert.match(await text(page, '#bb-unlinked-text'), /Add a baby first to keep them, or delete them\.$/);
+  assert.equal(await page.isVisible('#bb-link'), false, 'there is no baby to add them to yet');
+
+  await page.click('#bb-add');
   await page.waitForSelector('#screen-profile[data-ready]');
-  assert.equal(await hash(page), '#profile/profile');
-  await page.fill('#pf-nickname', 'Bean');
-  await page.fill('#pf-dob', '2026-09-12');
+  await page.fill('#pf-nickname', 'Test');
+  await page.fill('#pf-dob', '2026-10-01');
   await page.click('#pf-girl');
   await page.click('#pf-save');
-  await nameOnToday(page, 'Bean');
-  assert.deepEqual(await todayRows(page), ['Feed · Bottle 60 ml', 'Nappy · Wee']);
-  const saved = (await readRecords(page)).find((r) => r.type === 'profile');
-  assert.equal(saved.id, 'profile', 'the details join the old entries');
+  await nameOnToday(page, 'Test');
+  assert.equal(await text(page, '#lf-big'), 'No feed yet', 'the new baby has no entries');
+  assert.deepEqual(await todayRows(page), []);
+
+  await page.click('#today-unlinked');
+  await babiesReady(page);
+  await page.click('#bb-unlinked-delete');
+  assert.equal(await text(page, '#bb-unlinked-delete'), 'Tap again to delete');
+  await page.click('#bb-unlinked-delete');
+  await page.waitForFunction(() => document.getElementById('toast-text').textContent === '2 entries deleted.');
+  const old = (await readRecords(page)).filter((r) => r.id === 'w1' || r.id === 'f1');
+  assert.deepEqual(old.map((r) => r.deleted), [true, true], 'tombstones, so sync carries the delete');
+  await page.click('#bb-back');
+  await nameOnToday(page, 'Test');
+  assert.equal(await page.isVisible('#today-unlinked'), false);
   assert.deepEqual(errors, []);
   await context.close();
 });

@@ -49,6 +49,7 @@
         <span class="baby-text"><span class="baby-sub" id="bh-sub"></span><span class="baby-name" id="bh-name">[Nickname]</span></span>
         <svg class="baby-switch" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
       </a>
+      <a class="notice" id="today-unlinked" href="#babies" hidden><span id="today-unlinked-text"></span><strong>Review</strong></a>
       <div class="last-feed" id="last-feed">
         <span class="last-feed-label">Last feed</span>
         <span class="last-feed-big" id="lf-big">…</span>
@@ -475,6 +476,12 @@
     </div>
     <ul class="bb-list" id="bb-list"></ul>
     <button type="button" class="sync-btn" id="bb-add">Add a baby</button>
+    <div class="sync-card" id="bb-unlinked" hidden>
+      <h2 class="section-title">Entries without a baby</h2>
+      <p class="sync-detail" id="bb-unlinked-text"></p>
+      <button type="button" class="sync-btn primary" id="bb-link">Add them</button>
+      <button type="button" class="delete-btn" id="bb-unlinked-delete">Delete them</button>
+    </div>
   </section>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden>

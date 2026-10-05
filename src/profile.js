@@ -18,13 +18,15 @@
   }
 
   // The babies on this phone: [{ id, profile, entries }], oldest profile first (by name when added at the same time).
-  // A baby is known from its profile, or from entries whose profile is not here (profile: null). That happens for
-  // entries logged before the first profile was saved. Such a baby is listed last, so its details can be added.
+  // A baby is known from its profile, or from entries that name a baby whose profile is not here yet (profile: null),
+  // for example before the other phone's profile has synced. Such a baby is listed last, so its details can be added.
+  // Entries that name no baby make no baby (schema.js unlinked).
   function babies(records) {
     var byId = {}, list = [];
     records.forEach(function (r) {
       if (r.deleted || Sc.problem(r)) return;
       var id = Sc.babyOf(r);
+      if (id === null) return;
       var b = byId[id];
       if (!b) { b = byId[id] = { id: id, profile: null, entries: 0 }; list.push(b); }
       if (r.type === 'profile') b.profile = r;

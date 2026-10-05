@@ -127,8 +127,18 @@
     return li;
   }
 
+  // Entries that belong to no baby (made before feature 014) are not shown. A notice leads to the Babies screen, where a
+  // parent adds them to a baby or deletes them.
+  function renderUnlinked(entries) {
+    var n = entries.length;
+    document.getElementById('today-unlinked').hidden = n === 0;
+    document.getElementById('today-unlinked-text').textContent = (n === 1 ? '1 older entry has' : n + ' older entries have') + ' no baby.';
+  }
+
   function renderToday() {
-    return BABY.records().then(function (records) {
+    return Promise.all([BABY.records(), BABY.unlinked()]).then(function (r) {
+      var records = r[0];
+      renderUnlinked(r[1]);
       PROFILE_UI.renderHead(records); // the baby's photo and name at the top
       SLEEP_UI.renderToday(records); // the sleep card above the buttons
       feedRecord = R.latestFeed(records);

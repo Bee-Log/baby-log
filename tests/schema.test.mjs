@@ -24,10 +24,11 @@ test('a new entry is version 2 and passes the check', () => {
   assert.equal(Sc.problem(v2()), null);
 });
 
-test('entries from before feature 014 (no v, no babyId) are still fine, and belong to the baby "profile"', () => {
+test('entries from before feature 014 (no v, no babyId) are readable but belong to no baby; a profile is its own baby', () => {
   assert.equal(Sc.problem(v1()), null);
-  assert.equal(Sc.babyOf(v1()), 'profile');
+  assert.equal(Sc.babyOf(v1()), null, 'no babyId, no baby: it is never shown under a baby by guessing');
   assert.equal(Sc.problem(v1({ id: 'profile', type: 'profile' })), null, 'the first profile');
+  assert.equal(Sc.babyOf(v1({ id: 'profile', type: 'profile' })), 'profile');
   assert.equal(Sc.babyOf(v2()), 'baby-1');
 });
 
@@ -50,7 +51,6 @@ test('entries with missing or wrong fields are "invalid"', () => {
     'version 2 without a baby': v2({ babyId: undefined }),
     'babyId is a number': v2({ babyId: 7 }),
     'a profile of another baby': v2({ id: 'baby-2', type: 'profile', babyId: 'baby-1' }),
-    'an old profile with another id': v1({ id: 'p2', type: 'profile' }),
     'version is text': v2({ v: '2' }),
     'not an object': null
   };
@@ -67,6 +67,21 @@ test('forBaby gives only the readable entries of one baby; unreadable gives the 
     v2({ id: 'd', deleted: true }), v2({ id: 'e', v: 3 }), v2({ id: 'f', t: NaN })
   ];
   assert.deepEqual(plain(Sc.forBaby(records, 'baby-1').map((r) => r.id)), ['a', 'd']);
-  assert.deepEqual(plain(Sc.forBaby(records, 'profile').map((r) => r.id)), ['c']);
+  assert.deepEqual(plain(Sc.forBaby(records, 'profile').map((r) => r.id)), [], 'an entry without a babyId belongs to no baby');
   assert.deepEqual(plain(Sc.unreadable(records)), { newer: 1, invalid: 1 });
+});
+
+test('unlinked: the live, readable entries without a baby, oldest first', () => {
+  const records = [v1({ id: 'late', t: T + 1000 }), v1({ id: 'early' }), v1({ id: 'gone', deleted: true }), v1({ id: 'profile', type: 'profile' }),
+    v2({ id: 'mine' }), v1({ id: 'broken', t: 'x' })];
+  assert.deepEqual(plain(Sc.unlinked(records).map((r) => r.id)), ['early', 'late']);
+});
+
+test('linking an entry to a baby: same id, version 2, the baby, this phone, a newer updatedAt', () => {
+  const old = v1({ id: 'w1', type: 'pee' });
+  const linked = R.linkToBaby(old, 'baby-1', T - 5000, 'phone-b');
+  assert.deepEqual(plain(linked), { ...old, v: 2, babyId: 'baby-1', deviceId: 'phone-b', updatedAt: T + 1 });
+  assert.equal(Sc.problem(linked), null);
+  assert.equal(Sc.babyOf(linked), 'baby-1');
+  assert.ok(R.isNewer(linked, old), 'the merge rule carries it to the other phone');
 });

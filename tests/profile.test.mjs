@@ -65,11 +65,15 @@ test('the babies: one per profile, oldest first, with how many entries each has'
   assert.deepEqual(plain(list.map((b) => [b.id, b.profile.d.nickname, b.entries])), [['baby-2', 'Pip', 1], ['baby-1', 'Bean', 1]]);
 });
 
-test('entries from before feature 014 belong to the first profile (id "profile"), or show as a baby without details', () => {
+test('entries without a babyId (from before feature 014) belong to no baby; the first profile is still a baby', () => {
   const old = legacy('f1', 'feed');
   const first = legacy('profile', 'profile', { d: { nickname: 'Bean' } });   // a profile saved before 014: no v, no babyId
-  assert.deepEqual(plain(Pr.babies([old, first]).map((b) => [b.id, !!b.profile, b.entries])), [['profile', true, 1]]);
-  assert.deepEqual(plain(Pr.babies([old, legacy('n1', 'pee')]).map((b) => [b.id, b.profile, b.entries])), [['profile', null, 2]]);
+  assert.deepEqual(plain(Pr.babies([old, first]).map((b) => [b.id, !!b.profile, b.entries])), [['profile', true, 0]]);
+  assert.deepEqual(plain(Pr.babies([old, legacy('n1', 'pee')])), [], 'old entries alone make no baby');
+});
+
+test('entries of a baby whose profile is not here yet make a baby without details', () => {
+  assert.deepEqual(plain(Pr.babies([entry('n1', 'pee', { babyId: 'baby-9' })]).map((b) => [b.id, b.profile, b.entries])), [['baby-9', null, 1]]);
 });
 
 test('entries that cannot be read do not make a baby', () => {

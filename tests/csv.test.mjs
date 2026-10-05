@@ -59,7 +59,7 @@ test('notes with commas, quotes and line breaks are quoted', () => {
   assert.match(row, /"wet, ""a lot""\nnext line",Mum/);
 });
 
-test('every row names its baby; entries from before feature 014 belong to the baby "profile"; unreadable entries are left out', () => {
+test('every row names its baby; an entry from before feature 014 has none; unreadable entries are left out', () => {
   const header = lines([])[0].split(',');
   const col = (row, name) => row.split(',')[header.indexOf(name)];
   const rows = lines([
@@ -71,6 +71,6 @@ test('every row names its baby; entries from before feature 014 belong to the ba
     rec('d', 'feed', 'noon')                                        // broken
   ]);
   assert.equal(rows.length, 3, 'a header and two rows');
-  assert.deepEqual([col(rows[1], 'baby_id'), col(rows[1], 'baby')], ['profile', 'Bean']);
+  assert.deepEqual([col(rows[1], 'baby_id'), col(rows[1], 'baby')], ['', ''], 'no baby is guessed');
   assert.deepEqual([col(rows[2], 'baby_id'), col(rows[2], 'baby')], ['baby-2', 'Pip']);
 });

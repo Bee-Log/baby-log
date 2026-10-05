@@ -193,6 +193,9 @@ body.on-screen main, body.on-screen .tabbar { display: none; }
 .baby-sub { font-size: var(--text-sm); color: var(--muted); }
 .baby-name { font-family: var(--display); font-size: var(--text-2xl); font-weight: 700; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .baby-switch { flex-shrink: 0; color: var(--muted); }
+/* A notice that leads somewhere (entries without a baby) */
+.notice { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); min-height: var(--tap); padding: var(--space-2) var(--space-4); border-radius: var(--radius-lg); background: #fff1c9; color: var(--ink); font-size: var(--text-sm); text-decoration: none; }
+.notice strong { color: var(--accent); flex-shrink: 0; }
 /* Last feed card (feature 008) */
 .last-feed { padding: var(--pad-card); display: flex; flex-direction: column; gap: var(--gap-tight); }
 .last-feed-label { font-size: var(--text-sm); color: var(--muted); }
