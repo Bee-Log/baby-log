@@ -1,6 +1,7 @@
 // Google sign-in for the browser (Google Identity Services, "token" model).
-// The access token is kept in MEMORY ONLY: never in localStorage or IndexedDB. TEST, LIVE and every other page on
-// oudam-meas.github.io share one browser origin, so a stored token could be read by them (ADR-001 note, app-rules "Shared origin").
+// The access token is kept in MEMORY ONLY: never in localStorage or IndexedDB. TEST, LIVE and any other Pages site of the
+// Bee-Log organisation share one browser origin (bee-log.github.io), so a stored token could be read by them
+// (ADR-001 note, app-rules "Shared origin").
 // Google's window opens ONLY when someone taps "Sign in". On a phone even a "quiet" renewal opens that window, and
 // doing it by itself made the app open and close it in a loop. A sign-in lasts about an hour; then the app asks again.
 // Google's script is loaded when the app opens (prepare), so a tap opens the window at once. A window opened later,

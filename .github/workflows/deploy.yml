@@ -1,8 +1,8 @@
 name: Deploy Pages
 
 # One GitHub Pages site holds both addresses:
-#   LIVE  https://oudam-meas.github.io/baby-log/        built from the commit recorded by "Release LIVE"
-#   TEST  https://oudam-meas.github.io/baby-log/test/   built from `main`
+#   LIVE  https://bee-log.github.io/baby-log/        built from the commit recorded by "Release LIVE"
+#   TEST  https://bee-log.github.io/baby-log/test/   built from `main`
 # Every merge to main runs this. It rebuilds both, so LIVE stays on its recorded commit.
 # The LIVE commit is the newest deployment record in the `live-release` environment.
 on:

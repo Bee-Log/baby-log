@@ -4,8 +4,8 @@ The app is static files on GitHub Pages. One Pages site holds two addresses.
 
 | Address | Link | Built from | Changes when |
 |---|---|---|---|
-| TEST | https://oudam-meas.github.io/baby-log/test/ | `main` branch | every merge to `main` (automatic) |
-| LIVE | https://oudam-meas.github.io/baby-log/ | the commit recorded by **Release LIVE** | someone runs **Release LIVE** (manual) |
+| TEST | https://bee-log.github.io/baby-log/test/ | `main` branch | every merge to `main` (automatic) |
+| LIVE | https://bee-log.github.io/baby-log/ | the commit recorded by **Release LIVE** | someone runs **Release LIVE** (manual) |
 
 The TEST build shows an orange "TEST" banner and an orange TEST icon. It stores data under names that start with `test-`, so it never touches LIVE data.
 
@@ -62,7 +62,7 @@ Sync (ADR-001, feature 013) is switched on by the public client ID in `src/confi
 
 1. Create the shared Google account. Keep its password and 2-step code in 1Password.
 2. In Google Cloud, create a project and an OAuth client of type **Web application**.
-   - Authorised JavaScript origin: `https://oudam-meas.github.io`
+   - Authorised JavaScript origin: `https://bee-log.github.io` (since 2026-10-05, when the repository moved to the Bee-Log organisation). Keep `https://oudam-meas.github.io` until both phones have moved to the new address, then remove it.
    - Scope: `https://www.googleapis.com/auth/drive.appdata`
    - While the consent screen is in "Testing", add the shared account as a test user.
 3. Put the **client ID** in `googleClientId` in `src/config.js` (done on 2026-10-04). The client ID is public. Never use or commit the client secret.

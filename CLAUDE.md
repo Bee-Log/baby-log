@@ -41,13 +41,14 @@ To build, the owner says "build feature 001" or names the signoff. Find it in `f
 - Storage and sync: see `docs/adr/ADR-001-data-storage-and-sync.md` (one shared Google account, one append-only file per phone in the hidden app data folder, merge by id with the newest `updatedAt`).
 - Data is plain JSON with a CSV export, so it can move to another backend later.
 - Every entry belongs to one baby (feature 014, record format version 2: `v` and `babyId`). An entry belongs to a baby only through its own `babyId`; entries without one (version 1) are not shown until a parent adds them to a baby or deletes them. Unreadable entries are kept and synced, never deleted.
-- Data protection (owner decision, 2026-10-03): TEST, LIVE and every other GitHub Pages site of this account share one browser origin (`oudam-meas.github.io`), so they share storage. For now we keep that and protect real data in code (see "Shared origin" in app-rules). Moving LIVE to its own domain stays open for later.
+- Data protection (owner decisions, 2026-10-03 and 2026-10-05): TEST and LIVE share one browser origin, so they share storage, and real data is protected in code (see "Shared origin" in app-rules). On 2026-10-05 the repository moved to the **Bee-Log** organisation, so the app runs on `bee-log.github.io` and no longer shares storage with the owner's other sites. Keep that organisation for this app only: any other Pages site there would share the origin again.
 - Full rules and the record format: `.claude/skills/build-feature/references/app-rules.md`.
 - One design language for every screen: `docs/ux/design-language.md`. Use the tokens at the top of `src/styles.css` (space, corners, text, colours); never add a one-off margin. `tests/browser/layout.test.mjs` checks the spacing on every page.
 
 ## Commands
 - `npm test` runs the tests. `npm run build` builds both flavours. `npm run test:browser` checks the app in a real browser, including updates (see `DEPLOY.md`). CI runs all three on every pull request.
-- TEST: https://oudam-meas.github.io/baby-log/test/ . LIVE: https://oudam-meas.github.io/baby-log/ . Details in `DEPLOY.md`.
+- Repository: `Bee-Log/baby-log` (moved from `oudam-meas/baby-log` on 2026-10-05; the old name redirects for git, not for Pages).
+- TEST: https://bee-log.github.io/baby-log/test/ . LIVE: https://bee-log.github.io/baby-log/ . Details in `DEPLOY.md`.
 - Text files in `src/` may use build tokens such as `__APP_ENV__`; `scripts/build.mjs` fills them in and fails on unknown ones.
 
 ## Git rules
