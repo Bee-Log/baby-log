@@ -10,6 +10,8 @@ Please use it to bring the designs up to date.
 
 ## The rules behind the changes
 
+**Design language (5 October):** every screen now uses one spacing scale, one card shape and a small set of text sizes. See `docs/ux/design-language.md` (in the pack as `design-language.md`). Please use the same values in the designs.
+
 1. **Logging and editing look and work the same.** Editing an entry opens the same screen that made it, with the saved values.
 2. **Delete needs two taps.** The first tap turns the button red: "Tap again to delete". After 4 seconds it goes back. There is no Undo.
 3. **Messages never cover a button.** A message is a small, see-through dark pill ("Wee saved"). It shows for 2.5 seconds, and taps go through it. On Today it sits above the tabs. On a full screen it appears at the top. (Changed on 5 October: before, it was a wide dark bar.)
