@@ -136,23 +136,23 @@ test('when Google refuses the sign-in, the status asks to sign in again, and not
   await a.context.close();
 });
 
-test('after a restart the app asks for a tap to sign in, opens nothing by itself, and the token was not stored', async () => {
+test('a reload within the hour stays signed in and syncs, opening nothing; after the hour it asks for a tap and the sign-in is removed', async () => {
   const fake = createFakeDrive();
-  const a = await startPhone(fake);
+  const a = await startPhone(fake, { running: true });
   await signInAndSync(a.page);
+  const kept = () => a.page.evaluate(() => localStorage.getItem('test-baby-log-google-signin'));
+  assert.match(await kept(), /good-token/, 'kept on this phone until it expires');
+
+  await a.page.reload();                                    // like closing and reopening the app
+  await waitStatus(a.page, 'Synced');
+  assert.equal(await googleWindows(a.page), 0, 'no Google window: the kept sign-in was used');
+
+  await a.page.clock.fastForward(61 * 60 * 1000);           // Google's sign-in lasts about an hour
+  await waitStatus(a.page, 'Sign in to sync');
   await a.page.reload();
   await waitStatus(a.page, 'Sign in to sync');
-  await a.page.waitForTimeout(500);
-  assert.equal(await googleWindows(a.page), 0, 'no Google window on opening the app');
-  const stored = await a.page.evaluate(async () => {
-    const keys = Object.keys(localStorage).concat(Object.keys(sessionStorage));
-    const meta = await new Promise((resolve) => {
-      const req = indexedDB.open('test-baby-log');
-      req.onsuccess = () => { const all = req.result.transaction('meta').objectStore('meta').getAll(); all.onsuccess = () => { req.result.close(); resolve(JSON.stringify(all.result)); }; };
-    });
-    return { keys, meta };
-  });
-  assert.doesNotMatch(stored.meta + stored.keys.join(), /good-token/, 'the sign-in token is only in memory');
+  assert.equal(await kept(), null, 'the expired sign-in was removed');
+  assert.equal(await googleWindows(a.page), 0, 'still nothing opens by itself');
   assert.deepEqual(a.errors, []);
   await a.context.close();
 });
