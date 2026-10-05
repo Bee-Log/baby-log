@@ -2,8 +2,8 @@
 id: 009
 name: See the daily summary
 slug: see-the-daily-summary
-status: Testing
-updated: 2026-10-03
+status: Done
+updated: 2026-10-05
 ---
 
 # 009 See the daily summary
@@ -61,4 +61,4 @@ none
 **Test link.** https://oudam-meas.github.io/baby-log/test/ (open the Summary tab).
 
 ## Feedback
-(Filled in when someone tests it. Leave empty at sign-off.)
+- 2026-10-05: Released to LIVE on the owner's instruction ("Yes live"), at commit b9e42f0.

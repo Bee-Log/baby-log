@@ -12,7 +12,7 @@ Please use it to bring the designs up to date.
 
 1. **Logging and editing look and work the same.** Editing an entry opens the same screen that made it, with the saved values.
 2. **Delete needs two taps.** The first tap turns the button red: "Tap again to delete". After 4 seconds it goes back. There is no Undo.
-3. **Messages never cover a button.** On a full screen they appear at the top.
+3. **Messages never cover a button.** A message is a small, see-through dark pill ("Wee saved"). It shows for 2.5 seconds, and taps go through it. On Today it sits above the tabs. On a full screen it appears at the top. (Changed on 5 October: before, it was a wide dark bar.)
 4. **Buttons are at least 44 px tall**, and every screen fits a 320 px wide phone without sideways scrolling.
 5. **A time can never be in the future.** Up to 5 minutes ahead is allowed, because the time pickers work in 5-minute steps.
 6. **"Today" is 6 am to 6 am.**
@@ -77,11 +77,11 @@ First design: artboard "6 · Sleep".
 
 **Changed or added**
 - **Parts of the day are two circles, AM and PM** (the owner asked for this). They replace the four square buttons.
-  - AM: **Dawn 12a–6a** | **Morning 6a–12p**.
-  - PM: **Afternoon 12p–6p** | **Night 6p–12a**.
+  - The halves sit like on a clock face: 12 to 6 on the right, 6 to 12 on the left (owner decision, 5 October).
+  - AM: **Morning 6a–12p** | **Dawn 12a–6a**.
+  - PM: **Night 6p–12a** | **Afternoon 12p–6p**.
   - Each half shows its icon, its hours and **Today** or **Yesterday**. Unpicked halves have the tint of their part on the clock face. A picked half is dark.
   - The rule is the same as before: pick one part, or two neighbours.
-  - The halves read left to right in time order. On the big clock, 12 to 6 is on the right side. So the circles do not match the clock (see "For you to decide").
 - **Which day.** Each part means the last time it happened, so it is always within the last 24 hours. At 2 pm, "Night" is last night, and it says "Yesterday".
 - **Dragging:** only the two dots and the arc can be dragged. A finger anywhere else on the clock scrolls the page. Before this, scrolling changed the sleep by accident.
 - **Dragging stays within the last 24 hours.** A sleep can be dragged across the 12 and 6 lines. The parts follow it.
@@ -91,9 +91,7 @@ First design: artboard "6 · Sleep".
 - **Logged sleeps rows open Edit sleep** (section 5).
 - On a 320 px phone, the step-button text gets smaller so the buttons do not overlap.
 
-**For you to decide**
-- **The circle halves:** keep time order (dawn on the left), or match the clock (dawn on the right)? Changing it is one line.
-- **Very short sleeps:** tapping Start sleep and then Wake up straight away makes a 0-minute sleep. Should the app ignore a sleep shorter than 1 minute?
+- **Very short sleeps are not kept** (owner decision, 5 October). Tapping Wake up less than a minute after Start sleep removes the sleep and says "Sleep discarded: shorter than 1 minute."
 
 ## 5. Edit sleep (new screen)
 
@@ -167,11 +165,11 @@ These screens are not in the first designs. The owner asked for them: every entr
 
 ## Questions for design, in one list
 
-1. The AM and PM circle halves: time order, or clock order?
+1. ~~The AM and PM circle halves: time order, or clock order?~~ Decided: clock order.
 2. A home for "Sign in to sync" on Today, since a parent needs it about once an hour.
 3. "Share with partner": what should it do now, or should it go?
 4. A design for **Edit sleep**, and whether Delete should move to the top bar on all edit screens.
 5. A design for **Sync and data**.
-6. Ignore sleeps shorter than 1 minute?
+6. ~~Ignore sleeps shorter than 1 minute?~~ Decided: yes, with a "discarded" message.
 7. Older open questions: whether Undo comes back, and a dark look for night use.
 8. A design for the **Babies** and **welcome** screens, and the switch sign in the Today header.

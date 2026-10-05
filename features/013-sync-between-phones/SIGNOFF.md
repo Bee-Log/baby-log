@@ -2,8 +2,8 @@
 id: 013
 name: Sync between phones
 slug: sync-between-phones
-status: Testing
-updated: 2026-10-03
+status: Done
+updated: 2026-10-05
 ---
 
 # 013 Sync between phones
@@ -59,4 +59,4 @@ No new fields. Sync carries the existing records (and the `profile` record from 
 **Test link.** https://oudam-meas.github.io/baby-log/test/ (sync shows "not set up yet" there until the client ID is added).
 
 ## Feedback
-(Filled in when someone tests it. Leave empty at sign-off.)
+- 2026-10-05: Released to LIVE on the owner's instruction ("Yes live"), at commit b9e42f0.

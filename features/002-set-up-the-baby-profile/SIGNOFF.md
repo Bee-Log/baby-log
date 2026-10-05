@@ -2,8 +2,8 @@
 id: 002
 name: Set up the baby profile
 slug: set-up-the-baby-profile
-status: Testing
-updated: 2026-10-03
+status: Done
+updated: 2026-10-05
 ---
 
 # 002 Set up the baby profile
@@ -71,4 +71,4 @@ Save who the baby is, so other screens use the right name, age and WHO tables.
 **Test link.** https://oudam-meas.github.io/baby-log/test/
 
 ## Feedback
-(Filled in when someone tests it. Leave empty at sign-off.)
+- 2026-10-05: Released to LIVE on the owner's instruction ("Yes live"), at commit b9e42f0.

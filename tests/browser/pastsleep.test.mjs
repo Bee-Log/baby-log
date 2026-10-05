@@ -175,9 +175,9 @@ test('dragging the arc over the 12 border carries on into the morning part', asy
 test('each part says Today or Yesterday; an older sleep is added by typing its date', async () => {
   const { context, page, errors } = await start();
   const days = await page.$$eval('.ps-part .ps-day', (els) => els.map((e) => e.textContent));
-  assert.deepEqual(days, ['Today', 'Today', 'Today', 'Yesterday'], 'at 2 pm, the evening part is last night');
+  assert.deepEqual(days, ['Today', 'Today', 'Yesterday', 'Today'], 'at 2 pm, the evening part is last night');
   const order = await page.$$eval('.ps-part', (els) => els.map((e) => e.getAttribute('aria-label').split(',')[0]));
-  assert.deepEqual(order, ['Dawn', 'Morning', 'Afternoon', 'Night'], 'dawn, morning (AM), then afternoon, night (PM)');
+  assert.deepEqual(order, ['Morning', 'Dawn', 'Night', 'Afternoon'], 'like a clock face: 6 to 12 on the left, 12 to 6 on the right');
 
   await page.fill('#ps-from', '2026-09-28T18:50');
   await page.fill('#ps-to', '2026-09-28T20:20');

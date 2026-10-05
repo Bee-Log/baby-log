@@ -171,14 +171,14 @@
     });
   }
 
-  // ---- A short message, for 3.5 seconds. On a full screen it sits at the top, so it never covers a button ----
+  // ---- A short message, for 2.5 seconds. On a full screen it sits at the top, so it never covers a button ----
   var toastEl = document.getElementById('toast');
   var toastTimer = null;
   function toast(text) {
     clearTimeout(toastTimer);
     document.getElementById('toast-text').textContent = text;
     toastEl.hidden = false;
-    toastTimer = setTimeout(function () { toastEl.hidden = true; }, 3500);
+    toastTimer = setTimeout(function () { toastEl.hidden = true; }, 2500);
   }
 
   // Entries came from the other phone. The babies may have changed too (the first one loaded, or a new one), so read them again.

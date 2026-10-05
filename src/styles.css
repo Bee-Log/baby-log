@@ -170,13 +170,20 @@ body.on-screen main, body.on-screen .tabbar { display: none; }
 .delete-btn.armed { background: #9a3f0b; color: #fff; }
 .last-line { margin: -8px 0 0; text-align: center; }
 
-/* Short message above the tab bar. On a full screen it moves to the top, so it never covers a button. */
+/* Short message above the tab bar: a small see-through pill in the ink colour, so it does not take over the screen.
+   On a full screen it moves to the top, so it never covers a button. Taps go through it. */
 .toast {
-  position: fixed; left: 16px; right: 16px; z-index: 20; /* above the TEST banner (10) and the tab bar (5) */
+  position: fixed; left: 0; right: 0; z-index: 20; /* above the TEST banner (10) and the tab bar (5) */
   bottom: calc(var(--tabbar-h) + 12px + env(safe-area-inset-bottom));
-  max-width: 528px; margin: 0 auto; pointer-events: none;
-  background: var(--ink); color: #fff; border-radius: 16px; padding: 14px 18px; font-weight: 700;
+  width: fit-content; max-width: calc(100% - 32px); margin: 0 auto; pointer-events: none;
+  background: rgba(30, 34, 39, 0.72);   /* --ink at 72% */
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  color: #fff; border-radius: 999px; padding: 8px 16px; font-size: 14px; font-weight: 600; text-align: center;
+  box-shadow: 0 4px 14px rgba(30, 34, 39, 0.12);
+  animation: toast-in 160ms ease-out;
 }
+@keyframes toast-in { from { opacity: 0; transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
 body.on-screen .toast { bottom: auto; top: calc(12px + env(safe-area-inset-top)); }
 
 /* Bottom navigation: three equal tabs. The current tab is dark and bold. */
@@ -214,7 +221,8 @@ body.on-screen .toast { bottom: auto; top: calc(12px + env(safe-area-inset-top))
 .ps-step[aria-pressed="true"] { background: #2b2550; border-color: #2b2550; color: #fff; font-weight: 700; }
 .ps-minus { border: none; background: #efeaf8; color: #2b2550; font-weight: 700; }
 .ps-reset { min-width: 44px; min-height: 44px; border-radius: 22px; border: none; background: transparent; color: var(--muted); display: flex; align-items: center; justify-content: center; }
-/* Parts of the day: two circles, AM and PM, each cut into two half circles (dawn | morning, afternoon | night). */
+/* Parts of the day: two circles, AM and PM, each cut into two halves placed like on a clock face:
+   12 to 6 on the right, 6 to 12 on the left (morning | dawn, night | afternoon). */
 .ps-parts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .ps-circle-group { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
 .ps-circle { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; width: 100%; max-width: 150px; aspect-ratio: 1; }
