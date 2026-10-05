@@ -80,3 +80,4 @@ Tap Start sleep and Wake up as it happens, and see the logged sleeps.
 ## Feedback
 - 2026-10-03: Tested OK on TEST by the owner ("looks good so far", then "Release all"). Released to LIVE on the owner's instruction, before the partner's own test.
 - 2026-10-05: Owner decision: a sleep shorter than 1 minute is not kept. Tapping Wake up within a minute of Start sleep removes it and says "Sleep discarded: shorter than 1 minute." (`sleep.js` `tooShort`). It reaches TEST first; LIVE gets it with the next release.
+- 2026-10-05: That change was released to LIVE at commit acb7843.
