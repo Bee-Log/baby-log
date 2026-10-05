@@ -20,6 +20,7 @@
   var lastSynced = null;
   var running = false, again = false, timer = null;
   var lastError = '';         // the technical reason of the last failure, shown on the screen so it can be reported
+  var SIGNIN_KEY = cfg.storagePrefix + 'baby-log-google-signin';
   var listeners = [];         // told about every change of state (the Babies screen shows it)
 
   function $(id) { return document.getElementById(id); }
@@ -48,6 +49,15 @@
     $('sy-error').textContent = lastError ? 'Details: ' + lastError : '';
     $('sync-card').setAttribute('data-state', state);
   }
+
+  // Remembers the Google sign-in on this phone until it expires (google-auth.js), so a reload does not ask again.
+  // The app has its own origin (bee-log.github.io), so other websites cannot read it. Storage may be blocked (private mode):
+  // then the sign-in simply lasts until the app closes.
+  var keep = {
+    load: function () { try { return JSON.parse(root.localStorage.getItem(SIGNIN_KEY) || 'null'); } catch (err) { return null; } },
+    save: function (v) { try { root.localStorage.setItem(SIGNIN_KEY, JSON.stringify(v)); } catch (err) { /* kept in memory only */ } },
+    remove: function () { try { root.localStorage.removeItem(SIGNIN_KEY); } catch (err) { /* nothing to clear */ } }
+  };
 
   function setState(next) {
     state = next;
@@ -150,12 +160,13 @@
     $('sy-jsonl').addEventListener('click', function () { exportAs('jsonl'); });
     if (!Auth.isConfigured(cfg.googleClientId)) { setState('off'); return; }
 
-    auth = Auth.create({ clientId: cfg.googleClientId });
+    auth = Auth.create({ clientId: cfg.googleClientId, keep: keep });
     auth.prepare();                 // load Google's script now, so the Sign in tap opens Google's window at once
     var backend = Drive.create({ getToken: auth.getToken, fetch: root.fetch.bind(root) });
     store.deviceId().then(function (deviceId) {
       engine = Sync.create({ backend: backend, store: store, root: cfg.driveFolder, deviceId: deviceId });
-      setState('signin');           // the sign-in lives in memory only, so a newly opened app always starts here
+      if (auth.isSignedIn()) run();  // still signed in from earlier this hour
+      else setState('signin');
     });
     store.onChange(schedulePush);
     // Coming back to the app, the network coming back, and every few minutes: sync if signed in, else just say so.

@@ -95,9 +95,50 @@ test('the committed config has a public client ID (never a secret), so sync is o
   assert.doesNotMatch(cfg, /GOCSPX-|client_secret/i, 'a client secret must never be in the code');
 });
 
-test('the sign-in token is never written to storage', () => {
+test('google-auth.js does not touch storage itself: the app passes the store that keeps the sign-in', () => {
   const src = readFileSync(join(out, 'google-auth.js'), 'utf8');
-  assert.doesNotMatch(src.replace(/\/\/.*$/gm, ''), /localStorage|sessionStorage|indexedDB|setMeta|document\.cookie/, 'the token lives in memory only');
+  assert.doesNotMatch(src.replace(/\/\/.*$/gm, ''), /localStorage|sessionStorage|indexedDB|setMeta|document\.cookie/);
+});
+
+// A "keep" store like the one sync-ui.js passes (it uses localStorage there).
+function memoryKeep(initial = null) {
+  const k = { value: initial, load: () => k.value, save: (v) => { k.value = v; }, remove: () => { k.value = null; } };
+  return k;
+}
+const readyGoogle = (token) => ({ accounts: { oauth2: { initTokenClient: (cfg) => ({ requestAccessToken: () => cfg.callback({ access_token: token, expires_in: 3600 }) }) } } });
+
+test('the sign-in is kept until it expires: a reopened app is still signed in, without opening Google\'s window', async () => {
+  const keep = memoryKeep();
+  sandbox.self.google = readyGoogle('token-1');
+  try {
+    const first = Auth.create({ clientId: 'test.apps.googleusercontent.com', keep });
+    await first.signIn();
+    assert.equal(keep.value.token, 'token-1');
+    assert.ok(keep.value.expiresAt > Date.now() + 3500 * 1000);
+    const reopened = Auth.create({ clientId: 'test.apps.googleusercontent.com', keep });   // a reload
+    assert.equal(reopened.isSignedIn(), true);
+    assert.equal(await reopened.getToken(), 'token-1');
+  } finally {
+    delete sandbox.self.google;
+  }
+});
+
+test('an expired sign-in is not used and is removed; a refused one is removed too', async () => {
+  const expired = memoryKeep({ token: 'old', expiresAt: Date.now() + 30000 });   // inside the last minute counts as expired
+  const auth = Auth.create({ clientId: 'test.apps.googleusercontent.com', keep: expired });
+  assert.equal(auth.isSignedIn(), false);
+  assert.equal(expired.value, null, 'removed');
+  await assert.rejects(auth.getToken(), (e) => e.code === 'auth');
+
+  const good = memoryKeep({ token: 'kept', expiresAt: Date.now() + 1800 * 1000 });
+  const again = Auth.create({ clientId: 'test.apps.googleusercontent.com', keep: good });
+  assert.equal(again.isSignedIn(), true);
+  again.forget();                                     // Google refused it
+  assert.equal(good.value, null);
+  assert.equal(again.isSignedIn(), false);
+
+  const broken = memoryKeep({ token: 7, expiresAt: 'soon' });
+  assert.equal(Auth.create({ clientId: 'test.apps.googleusercontent.com', keep: broken }).isSignedIn(), false, 'a damaged value is ignored');
 });
 
 test('Google sign-in: the script loads when the app opens, so one tap opens Google\'s window at once', async () => {

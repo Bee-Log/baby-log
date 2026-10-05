@@ -1,7 +1,7 @@
 // Google sign-in for the browser (Google Identity Services, "token" model).
-// The access token is kept in MEMORY ONLY: never in localStorage or IndexedDB. TEST, LIVE and any other Pages site of the
-// Bee-Log organisation share one browser origin (bee-log.github.io), so a stored token could be read by them
-// (ADR-001 note, app-rules "Shared origin").
+// The access token is kept until it expires (about an hour), so a reload or reopening the app within that time does not
+// ask again (owner decision 2026-10-05, once the app had its own origin, bee-log.github.io). This file does not touch
+// storage itself: the app passes a small "keep" store (sync-ui.js). An expired or refused token is removed.
 // Google's window opens ONLY when someone taps "Sign in". On a phone even a "quiet" renewal opens that window, and
 // doing it by itself made the app open and close it in a loop. A sign-in lasts about an hour; then the app asks again.
 // Google's script is loaded when the app opens (prepare), so a tap opens the window at once. A window opened later,
@@ -22,10 +22,19 @@
   // The client ID is public. 'PLACEHOLDER' means the owner has not created it yet: sync stays off.
   function isConfigured(clientId) { return !!clientId && clientId.indexOf('PLACEHOLDER') !== 0; }
 
-  // options: { clientId, document } (document is for tests)
+  // options: { clientId, document, keep }. document is for tests. keep (optional) remembers the sign-in until it expires:
+  //   keep.load() -> { token, expiresAt } or null, keep.save({ token, expiresAt }), keep.remove()
   function create(options) {
     var doc = options.document || root.document;
+    var keep = options.keep || null;
     var token = null, expiresAt = 0;
+    var saved = keep && keep.load();
+    if (saved && typeof saved.token === 'string' && Date.now() < saved.expiresAt - EXPIRY_MARGIN_MS) {
+      token = saved.token;
+      expiresAt = saved.expiresAt;
+    } else if (keep) {
+      keep.remove();                 // nothing kept, or it has expired
+    }
     var client = null, pending = null, loading = null;
 
     // One download of Google's script at a time. A failed download (no network) can be tried again later.
@@ -56,6 +65,7 @@
               if (resp && resp.access_token) {
                 token = resp.access_token;
                 expiresAt = Date.now() + (Number(resp.expires_in) || 3600) * 1000;
+                if (keep) keep.save({ token: token, expiresAt: expiresAt });
                 p.resolve(token);
               } else {
                 p.reject(fail('auth', 'Sign-in needed'));
@@ -102,7 +112,7 @@
     // The token, while it is good. It never asks Google by itself: without a good token the answer is "sign-in needed".
     function getToken() { return isSignedIn() ? Promise.resolve(token) : Promise.reject(fail('auth', 'Sign-in needed')); }
     // Google refused the token (for example it was taken back): drop it, so nothing keeps trying with it.
-    function forget() { token = null; expiresAt = 0; }
+    function forget() { token = null; expiresAt = 0; if (keep) keep.remove(); }
 
     return { prepare: prepare, signIn: signIn, getToken: getToken, isSignedIn: isSignedIn, forget: forget };
   }
