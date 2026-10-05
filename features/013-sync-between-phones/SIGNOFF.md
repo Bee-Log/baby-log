@@ -63,3 +63,4 @@ No new fields. Sync carries the existing records (and the `profile` record from 
 - 2026-10-05: The owner had to tap Sign in twice. Google's script was downloaded only on the tap, and the window opened after the download; a phone can block a window that opens late. Now the script loads when the app opens, so the tap opens Google's window at once.
 - 2026-10-05: Released to LIVE at commit e0892cb (owner: "Release now"): sign in with one tap.
 - 2026-10-05: Owner decision, after the move to `bee-log.github.io` (its own origin): the sign-in is kept on the phone until it expires (about an hour). A reload or reopening the app within that time stays signed in and syncs at once, without Google's window. After the hour, one tap on Sign in is still needed (Google gives no longer sign-in without a server).
+- 2026-10-05: Released to LIVE at commit 14d6526 (owner: "Okay, release it"): the sign-in is kept until it expires, so a refresh within the hour stays signed in.
