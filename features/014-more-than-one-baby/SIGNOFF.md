@@ -66,3 +66,4 @@ The record format becomes **version 2** (`app-rules.md`, "Data format"):
 
 ## Feedback
 - 2026-10-05: Released to LIVE on the owner's instruction ("Yes live"), at commit b9e42f0, the day after it reached TEST. Not tested on TEST by the partner yet.
+- 2026-10-05: Released to LIVE at commit e0892cb (owner: "Release now"): entries without a baby are no longer shown under the baby `profile`; on LIVE a parent taps Review, then "Add them to [baby]" once to keep older entries visible.
