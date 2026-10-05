@@ -3,10 +3,10 @@
 Generated from the header of each `features/*/SIGNOFF.md`. Do not edit by hand.
 
 ## Ready
-- 010 Track growth against WHO (updated 2026-10-03) - `features/010-track-growth-against-who/`
+- none
 
 ## Building
-- none
+- 010 Track growth against WHO (updated 2026-10-05) - `features/010-track-growth-against-who/`
 
 ## Testing
 - none
