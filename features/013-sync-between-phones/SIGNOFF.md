@@ -60,3 +60,4 @@ No new fields. Sync carries the existing records (and the `profile` record from 
 
 ## Feedback
 - 2026-10-05: Released to LIVE on the owner's instruction ("Yes live"), at commit b9e42f0.
+- 2026-10-05: The owner had to tap Sign in twice. Google's script was downloaded only on the tap, and the window opened after the download; a phone can block a window that opens late. Now the script loads when the app opens, so the tap opens Google's window at once.

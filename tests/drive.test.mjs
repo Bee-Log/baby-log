@@ -9,7 +9,7 @@ import { build } from '../scripts/build.mjs';
 import { createFakeDrive } from './fake-drive.mjs';
 
 const out = build({ env: 'test', out: join(mkdtempSync(join(tmpdir(), 'baby-log-drive-')), 'test'), version: 't1' });
-const sandbox = { self: {} };
+const sandbox = { self: {}, setTimeout, clearTimeout };   // the sign-in request has a time limit
 for (const f of ['records.js', 'sync.js', 'drive.js', 'google-auth.js']) vm.runInNewContext(readFileSync(join(out, f), 'utf8'), sandbox);
 const { BABYLOG_DRIVE: Drive, BABYLOG_SYNC: Sync, BABYLOG_RECORDS: R, BABYLOG_GOOGLE_AUTH: Auth } = sandbox.self;
 const plain = (v) => JSON.parse(JSON.stringify(v));
@@ -98,4 +98,49 @@ test('the committed config has a public client ID (never a secret), so sync is o
 test('the sign-in token is never written to storage', () => {
   const src = readFileSync(join(out, 'google-auth.js'), 'utf8');
   assert.doesNotMatch(src.replace(/\/\/.*$/gm, ''), /localStorage|sessionStorage|indexedDB|setMeta|document\.cookie/, 'the token lives in memory only');
+});
+
+test('Google sign-in: the script loads when the app opens, so one tap opens Google\'s window at once', async () => {
+  let opened = 0, answer = null;
+  const added = [];
+  const fakeGoogle = { accounts: { oauth2: { initTokenClient: (cfg) => { answer = cfg.callback; return { requestAccessToken: () => { opened++; } }; } } } };
+  const doc = {
+    createElement: () => ({ remove() {} }),
+    head: { appendChild: (tag) => { added.push(tag); setTimeout(() => { sandbox.self.google = fakeGoogle; tag.onload(); }, 5); } }
+  };
+  try {
+    const auth = Auth.create({ clientId: 'test.apps.googleusercontent.com', document: doc });
+    const [first, second] = await Promise.all([auth.prepare(), auth.prepare()]);
+    assert.deepEqual([first, second], [true, true]);
+    assert.equal(added.length, 1, 'the script is downloaded once');
+    assert.equal(opened, 0, 'getting ready opens no window');
+    const signedIn = auth.signIn();
+    assert.equal(opened, 1, 'the window opens inside the tap, not after a download (a phone may block a late window)');
+    answer({ access_token: 'token-1', expires_in: 3600 });
+    assert.equal(await signedIn, 'token-1');
+    assert.equal(auth.isSignedIn(), true);
+  } finally {
+    delete sandbox.self.google;
+  }
+});
+
+test('Google sign-in: without network when the app opens, the tap loads the script and tries again', async () => {
+  let fail = true, opened = 0;
+  const doc = {
+    createElement: () => ({ remove() {} }),
+    head: { appendChild: (tag) => setTimeout(() => {
+      if (fail) { tag.onerror(); return; }
+      sandbox.self.google = { accounts: { oauth2: { initTokenClient: (cfg) => ({ requestAccessToken: () => { opened++; cfg.callback({ access_token: 't', expires_in: 3600 }); } }) } } };
+      tag.onload();
+    }, 5) }
+  };
+  try {
+    const auth = Auth.create({ clientId: 'test.apps.googleusercontent.com', document: doc });
+    assert.equal(await auth.prepare(), false, 'offline: not ready, and no error');
+    fail = false;
+    assert.equal(await auth.signIn(), 't');
+    assert.equal(opened, 1);
+  } finally {
+    delete sandbox.self.google;
+  }
 });
