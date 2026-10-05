@@ -2,7 +2,7 @@
 id: 010
 name: Track growth against WHO
 slug: track-growth-against-who
-status: Testing
+status: Done
 updated: 2026-10-05
 ---
 
@@ -70,4 +70,4 @@ Record weight and length and compare them with the WHO percentiles.
 **Test link.** https://oudam-meas.github.io/baby-log/test/ (open the Growth tab).
 
 ## Feedback
-(Filled in when someone tests it. Leave empty at sign-off.)
+- 2026-10-05: Released to LIVE on the owner's instruction ("Go live, I'll test later"), at commit acb7843, the same day it reached TEST. Not tested yet.

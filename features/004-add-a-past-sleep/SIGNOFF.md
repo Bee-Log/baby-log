@@ -80,3 +80,4 @@ none
 ## Feedback
 - 2026-10-03: Tested OK on TEST by the owner ("looks good so far", then "Release all"). Released to LIVE on the owner's instruction, before the partner's own test.
 - 2026-10-05: Owner decision: the AM and PM circles are placed like a clock face. The right half is 12 to 6, the left half is 6 to 12 (AM: Morning | Dawn, PM: Night | Afternoon). It reaches TEST first; LIVE gets it with the next release.
+- 2026-10-05: That change was released to LIVE at commit acb7843.
