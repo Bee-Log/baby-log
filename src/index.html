@@ -76,12 +76,14 @@
           Poo
         </button>
       </div>
-      <div class="list-head">
-        <h1 id="h-today" class="list-title">Today</h1>
-        <span class="muted">Tap a row to edit</span>
+      <div class="group">
+        <div class="list-head">
+          <h1 id="h-today" class="section-title">Today</h1>
+          <span class="muted">Tap a row to edit</span>
+        </div>
+        <ol class="timeline" id="today-list"></ol>
+        <p class="empty" id="today-empty" hidden>Nothing logged yet today.</p>
       </div>
-      <ol class="timeline" id="today-list"></ol>
-      <p class="empty" id="today-empty" hidden>Nothing logged yet today.</p>
     </section>
     <section class="view" id="view-summary" data-tab="summary" aria-labelledby="h-summary" hidden>
       <div class="sum-head">
@@ -99,7 +101,7 @@
         <div class="sum-tile"><div class="sum-label">Avg. gap</div><div class="sum-big" id="sum-gap">—</div><div class="sum-sub" id="sum-gap-sub"></div></div>
       </div>
       <div class="sum-chart">
-        <div class="sum-chart-head"><h2>Feeds · last 7 days</h2><span class="sum-sub">per day</span></div>
+        <div class="sum-chart-head"><h2 class="section-title">Feeds · last 7 days</h2><span class="sum-sub">per day</span></div>
         <div class="sum-bars" id="sum-bars" role="img" aria-label="Feeds per day for the last 7 days"></div>
         <div class="sum-days" id="sum-days"></div>
       </div>
@@ -119,7 +121,7 @@
       </div>
       <div class="gr-chart-card">
         <div class="gr-chart-head">
-          <div><h2 id="gr-chart-title">Weight</h2><div class="gr-chart-sub" id="gr-chart-sub"></div></div>
+          <div><h2 class="section-title" id="gr-chart-title">Weight</h2><div class="gr-chart-sub" id="gr-chart-sub"></div></div>
           <div class="seg gr-seg" role="group" aria-label="Chart">
             <button type="button" id="gr-show-weight" aria-pressed="true">Weight</button>
             <button type="button" id="gr-show-length" aria-pressed="false">Length</button>
@@ -134,9 +136,11 @@
         </div>
         <p class="gr-note" id="gr-note">WHO Child Growth Standards. A guide only. Ask your maternal and child health nurse if you are unsure.</p>
       </div>
-      <h2 class="gr-history-title">History</h2>
-      <ol class="gr-history" id="gr-history"></ol>
-      <p class="empty" id="gr-empty" hidden>No measurements yet. Tap Add to log one.</p>
+      <div class="group">
+        <h2 class="section-title">History</h2>
+        <ol class="gr-history" id="gr-history"></ol>
+        <p class="empty" id="gr-empty" hidden>No measurements yet. Tap Add to log one.</p>
+      </div>
       <p class="gr-credit">Growth data: WHO Child Growth Standards, © World Health Organization.</p>
     </section>
     <p class="status"><a href="#sync" id="sync-link" class="sync-link"></a> <span id="status">Checking offline support…</span> <span id="version"></span></p>
@@ -152,14 +156,15 @@
       <span class="round-spacer"></span>
     </header>
 
-    <div class="seg" role="group" aria-label="Type of feed">
-      <button type="button" id="mode-breast" aria-pressed="true">Breast</button>
-      <button type="button" id="mode-bottle" aria-pressed="false">Bottle</button>
+    <div class="group">
+      <div class="seg" role="group" aria-label="Type of feed">
+        <button type="button" id="mode-breast" aria-pressed="true">Breast</button>
+        <button type="button" id="mode-bottle" aria-pressed="false">Bottle</button>
+      </div>
+      <p class="muted last-line" id="last-line"></p>
     </div>
 
-    <p class="muted last-line" id="last-line"></p>
-
-    <div id="panel-breast">
+    <div class="stack" id="panel-breast">
       <div class="timer-block only-log" id="breast-timer-block">
         <div class="muted" id="breast-started">Not started yet</div>
         <div class="timer" id="breast-timer" aria-live="off">00:00</div>
@@ -202,7 +207,7 @@
       </div>
     </div>
 
-    <div id="panel-bottle" hidden>
+    <div class="stack" id="panel-bottle" hidden>
       <div class="bottle-grid">
         <svg id="bt-svg" width="150" height="300" viewBox="0 0 150 300" role="img" aria-label="Bottle" class="bottle">
           <defs><clipPath id="bottle-body"><rect x="30" y="64" width="90" height="216" rx="22"></rect></clipPath></defs>
@@ -239,9 +244,10 @@
       </div>
     </div>
 
-    <div class="screen-fill"></div>
-    <button type="button" class="save-btn" id="feed-save" disabled>Stop and save</button>
-    <button type="button" class="delete-btn" id="feed-delete" hidden>Delete this entry</button>
+    <div class="actions">
+      <button type="button" class="save-btn" id="feed-save" disabled>Stop and save</button>
+      <button type="button" class="delete-btn" id="feed-delete" hidden>Delete this entry</button>
+    </div>
   </section>
 
   <section class="screen" id="screen-edit" aria-labelledby="h-edit" hidden>
@@ -258,9 +264,10 @@
     </div>
     <p id="edit-nappy" class="edit-kind" hidden></p>
 
-    <div class="screen-fill"></div>
-    <button type="button" class="save-btn" id="edit-save" disabled>Save changes</button>
-    <button type="button" class="delete-btn" id="edit-delete" disabled>Delete this entry</button>
+    <div class="actions">
+      <button type="button" class="save-btn" id="edit-save" disabled>Save changes</button>
+      <button type="button" class="delete-btn" id="edit-delete" disabled>Delete this entry</button>
+    </div>
   </section>
 
   <section class="screen" id="screen-sleep-edit" aria-labelledby="h-sleep-edit" hidden>
@@ -271,14 +278,15 @@
       <h1 id="h-sleep-edit">Edit sleep</h1>
       <button type="button" class="head-delete" id="se-delete" aria-label="Delete this sleep"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"></path><path d="M10 11v6M14 11v6"></path><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"></path><path d="M9 7V4h6v3"></path></svg><span class="head-delete-text">Tap again to delete</span></button>
     </header>
-    <div class="pf-card">
+    <div class="card">
       <div class="pf-field"><label for="se-from">Fell asleep</label><input id="se-from" type="datetime-local" step="300"></div>
       <div class="pf-field" id="se-to-field"><label for="se-to">Woke up</label><input id="se-to" type="datetime-local" step="300"></div>
     </div>
     <p class="muted" id="se-running" hidden>This sleep is still going. It ends when you tap Wake up.</p>
     <p class="ps-hint bad" id="se-hint" role="status" hidden></p>
-    <div class="screen-fill"></div>
-    <button type="button" class="save-btn" id="se-save" disabled>Save changes</button>
+    <div class="actions">
+      <button type="button" class="save-btn" id="se-save" disabled>Save changes</button>
+    </div>
   </section>
 
   <section class="screen" id="screen-sleep" aria-labelledby="h-sleep" hidden>
@@ -353,7 +361,7 @@
       <div class="ps-hint" id="ps-hint" role="status" hidden></div>
       <button type="button" class="ps-add" id="ps-add">Add sleep</button>
     </div>
-    <div>
+    <div class="group">
       <h2 class="section-title">Logged sleeps</h2>
       <ol class="timeline" id="sleep-list"></ol>
       <p class="empty" id="sleep-empty" hidden>No sleeps logged yet.</p>
@@ -389,7 +397,7 @@
       <div class="pf-name" id="pf-name">[Nickname]</div>
       <div class="pf-age" id="pf-age"></div>
     </div>
-    <div class="pf-card">
+    <div class="card">
       <div class="pf-field"><label for="pf-nickname">Nickname</label><input id="pf-nickname" type="text" maxlength="20" placeholder="What do you call them?" autocomplete="off"></div>
       <div class="pf-field"><label for="pf-dob">Date of birth</label><input id="pf-dob" type="date"></div>
       <div class="pf-field">
@@ -401,8 +409,9 @@
         <span class="muted pf-note">Used to pick the WHO growth chart.</span>
       </div>
     </div>
-    <div class="screen-fill"></div>
-    <button type="button" class="save-btn" id="pf-save" disabled>Save profile</button>
+    <div class="actions">
+      <button type="button" class="save-btn" id="pf-save" disabled>Save profile</button>
+    </div>
   </section>
 
   <section class="screen" id="screen-sync" aria-labelledby="h-sync" hidden>
@@ -414,14 +423,14 @@
       <span class="round-spacer"></span>
     </header>
     <div class="sync-card" id="sync-card" data-state="off">
-      <h2 class="sync-state" id="sy-state"></h2>
+      <h2 class="section-title sync-state" id="sy-state"></h2>
       <p class="sync-detail" id="sy-detail"></p>
       <p class="sync-error" id="sy-error" hidden></p>
       <button type="button" class="sync-btn primary" id="sy-signin" hidden>Sign in with Google</button>
       <button type="button" class="sync-btn" id="sy-now" hidden>Sync now</button>
     </div>
     <div class="sync-card">
-      <h2 class="sync-state">Your data</h2>
+      <h2 class="section-title sync-state">Your data</h2>
       <p class="sync-detail">Download every entry from this phone. The files can be opened in a spreadsheet or kept as a backup.</p>
       <button type="button" class="sync-btn" id="sy-csv">Download CSV (spreadsheet)</button>
       <button type="button" class="sync-btn" id="sy-jsonl">Download JSONL (all entries)</button>
@@ -443,9 +452,10 @@
       <div class="card-row"><label for="ms-length">Length (cm)</label><input id="ms-length" type="number" inputmode="decimal" min="25" max="130" step="0.1" placeholder="e.g. 54"></div>
     </div>
     <p class="muted ms-hint">Fill in the weight, the length, or both. Length is measured lying down.</p>
-    <div class="screen-fill"></div>
-    <button type="button" class="save-btn" id="ms-save" disabled>Save measurement</button>
-    <button type="button" class="delete-btn" id="ms-delete" hidden>Delete this entry</button>
+    <div class="actions">
+      <button type="button" class="save-btn" id="ms-save" disabled>Save measurement</button>
+      <button type="button" class="delete-btn" id="ms-delete" hidden>Delete this entry</button>
+    </div>
   </section>
 
   <section class="screen" id="screen-babies" aria-labelledby="h-babies" hidden>
@@ -458,7 +468,7 @@
     </header>
     <p class="bb-intro" id="bb-intro" hidden></p>
     <div class="sync-card" id="bb-signin-card" hidden>
-      <h2 class="sync-state">Using Baby Log on another phone?</h2>
+      <h2 class="section-title sync-state">Using Baby Log on another phone?</h2>
       <p class="sync-detail">Sign in with the shared Google account to load your baby from there.</p>
       <button type="button" class="sync-btn primary" id="bb-signin">Sign in with Google</button>
       <p class="sync-detail" id="bb-sync-state" hidden></p>
