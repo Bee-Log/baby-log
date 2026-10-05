@@ -167,7 +167,7 @@ These screens are not in the first designs. The owner asked for them: every entr
   - one baby found → Today opens with that baby;
   - two or more → "Which baby?" and the list;
   - none → "No baby was found in the Google account. Add your baby to start."
-- **Entries from before** (`25`). A phone that was used before babies had names shows those entries as one row: "Entries from before · 6 entries · add your baby's details". Tapping it opens the profile. **Add a baby** is hidden until then.
+- **Entries without a baby** (`25`, changed 5 October). Entries logged before babies had their own entries are not shown under any baby. Today shows a small yellow notice, "6 older entries have no baby. Review". The Babies screen has a card with **Add them to [baby]** and **Delete them**.
 - Each baby has its own entries, sleep card and breast timer. Twins can sleep or feed at the same time.
 
 **For you to design:** the Babies screen and the welcome screen, and how the header shows that it switches babies.

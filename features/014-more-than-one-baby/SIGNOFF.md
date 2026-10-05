@@ -28,10 +28,9 @@ Every entry belongs to one baby. Parents can add more than one baby and switch b
 - **The gate.** While no baby is chosen, every screen goes to the Babies screen. It then says "Welcome. Add your baby to start." and offers **Sign in with Google** (when sync is set up) and **Add a baby**. There is no back button, because there is nothing to go back to.
 - **Opening without asking.** The app opens on the baby chosen last time on this phone, or on the only baby. The choice is kept on the phone only, so each parent can look at a different baby.
 - **Signing in on the welcome screen** runs sync. When it finishes: one baby → Today opens with that baby; two or more → "Which baby?"; none → "No baby was found in the Google account. Add your baby to start."
-- **Entries from before this feature** have no baby id. They belong to the baby `profile`.
-  - On TEST, that is the profile from feature 002, so everything opens as before.
-  - On a phone with old entries but no profile (LIVE, where 002 is not released yet), the welcome screen shows them as **Entries from before · N entries · add your baby's details**. Adding the details joins them to that baby. **Add a baby** is hidden until then, so the old entries are not left behind.
-  - Old entries are never rewritten. A breast timer that was running during the update moves to the baby `profile` too.
+- **Entries from before this feature** have no baby id. **Changed on 2026-10-05 (owner):** they belong to no baby and are never shown under a baby by guessing.
+  - Today shows "N older entries have no baby. Review". The Babies screen says how many there are, with **Add them to [baby]** and **Delete them** (two taps).
+  - Before this change they belonged to the baby with the id `profile`. The owner found that a new test profile showed leftover test entries from the day before: the welcome screen's "Entries from before" row opened a form titled "Add a baby", which attached the old entries. That row is gone, and **Add a baby** is always shown.
 - **Each screen shows only the chosen baby:** Today, the Feed screen (last feed, timer), Sleep (the card, the logged sleeps, the overlap check), Edit screens and the Summary. An old link to another baby's entry says "That entry is not there any more."
 - **Export:** the CSV has every baby, with two new columns at the end: `baby_id` and `baby` (the nickname). JSONL has every entry as stored.
 

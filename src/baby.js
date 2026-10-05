@@ -6,18 +6,17 @@
   var Sc = root.BABYLOG_SCHEMA;
   var store = root.BABYLOG_STORE;
   var KEY = 'currentBaby';
-  var OLD_TIMER_KEY = 'breastTimer';     // a breast timer from before feature 014 (one for the whole phone)
 
   var current = null;
 
   function id() { return current; }
 
   // Where the breast timer of the current baby is kept, so two babies can each have one running.
-  function timerKey() { return OLD_TIMER_KEY + ':' + current; }
+  function timerKey() { return 'breastTimer:' + current; }
 
   // Read the babies on this phone, and pick one without asking if that is clear. Resolves with the list of babies.
   function load() {
-    return Promise.all([store.getMeta(KEY), store.all(), moveOldTimer()]).then(function (r) {
+    return Promise.all([store.getMeta(KEY), store.all()]).then(function (r) {
       var list = Pr.babies(r[1]);
       current = Pr.pick(list, r[0]);
       // Keep a baby picked because it was the only one, so a second baby arriving later does not make the app ask again.
@@ -36,13 +35,10 @@
     return store.all().then(function (all) { return Sc.forBaby(all, current); });
   }
 
-  // A timer that was running before feature 014 belongs to the first baby, like the entries from that time.
-  function moveOldTimer() {
-    return store.getMeta(OLD_TIMER_KEY).then(function (timer) {
-      if (!timer) return null;
-      return store.setMeta(OLD_TIMER_KEY + ':' + Sc.LEGACY_BABY, timer).then(function () { return store.removeMeta(OLD_TIMER_KEY); });
-    });
+  // Entries that belong to no baby (made before feature 014). They are not shown until a parent adds them to a baby.
+  function unlinked() {
+    return store.all().then(Sc.unlinked);
   }
 
-  root.BABYLOG_BABY = { id: id, timerKey: timerKey, load: load, choose: choose, records: records };
+  root.BABYLOG_BABY = { id: id, timerKey: timerKey, load: load, choose: choose, records: records, unlinked: unlinked };
 })(typeof self !== 'undefined' ? self : this);

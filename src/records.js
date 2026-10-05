@@ -138,6 +138,18 @@
     return out;
   }
 
+  // Give an entry without a baby (made before feature 014) the baby a parent chose. Like an edit: the same id, a newer
+  // updatedAt and this phone, so sync carries it. It becomes a version 2 entry.
+  function linkToBaby(rec, babyId, now, deviceId) {
+    var out = {};
+    for (var k in rec) out[k] = rec[k];
+    out.v = VERSION;
+    out.babyId = String(babyId);
+    out.deviceId = deviceId || rec.deviceId;
+    out.updatedAt = Math.max(now, rec.updatedAt + 1);
+    return out;
+  }
+
   // The entry's details with some fields replaced. Fields the app does not know about are kept.
   function withFields(d, fields, more) {
     var out = {};
@@ -190,7 +202,7 @@
     TYPES: TYPES, VERSION: VERSION, NAPPY_PAIR_MS: NAPPY_PAIR_MS,
     makeRecord: makeRecord, isNewer: isNewer, tombstone: tombstone, dayWindow: dayWindow,
     nappyRows: nappyRows, nappyLabel: nappyLabel, feedLabel: feedLabel, timelineRows: timelineRows, lastFeed: lastFeed, latestFeed: latestFeed, agoText: agoText,
-    revise: revise, withFields: withFields, sameContent: sameContent, hhmm: hhmm, timeInDay: timeInDay,
+    revise: revise, linkToBaby: linkToBaby, withFields: withFields, sameContent: sameContent, hhmm: hhmm, timeInDay: timeInDay,
     formatClock: formatClock, dateLabel: dateLabel, dayName: dayName
   };
 })(typeof self !== 'undefined' ? self : this);
