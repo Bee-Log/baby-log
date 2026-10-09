@@ -1,0 +1,17 @@
+# Cloudflare Worker settings for the Baby Log sign-in relay (ADR-002). Nothing secret is in this file.
+# The client secret is set once with:  npx wrangler secret put GOOGLE_CLIENT_SECRET   (see README.md)
+name = "baby-log-relay"
+main = "worker.mjs"
+compatibility_date = "2026-09-01"
+
+[vars]
+# The public Google client ID (also in src/config.js).
+GOOGLE_CLIENT_ID = "280371776054-ejcc7qlq4j2b9gsv001nrvo2d57gu1t2.apps.googleusercontent.com"
+# Only pages from these web addresses may use the relay (TEST and LIVE share one address).
+ALLOWED_ORIGINS = "https://bee-log.github.io"
+# The addresses Google sends people back to after sign-in. They must also be listed on the Google client.
+REDIRECT_URIS = "https://bee-log.github.io/baby-log/,https://bee-log.github.io/baby-log/test/"
+
+# Keep Cloudflare from storing request logs for this Worker.
+[observability]
+enabled = false

@@ -17,7 +17,8 @@ BOARD.md                generated list of features by status (never edit by hand
 scripts/make_board.py   rebuilds BOARD.md from the SIGNOFF.md headers
 prototype/baby-log.html first prototype, for reference only
 docs/ux/                how the screens work now and what to design next (share with Claude Design)
-docs/adr/               architecture decision records (ADR-001: data storage and sync)
+docs/adr/               architecture decision records (ADR-001: data storage and sync, ADR-002: sign-in relay)
+broker/                 the small Cloudflare Worker that keeps the Google sign-in alive (ADR-002; deploy steps in broker/README.md)
 legal/                  public about, privacy and terms pages for Google's consent screen (published by the deploy workflow; see legal/README.md)
 DEPLOY.md               how test and live are published, rollback, links
 scripts/build.mjs       builds src/ into dist/test and dist/live (no dependencies)
@@ -41,6 +42,7 @@ To build, the owner says "build feature 001" or names the signoff. Find it in `f
 - The phone is the main store (IndexedDB). It must work fully offline.
 - Storage and sync: see `docs/adr/ADR-001-data-storage-and-sync.md` (one shared Google account, one append-only file per phone in the hidden app data folder, merge by id with the newest `updatedAt`).
 - Data is plain JSON with a CSV export, so it can move to another backend later.
+- Sign-in renewal (ADR-002, trial from 2026-10-09): a stateless Cloudflare Worker on the free plan holds Google's client secret and swaps codes and refresh tokens for tokens. It stores nothing and never sees an entry. The app side is not built yet; until it is, the hourly sign-in tap stays.
 - Every entry belongs to one baby (feature 014, record format version 2: `v` and `babyId`). An entry belongs to a baby only through its own `babyId`; entries without one (version 1) are not shown until a parent adds them to a baby or deletes them. Unreadable entries are kept and synced, never deleted.
 - Data protection (owner decisions, 2026-10-03 and 2026-10-05): TEST and LIVE share one browser origin, so they share storage, and real data is protected in code (see "Shared origin" in app-rules). On 2026-10-05 the repository moved to the **Bee-Log** organisation, so the app runs on `bee-log.github.io` and no longer shares storage with the owner's other sites. Keep that organisation for this app only: any other Pages site there would share the origin again.
 - Full rules and the record format: `.claude/skills/build-feature/references/app-rules.md`.

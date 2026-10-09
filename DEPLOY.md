@@ -84,3 +84,7 @@ The folder `legal/` holds an about page, a privacy policy and terms of service. 
 - Terms of service: https://bee-log.github.io/baby-log/legal/terms.html
 
 Paste them in Google Cloud, project `project-45070-beelog`, Google Auth platform, **Branding**. Keep the privacy policy true: see `legal/README.md`.
+
+## Sign-in relay (Cloudflare Worker)
+`broker/` holds a tiny Worker that will renew the Google sign-in without a tap (ADR-002). It is deployed by hand with `wrangler`, not by GitHub Actions. Steps are in `broker/README.md`. Its client secret lives only in Cloudflare. The app does not use the relay yet.
+
