@@ -157,6 +157,56 @@ test('a reload within the hour stays signed in and syncs, opening nothing; after
   await a.context.close();
 });
 
+test('Sign out: this phone stops syncing, keeps its entries, and the next sign-in shows the account list', async () => {
+  const fake = createFakeDrive();
+  const a = await startPhone(fake, { running: true });
+  assert.equal(await a.page.evaluate(() => { document.getElementById('sync-link').click(); return document.getElementById('sy-signout').hidden; }), true, 'not signed in: nothing to sign out of');
+  await a.page.click('#sy-signin');
+  await a.page.clock.fastForward(100);
+  await waitStatus(a.page, 'Synced');
+  assert.deepEqual(await a.page.evaluate(() => window.__googlePrompts), [''], 'the first sign-in reuses the account');
+  assert.match(await text(a.page, '#sy-detail'), /This phone stays signed in until \d{1,2}:\d{2} (am|pm)\./);
+  assert.equal(await a.page.isVisible('#sy-signout'), true);
+  await ownEntry(a.page, 'f1', 'feed', at(15), { d: { kind: 'Bottle', ml: 60 } });
+
+  await a.page.click('#sy-signout');
+  await waitStatus(a.page, 'Sign in to sync');
+  assert.equal(await a.page.isVisible('#sy-signout'), false);
+  assert.equal(await a.page.isVisible('#sy-signin'), true);
+  assert.equal(await a.page.evaluate(() => localStorage.getItem('test-baby-log-google-signin')), '{"signedOut":true}', 'the token is gone');
+  assert.equal((await feeds(a.page)).length, 1, 'the entry is still on the phone');
+  const before = fake.requests.length;
+  await a.page.clock.fastForward(5 * 60 * 1000);
+  assert.equal(fake.requests.length, before, 'nothing is sent while signed out');
+
+  await a.page.reload();                                      // reopening the app stays signed out
+  await waitStatus(a.page, 'Sign in to sync');
+  assert.equal(await googleWindows(a.page), 0);
+  await a.page.click('#sy-signin');                           // the reload keeps the Sync screen open
+  await a.page.clock.fastForward(100);
+  await waitStatus(a.page, 'Synced');
+  assert.deepEqual(await a.page.evaluate(() => window.__googlePrompts), ['select_account'], 'the account list is shown after a sign-out');
+  assert.match(await a.page.evaluate(() => localStorage.getItem('test-baby-log-google-signin')), /good-token/);
+  assert.deepEqual(a.errors, []);
+  await a.context.close();
+});
+
+test('Sign out while a sync is running: the sync does not bring the status back to Synced or Could not sync', async () => {
+  const fake = createFakeDrive();
+  const a = await startPhone(fake, { running: true, driveSilent: true });
+  await a.page.click('#sync-link');
+  await a.page.click('#sy-signin');
+  await a.page.clock.fastForward(100);
+  await a.page.waitForFunction(() => document.getElementById('sync-link').textContent === 'Syncing…');
+  await a.page.click('#sy-signout');
+  await waitStatus(a.page, 'Sign in to sync');
+  await a.page.clock.fastForward(61000);                       // the stuck sync gives up
+  assert.equal(await a.page.textContent('#sync-link'), 'Sign in to sync');
+  assert.equal(await a.page.isHidden('#sy-error'), true);
+  assert.deepEqual(a.errors, []);
+  await a.context.close();
+});
+
 test('the CSV and JSONL downloads hold the entries', async () => {
   const fake = createFakeDrive();
   const a = await startPhone(fake, { configured: false });

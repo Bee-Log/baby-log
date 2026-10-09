@@ -141,6 +141,35 @@ test('an expired sign-in is not used and is removed; a refused one is removed to
   assert.equal(Auth.create({ clientId: 'test.apps.googleusercontent.com', keep: broken }).isSignedIn(), false, 'a damaged value is ignored');
 });
 
+test('sign out drops the token on this phone; the next sign-in shows the account list, then goes back to normal', async () => {
+  const keep = memoryKeep();
+  const prompts = [];
+  sandbox.self.google = { accounts: { oauth2: { initTokenClient: (cfg) => ({ requestAccessToken: (o) => { prompts.push(o.prompt); cfg.callback({ access_token: 'token-' + prompts.length, expires_in: 3600 }); } }) } } };
+  try {
+    const auth = Auth.create({ clientId: 'test.apps.googleusercontent.com', keep });
+    await auth.signIn();
+    assert.ok(auth.expiry() > Date.now() + 3500 * 1000, 'the end of the sign-in is known');
+    auth.signOut();
+    assert.equal(auth.isSignedIn(), false);
+    assert.equal(auth.expiry(), 0);
+    assert.deepEqual(plain(keep.value), { signedOut: true }, 'the token is not kept');
+    await assert.rejects(auth.getToken(), (e) => e.code === 'auth');
+    auth.forget();                                                       // a late "refused" answer must not undo the sign-out
+    assert.deepEqual(plain(keep.value), { signedOut: true });
+
+    const reopened = Auth.create({ clientId: 'test.apps.googleusercontent.com', keep });   // the app is closed and opened again
+    assert.equal(reopened.isSignedIn(), false);
+    assert.deepEqual(plain(keep.value), { signedOut: true }, 'still remembered');
+    await reopened.signIn();
+    assert.equal(reopened.isSignedIn(), true);
+    assert.equal(keep.value.token, 'token-2');
+    reopened.signOut(); await reopened.signIn(); await reopened.signIn();
+    assert.deepEqual(prompts, ['', 'select_account', 'select_account', ''], 'the account list is shown once after each sign-out');
+  } finally {
+    delete sandbox.self.google;
+  }
+});
+
 test('Google sign-in: the script loads when the app opens, so one tap opens Google\'s window at once', async () => {
   let opened = 0, answer = null;
   const added = [];

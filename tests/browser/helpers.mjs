@@ -165,10 +165,11 @@ export function readRecords(page, dbName = 'test-baby-log') {
 
 // ---- A fake Google for the sync tests (no real Google account is used) ----
 // Google's sign-in script, as a stub. Every call is one opening of Google's window on a real phone: it is counted
-// in window.__googleWindows, so the tests can check that the app never opens it by itself.
-const GOOGLE_STUB = `window.__googleWindows = 0;
+// in window.__googleWindows, so the tests can check that the app never opens it by itself. The "prompt" asked for is
+// kept in window.__googlePrompts ('' = reuse the account, 'select_account' = show the account list).
+const GOOGLE_STUB = `window.__googleWindows = 0; window.__googlePrompts = [];
 window.google = { accounts: { oauth2: { initTokenClient(cfg) { return { requestAccessToken(opts) {
-  window.__googleWindows++;
+  window.__googleWindows++; window.__googlePrompts.push(opts && opts.prompt);
   setTimeout(() => cfg.callback({ access_token: window.__stubToken || 'good-token', expires_in: 3600 }), 5);
 } }; } } } };`;
 
