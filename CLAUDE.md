@@ -18,6 +18,7 @@ scripts/make_board.py   rebuilds BOARD.md from the SIGNOFF.md headers
 prototype/baby-log.html first prototype, for reference only
 docs/ux/                how the screens work now and what to design next (share with Claude Design)
 docs/adr/               architecture decision records (ADR-001: data storage and sync)
+legal/                  public about, privacy and terms pages for Google's consent screen (published by the deploy workflow; see legal/README.md)
 DEPLOY.md               how test and live are published, rollback, links
 scripts/build.mjs       builds src/ into dist/test and dist/live (no dependencies)
 tests/                  node:test checks, run with `npm test`
