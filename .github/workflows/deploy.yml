@@ -3,6 +3,7 @@ name: Deploy Pages
 # One GitHub Pages site holds both addresses:
 #   LIVE  https://bee-log.github.io/baby-log/        built from the commit recorded by "Release LIVE"
 #   TEST  https://bee-log.github.io/baby-log/test/   built from `main`
+#   PAGES https://bee-log.github.io/baby-log/legal/  about, privacy and terms, copied from `main` (folder legal/)
 # Every merge to main runs this. It rebuilds both, so LIVE stays on its recorded commit.
 # The LIVE commit is the newest deployment record in the `live-release` environment.
 on:
@@ -76,6 +77,13 @@ jobs:
           fi
           touch _site/.nojekyll
           ls -R _site | head -50
+
+      - name: Add the public pages (about, privacy, terms)
+        # Always from main, so the addresses work as soon as a change is merged, whatever the LIVE commit is.
+        # https://bee-log.github.io/baby-log/legal/ (used on the Google sign-in consent screen, see DEPLOY.md)
+        run: |
+          mkdir -p _site/legal
+          cp main-src/legal/*.html _site/legal/
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

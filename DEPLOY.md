@@ -67,7 +67,7 @@ Sync (ADR-001, feature 013) is switched on by the public client ID in `src/confi
    - While the consent screen is in "Testing", add the shared account as a test user.
 3. Put the **client ID** in `googleClientId` in `src/config.js` (done on 2026-10-04). The client ID is public. Never use or commit the client secret.
 4. Merge the change. Open the TEST app, go to **Sync and data**, and tap **Sign in with Google** on two phones. Check that an entry on one phone shows on the other.
-5. If the sign-in stops working after about 7 days, the project is still in "Testing" mode. Publish the OAuth app.
+5. If the sign-in stops working after about 7 days, the project is still in "Testing" mode. Publish the OAuth app. (The owner published it on 2026-10-09.)
 6. When TEST works, run **Release LIVE**.
 
 TEST uses the Drive folder `baby-log-test` and LIVE uses `baby-log`. Both are inside the hidden app-data folder, so they never mix.
@@ -75,3 +75,12 @@ TEST uses the Drive folder `baby-log-test` and LIVE uses `baby-log`. Both are in
 ## One-time setup (owner)
 - Repository **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 - Recommended: **Settings → Branches** → protect `main` (require a pull request and the **CI** check).
+
+## Public pages for the consent screen
+The folder `legal/` holds an about page, a privacy policy and terms of service. The deploy workflow copies them from `main` on every merge, so they do not wait for a LIVE release. They are not part of the app and are not cached by its service worker.
+
+- Application home page: https://bee-log.github.io/baby-log/legal/
+- Privacy policy: https://bee-log.github.io/baby-log/legal/privacy.html
+- Terms of service: https://bee-log.github.io/baby-log/legal/terms.html
+
+Paste them in Google Cloud, project `project-45070-beelog`, Google Auth platform, **Branding**. Keep the privacy policy true: see `legal/README.md`.
