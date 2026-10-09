@@ -36,6 +36,10 @@ test('the privacy policy says what the app does: the same Google permission, no 
   const scope = /auth\/([a-z.]+)'/.exec(read('src/google-auth.js'))[1];
   assert.ok(html.includes(`<strong>${scope}</strong>`), `the policy names the permission the app asks for (${scope})`);
   assert.match(html, /no server and no database/);
+  assert.match(html, /client web app/);
+  assert.match(html, /does not receive, store or keep any of your information/);
+  assert.match(html, /No data is persisted by Baby Log/);
+  assert.match(html, /browser keeps a copy in its storage \(IndexedDB\)/, 'the policy also tells the truth about the copy on the phone');
   assert.match(html, /Google API Services User Data Policy<\/a>, including the Limited Use requirements/);
   assert.match(html, /Sign out on this phone/);
   assert.match(html, /myaccount\.google\.com\/permissions/);
