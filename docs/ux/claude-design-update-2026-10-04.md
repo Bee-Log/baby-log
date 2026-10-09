@@ -137,6 +137,7 @@ This screen is not in the first designs. It opens from the sync line at the bott
   - Both phones sign in with **one shared Google account**.
   - After one tap on **Sign in with Google**, the phone sends and receives entries by itself. It does this after each change, when the app comes back to the front, and every 3 minutes.
   - Google asks to sign in again **about once an hour**. Google's window only opens when someone taps **Sign in**. It never opens by itself.
+- **Sign out on this phone** (added 2026-10-09): a button on the status card, shown only while the phone is signed in. It signs out this phone only. The entries stay, and the other phone stays signed in. The next sign-in shows Google's account list, so a parent can choose another account. The card also says when the sign-in ends ("This phone stays signed in until 6:17 pm").
 - **The status card** shows one of: "Sync is not set up yet", "Sign in to sync", "Syncing…", "Synced", "Waiting for network", "Could not sync". After a failure, a small "Details:" line shows the reason.
 - **Your data:** **Download CSV (spreadsheet)** and **Download JSONL (all entries)**.
 

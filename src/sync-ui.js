@@ -19,6 +19,7 @@
   var state = 'off';          // 'off' (not set up), 'signin', 'syncing', 'synced', 'offline', 'error'
   var lastSynced = null;
   var running = false, again = false, timer = null;
+  var epoch = 0;              // goes up at every sign-out, so a sync that was already running does not undo it
   var lastError = '';         // the technical reason of the last failure, shown on the screen so it can be reported
   var SIGNIN_KEY = cfg.storagePrefix + 'baby-log-google-signin';
   var listeners = [];         // told about every change of state (the Babies screen shows it)
@@ -39,10 +40,13 @@
   };
 
   function render() {
+    var until = auth ? auth.expiry() : 0;     // when Google's sign-in ends, while this phone is signed in
     $('sync-link').textContent = LABEL[state] + (state === 'synced' && lastSynced ? ' · ' + R.formatClock(lastSynced) : '');
     $('sy-state').textContent = LABEL[state];
-    $('sy-detail').textContent = DETAIL[state] + (state === 'synced' && lastSynced ? ' Last synced at ' + R.formatClock(lastSynced) + '.' : '');
+    $('sy-detail').textContent = DETAIL[state] + (state === 'synced' && lastSynced ? ' Last synced at ' + R.formatClock(lastSynced) + '.' : '') +
+      (until ? ' This phone stays signed in until ' + R.formatClock(until) + '.' : '');
     $('sy-signin').hidden = state !== 'signin';
+    $('sy-signout').hidden = !until;
     $('sy-now').hidden = state === 'off' || state === 'signin';
     $('sy-now').disabled = state === 'syncing';
     $('sy-error').hidden = !lastError || state === 'synced';
@@ -76,16 +80,19 @@
     if (!auth.isSignedIn()) { setState('signin'); return Promise.resolve(); }
     if (running) { again = true; return Promise.resolve(); }
     running = true;
+    var myEpoch = epoch;
     lastError = '';
     setState('syncing');
     var limit = new Promise(function (resolve, reject) {
       setTimeout(function () { reject(Object.assign(new Error('Sync took longer than a minute'), { code: 'timeout' })); }, SYNC_TIMEOUT_MS);
     });
     return Promise.race([engine.sync(), limit]).then(function (result) {
-      lastSynced = Date.now();
       if (result.merged > 0) ctx.dataChanged();      // entries came from the other phone
+      if (myEpoch !== epoch) return;                 // signed out while this ran: the screen already says so
+      lastSynced = Date.now();
       setState('synced');
     }).catch(function (err) {
+      if (myEpoch !== epoch) return;
       console.warn('[baby-log] sync', err);
       if (err.code === 'auth') { auth.forget(); again = false; }
       lastError = (err.code ? err.code + ': ' : '') + (err.message || String(err));
@@ -103,6 +110,17 @@
       setState(err.code === 'offline' ? 'offline' : 'signin');
       ctx.toast(err.code === 'offline' ? 'No network. Try again when you are online.' : 'Sign-in did not finish. Please try again.');
     });
+  }
+
+  // Sign out on this phone only. The entries stay here, and the other phone stays signed in.
+  function signOut() {
+    auth.signOut();
+    epoch++;
+    clearTimeout(timer);
+    again = false;
+    lastError = '';
+    setState('signin');
+    ctx.toast('Signed out on this phone. Your entries are still here.');
   }
 
   // Something changed on this phone: send it soon, if signed in.
@@ -155,6 +173,7 @@
   function init(context) {
     ctx = context;
     $('sy-signin').addEventListener('click', signIn);
+    $('sy-signout').addEventListener('click', function () { if (auth) signOut(); });
     $('sy-now').addEventListener('click', run);
     $('sy-csv').addEventListener('click', function () { exportAs('csv'); });
     $('sy-jsonl').addEventListener('click', function () { exportAs('jsonl'); });
@@ -180,5 +199,5 @@
     setInterval(tick, PULL_EVERY_MS);
   }
 
-  root.BABYLOG_SYNC_UI = { init: init, show: show, hide: hide, signIn: signIn, onState: onState, status: status };
+  root.BABYLOG_SYNC_UI = { init: init, show: show, hide: hide, signIn: signIn, signOut: signOut, onState: onState, status: status };
 })(typeof self !== 'undefined' ? self : this);

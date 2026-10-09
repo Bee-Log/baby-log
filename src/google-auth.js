@@ -6,6 +6,7 @@
 // doing it by itself made the app open and close it in a loop. A sign-in lasts about an hour; then the app asks again.
 // Google's script is loaded when the app opens (prepare), so a tap opens the window at once. A window opened later,
 // after waiting for the script to download, can be blocked by the phone: then the first tap did nothing.
+// Sign out works on this phone only: it drops the token here and the next sign-in lets the person choose the account.
 // Only the public client ID is used. There is no client secret.
 (function (root) {
   var SCRIPT = 'https://accounts.google.com/gsi/client';
@@ -23,16 +24,17 @@
   function isConfigured(clientId) { return !!clientId && clientId.indexOf('PLACEHOLDER') !== 0; }
 
   // options: { clientId, document, keep }. document is for tests. keep (optional) remembers the sign-in until it expires:
-  //   keep.load() -> { token, expiresAt } or null, keep.save({ token, expiresAt }), keep.remove()
+  //   keep.load() -> { token, expiresAt } or { signedOut: true } or null, keep.save(...), keep.remove()
   function create(options) {
     var doc = options.document || root.document;
     var keep = options.keep || null;
     var token = null, expiresAt = 0;
     var saved = keep && keep.load();
+    var chooseAccount = !!(saved && saved.signedOut === true);   // after a sign-out the next sign-in shows the account list
     if (saved && typeof saved.token === 'string' && Date.now() < saved.expiresAt - EXPIRY_MARGIN_MS) {
       token = saved.token;
       expiresAt = saved.expiresAt;
-    } else if (keep) {
+    } else if (keep && !chooseAccount) {
       keep.remove();                 // nothing kept, or it has expired
     }
     var client = null, pending = null, loading = null;
@@ -65,6 +67,7 @@
               if (resp && resp.access_token) {
                 token = resp.access_token;
                 expiresAt = Date.now() + (Number(resp.expires_in) || 3600) * 1000;
+                chooseAccount = false;
                 if (keep) keep.save({ token: token, expiresAt: expiresAt });
                 p.resolve(token);
               } else {
@@ -104,17 +107,23 @@
           resolve: function (t) { clearTimeout(timer); resolve(t); },
           reject: function (e) { clearTimeout(timer); reject(e); }
         };
-        c.requestAccessToken({ prompt: '' });
+        c.requestAccessToken({ prompt: chooseAccount ? 'select_account' : '' });
       });
     }
 
     function isSignedIn() { return !!token && Date.now() < expiresAt - EXPIRY_MARGIN_MS; }
+    // When the sign-in ends (milliseconds), or 0 when not signed in.
+    function expiry() { return isSignedIn() ? expiresAt : 0; }
     // The token, while it is good. It never asks Google by itself: without a good token the answer is "sign-in needed".
     function getToken() { return isSignedIn() ? Promise.resolve(token) : Promise.reject(fail('auth', 'Sign-in needed')); }
     // Google refused the token (for example it was taken back): drop it, so nothing keeps trying with it.
-    function forget() { token = null; expiresAt = 0; if (keep) keep.remove(); }
+    function forget() { token = null; expiresAt = 0; if (keep && !chooseAccount) keep.remove(); }
+    // Sign out on this phone: drop the token and remember that the next sign-in must show the account list.
+    // The token is not cancelled at Google. Google's cancel removes the app's permission for the whole account, which
+    // could also stop the other phone. The unused token runs out by itself within the hour.
+    function signOut() { token = null; expiresAt = 0; chooseAccount = true; if (keep) keep.save({ signedOut: true }); }
 
-    return { prepare: prepare, signIn: signIn, getToken: getToken, isSignedIn: isSignedIn, forget: forget };
+    return { prepare: prepare, signIn: signIn, signOut: signOut, getToken: getToken, isSignedIn: isSignedIn, expiry: expiry, forget: forget };
   }
 
   root.BABYLOG_GOOGLE_AUTH = { create: create, isConfigured: isConfigured, SCOPE: SCOPE };
