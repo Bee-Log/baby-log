@@ -33,12 +33,19 @@ A parent uses this at night, with one hand. If editing is a different form from 
 - **Delete asks for a second tap** ("Tap again to delete"), because there is no Undo.
 
 ### Editing a nappy
-- A small screen: the time, **Save changes**, **Delete this entry**.
-- A "Wee + Poo" row is two entries. A time change moves both. Delete removes both.
+- A small screen: **Date and time**, **Save changes**, **Delete this entry**.
+- A "Wee + Poo" row is two entries. A date or time change moves both. Delete removes both.
+- The date can change too (2026-10-09). A nappy moved to another day leaves the Today list, and the message says where it went, for example "Saved for Fri 2 Oct, 9:15 pm".
+
+### Adding a nappy at another time (2026-10-09)
+- The **Wee** and **Poo** buttons on Today still log "now" with one tap.
+- Under them, **Wee or Poo at another time** opens a small screen: **Date and time** (it starts at now), a choice of **Wee**, **Poo** or both, and **Save nappy**. Save stays off until Wee or Poo is chosen.
+- Wee and Poo together are two entries with the same time, as with the buttons.
+- A nappy for another day is not in the Today list, so the message says where it went, for example "Poo saved for Fri 2 Oct, 10:15 pm".
 
 ## Rules the screens follow
 - A time can never be in the future (5 minutes ahead is allowed, because the time picker works in 5-minute steps).
-- Editing keeps an entry inside its own "Today" (6 am to 6 am).
+- Editing a feed keeps it inside its own "Today" (6 am to 6 am). A nappy can be moved to any day, because it has a date field.
 - Buttons are at least 44 px tall. They must fit on a 320 px wide phone.
 - Messages must never cover a button. On a full screen they appear at the top.
 - The note is one value. It is shared between Breast and Bottle, so switching kind never loses it.

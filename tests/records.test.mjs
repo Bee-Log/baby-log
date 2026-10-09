@@ -98,3 +98,24 @@ test('no code lists or deletes databases (shared origin safeguard)', () => {
     if (f !== 'store.js') assert.doesNotMatch(code, /indexedDB/, `${f}: only store.js may touch storage`);
   }
 });
+
+test('dateTimeValue and parseDateTime turn a moment into a datetime-local value and back, in local time', () => {
+  assert.equal(R.dateTimeValue(at(14, 5)), '2026-10-03T14:05');
+  assert.equal(R.dateTimeValue(at(0, 7, 9)), '2026-10-09T00:07');
+  assert.equal(R.parseDateTime('2026-10-03T14:05'), at(14, 5));
+  assert.equal(R.parseDateTime('2026-10-03T14:05:30'), at(14, 5), 'seconds are ignored');
+  for (const t of [at(1, 30), at(23, 59, 31), new Date(2026, 0, 1, 0, 0).getTime()]) assert.equal(R.parseDateTime(R.dateTimeValue(t)), t);
+});
+
+test('parseDateTime refuses text that is not a real date and time', () => {
+  for (const bad of ['', null, undefined, 'x', '2026-10-03', '14:05', '2026-02-31T10:00', '2026-13-01T10:00', '2026-10-03T24:00', '2026-10-03T10:60']) {
+    assert.equal(R.parseDateTime(bad), null, String(bad));
+  }
+});
+
+test('isFuture allows 5 minutes ahead and no more', () => {
+  const now = at(14);
+  assert.equal(R.isFuture(now + 5 * 60000, now), false);
+  assert.equal(R.isFuture(now + 5 * 60000 + 1, now), true);
+  assert.equal(R.isFuture(now - 3 * 86400000, now), false, 'any day in the past is fine');
+});

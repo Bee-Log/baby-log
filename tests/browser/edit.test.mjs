@@ -211,7 +211,8 @@ test('a Wee + Poo row is two entries: a time change moves both, and Delete remov
   assert.equal(await page.textContent('#h-edit'), 'Edit nappy');
   assert.equal(await page.textContent('#edit-nappy'), 'Wee + Poo');
 
-  await page.fill('#edit-time', '12:30');
+  assert.equal(await page.inputValue('#edit-when'), '2026-10-03T13:00', 'the date and the time are both shown');
+  await page.fill('#edit-when', '2026-10-03T12:30');
   await page.click('#edit-save');
   await waitToast(page, 'Changes saved');
   assert.deepEqual([(await byId(page, 'w1')).t, (await byId(page, 'p1')).t], [at(12, 30), at(12, 31)], 'moved together, order kept');
@@ -224,6 +225,52 @@ test('a Wee + Poo row is two entries: a time change moves both, and Delete remov
   await waitToast(page, 'Deleted');
   assert.deepEqual(await todayRows(page), []);
   assert.deepEqual([(await byId(page, 'w1')).deleted, (await byId(page, 'p1')).deleted], [true, true], 'tombstones, not removed');
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('a nappy can be moved to another day: it leaves Today, and the message says where it went', async () => {
+  const { context, page, errors } = await start([rec('w1', 'pee', at(13, 0)), rec('p1', 'poop', at(13, 1)), rec('w2', 'pee', at(9, 0))]);
+  assert.deepEqual(await todayRows(page), ['Nappy · Wee + Poo', 'Nappy · Wee']);
+  await openNappy(page, 0);                                  // the Wee + Poo row
+  await page.fill('#edit-when', '2026-10-02T21:15');         // yesterday evening
+  await page.click('#edit-save');
+  await waitToast(page, 'Saved for Fri 2 Oct, 9:15 pm');
+  await page.waitForFunction(() => location.hash === '#today');
+  assert.deepEqual(await todayRows(page), ['Nappy · Wee'], 'it is not in the Today list any more');
+  const new1 = await byId(page, 'w1'), new2 = await byId(page, 'p1');
+  assert.deepEqual([new1.t, new2.t], [new Date(2026, 9, 2, 21, 15).getTime(), new Date(2026, 9, 2, 21, 16).getTime()], 'the pair moved together, one minute apart as before');
+  assert.ok(new1.updatedAt > at(13, 0), 'newer, so it wins the merge');
+  assert.equal((await readRecords(page)).filter((r) => r.type === 'pee' || r.type === 'poop').length, 3, 'edited in place, nothing copied');
+
+  // And back to a time today.
+  await page.goto(url() + '#edit/w1+p1');
+  await page.waitForSelector('#screen-edit[data-ready]');
+  assert.equal(await page.inputValue('#edit-when'), '2026-10-02T21:15');
+  await page.fill('#edit-when', '2026-10-03T08:00');
+  await page.click('#edit-save');
+  await waitToast(page, 'Changes saved');
+  assert.deepEqual(await todayRows(page), ['Nappy · Wee', 'Nappy · Wee + Poo'], 'back in the list');
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test('a nappy date and time that is not real, or has not happened yet, is refused, and nothing changes', async () => {
+  const { context, page, errors } = await start([rec('w1', 'pee', at(13, 0))]);
+  const before = await byId(page, 'w1');
+  await openNappy(page);
+  await page.fill('#edit-when', '');
+  await page.click('#edit-save');
+  await waitToast(page, 'Please check the date and time.');
+  await page.fill('#edit-when', '2026-10-04T09:00');          // tomorrow
+  await page.click('#edit-save');
+  await waitToast(page, 'That time has not happened yet.');
+  assert.match(await page.evaluate(() => location.hash), /^#edit\//, 'stays on the Edit screen');
+  assert.deepEqual(await byId(page, 'w1'), before);
+  await page.fill('#edit-when', '2026-10-03T14:04');          // up to 5 minutes ahead is allowed
+  await page.click('#edit-save');
+  await waitToast(page, 'Changes saved');
+  assert.equal((await byId(page, 'w1')).t, at(14, 4));
   assert.deepEqual(errors, []);
   await context.close();
 });

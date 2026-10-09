@@ -12,7 +12,7 @@ before(async () => ({ origin, browser, close } = await startSite({ 'test-v1': 't
 after(() => close?.());
 
 const url = () => `${origin}/baby-log/test/`;
-const PAGES = ['#today', '#summary', '#growth', '#feed', '#sleep', '#profile', '#sync', '#babies', '#measure'];
+const PAGES = ['#today', '#summary', '#growth', '#feed', '#nappy', '#sleep', '#profile', '#sync', '#babies', '#measure'];
 const CARDS = '.card, .last-feed, .sleep-card, .sync-card, .sum-tile, .sum-chart, .gr-card, .gr-chart-card, .gr-standard, .ps-card, .bb-row';
 const at = (h, m = 0) => new Date(2026, 9, 3, h, m).getTime();
 const entry = (id, type, t, extra = {}) => ({ id, type, t, end: null, d: {}, note: '', by: '', deviceId: 'seed', updatedAt: t, ...extra });

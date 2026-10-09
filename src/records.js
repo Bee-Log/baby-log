@@ -167,6 +167,22 @@
   // 24-hour hh:mm, as a time field wants it.
   function hhmm(t) { var d = new Date(t); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
 
+  // "2026-10-03T14:05": local date and time, as a datetime-local field wants it. A nappy can be moved to any day (2026-10-09).
+  function dateTimeValue(t) {
+    var d = new Date(t);
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + 'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+  // The other way: milliseconds, or null when the text is not a real date and time ("2026-02-31T10:00" is not).
+  function parseDateTime(text) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(String(text));
+    if (!m) return null;
+    var d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
+    var same = d.getFullYear() === +m[1] && d.getMonth() === +m[2] - 1 && d.getDate() === +m[3] && d.getHours() === +m[4] && d.getMinutes() === +m[5];
+    return same ? d.getTime() : null;
+  }
+  // A time up to 5 minutes ahead is allowed, because phone clocks differ a little.
+  function isFuture(t, now) { return t > now + 5 * 60000; }
+
   // The moment inside the 6 am to 6 am day that contains `t` which shows hh:mm on the clock.
   // Editing a time never moves an entry to another day: 01:30 in a day that began at 6 am yesterday is after midnight.
   function timeInDay(t, text) {
@@ -202,7 +218,7 @@
     TYPES: TYPES, VERSION: VERSION, NAPPY_PAIR_MS: NAPPY_PAIR_MS,
     makeRecord: makeRecord, isNewer: isNewer, tombstone: tombstone, dayWindow: dayWindow,
     nappyRows: nappyRows, nappyLabel: nappyLabel, feedLabel: feedLabel, timelineRows: timelineRows, lastFeed: lastFeed, latestFeed: latestFeed, agoText: agoText,
-    revise: revise, linkToBaby: linkToBaby, withFields: withFields, sameContent: sameContent, hhmm: hhmm, timeInDay: timeInDay,
+    revise: revise, linkToBaby: linkToBaby, withFields: withFields, sameContent: sameContent, hhmm: hhmm, timeInDay: timeInDay, dateTimeValue: dateTimeValue, parseDateTime: parseDateTime, isFuture: isFuture,
     formatClock: formatClock, dateLabel: dateLabel, dayName: dayName
   };
 })(typeof self !== 'undefined' ? self : this);

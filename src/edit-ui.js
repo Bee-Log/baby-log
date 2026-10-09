@@ -1,4 +1,4 @@
-// The Edit screen for a nappy (feature 011): change the time, or delete it.
+// The Edit screen for a nappy (feature 011): change the date and time, or delete it.
 // Opened with #edit/<ids> (ids joined with +, because "Wee + Poo" is two entries).
 // Feeds are edited on the Feed screen itself (feed-ui.js), so logging and editing a feed look alike.
 (function (root) {
@@ -37,7 +37,7 @@
         return;
       }
       recs = live.sort(function (a, b) { return a.t - b.t; });
-      $('edit-time').value = R.hhmm(recs[0].t);
+      $('edit-when').value = R.dateTimeValue(recs[0].t);
       $('edit-nappy').textContent = R.nappyLabel({
         wee: recs.some(function (r) { return r.type === 'pee'; }),
         poo: recs.some(function (r) { return r.type === 'poop'; })
@@ -61,15 +61,17 @@
   function save() {
     if (saving) return;
     var now = Date.now();
-    var t = R.timeInDay(recs[0].t, $('edit-time').value);
-    if (t == null) { ctx.toast('Please check the time.'); return; }
-    if (t > now + 5 * 60000) { ctx.toast('That time has not happened yet.'); return; }
+    var t = R.parseDateTime($('edit-when').value);
+    if (t == null) { ctx.toast('Please check the date and time.'); return; }
+    if (R.isFuture(t, now)) { ctx.toast('That time has not happened yet.'); return; }
     var delta = t - recs[0].t;           // a Wee + Poo pair moves together, so their order stays
     if (delta === 0) { holdBusy(false); location.hash = '#today'; return; } // nothing changed
     saving = true;
     store.deviceId().then(function (deviceId) {
       var next = recs.map(function (r) { return R.revise(r, { t: r.t + delta }, now, deviceId); });
-      return ctx.commitEdit('Changes saved', next);
+      // Moved to another day: it leaves the Today list, so say where it went.
+      var w = R.dayWindow(now), moved = t < w.from || t >= w.to;
+      return ctx.commitEdit(moved ? 'Saved for ' + R.dateLabel(t) + ', ' + R.formatClock(t) : 'Changes saved', next);
     }).then(function () { saving = false; holdBusy(false); }, function (err) {
       saving = false;
       console.error('[baby-log] edit save', err);
@@ -92,7 +94,7 @@
 
   function init(context) {
     ctx = context;
-    $('edit-time').addEventListener('click', function (e) {
+    $('edit-when').addEventListener('click', function (e) {
       if (typeof e.currentTarget.showPicker === 'function') { try { e.currentTarget.showPicker(); } catch (err) { /* already open or not allowed */ } }
     });
     $('edit-save').addEventListener('click', save);

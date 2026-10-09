@@ -38,6 +38,7 @@ var SHELL = [
   'summary.js',
   'summary-ui.js',
   'edit-ui.js',
+  'nappy-ui.js',
   'styles.css',
   'manifest.webmanifest',
   'fonts/atkinson-hyperlegible-400.woff2',
