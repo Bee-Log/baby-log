@@ -28,15 +28,27 @@
 <div class="card">
   <h1>Privacy policy</h1>
   <p class="meta">Baby Log. Last updated 9 October 2026.</p>
-  <p>This page says what Baby Log does with information. The short version: your entries stay on your phone and, if you sign in, in your own Google Drive. The people who made Baby Log cannot see them.</p>
+  <p>This page says what Baby Log does with information.</p>
 
-  <h2>What Baby Log stores</h2>
+  <h2>The short version</h2>
+  <ul>
+    <li><strong>Baby Log is a client web app.</strong> It is a web page whose code runs in your own browser, on your own phone.</li>
+    <li><strong>Baby Log has no server and no database.</strong> It has no accounts of its own.</li>
+    <li><strong>The Baby Log project does not receive, store or keep any of your information.</strong> No data is persisted by Baby Log.</li>
+    <li>Your information is kept in places you own: your phone's browser storage and, only if you sign in, a hidden folder in your own private Google Drive.</li>
+  </ul>
+
+  <h2>Where your information is kept</h2>
   <p>You type in the information. It can include:</p>
   <ul>
     <li>a baby's nickname, date of birth, sex and an optional photo;</li>
     <li>feeds, sleeps, nappies, crying, weight and length, and any notes you add.</li>
   </ul>
-  <p>The app saves this in your phone's browser storage (IndexedDB). It stays on that phone until you delete it.</p>
+  <p>Baby Log shows and edits this information. It does not hold it. The information is kept in two places:</p>
+  <ul>
+    <li><strong>Your phone.</strong> Your browser keeps a copy in its storage (IndexedDB), so the app works with no internet. It stays on that phone until you delete it.</li>
+    <li><strong>Your Google Drive.</strong> Only if you sign in. It is saved in your own private Google account, in a hidden folder that only Baby Log can open. The Baby Log project cannot see it.</li>
+  </ul>
 
   <h2>What Baby Log asks Google for</h2>
   <p>Signing in with Google is optional. It is only used to keep two phones in step.</p>
@@ -50,7 +62,7 @@
 
   <h2>Who can see your information</h2>
   <ul>
-    <li><strong>Baby Log has no server and no database.</strong> Nothing is sent to the people who made the app.</li>
+    <li>Nothing is sent to the people who made the app, because the app has no server to send it to.</li>
     <li>The only network calls the app makes are to Google: to load Google's sign-in script, to sign in, and to read and write the hidden Drive folder.</li>
     <li>The app does not sell, share or give your information to anyone. It does not use it for adverts. It has no analytics or tracking.</li>
     <li>The app's pages are hosted on GitHub Pages. Like any website host, GitHub can see standard visit details, such as an IP address, when a page loads. See <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub's privacy statement</a>. Your entries are not sent to GitHub.</li>
