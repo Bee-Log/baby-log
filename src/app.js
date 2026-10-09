@@ -25,6 +25,7 @@
   // ---- Routes: three tabs, and full screens (the Feed screen) without the tab bar ----
   var FEED_UI = self.BABYLOG_FEED_UI;
   var EDIT_UI = self.BABYLOG_EDIT_UI;
+  var NAPPY_UI = self.BABYLOG_NAPPY_UI;
   var SLEEP_UI = self.BABYLOG_SLEEP_UI;
   var SLEEP_EDIT_UI = self.BABYLOG_SLEEP_EDIT_UI;
   var PROFILE_UI = self.BABYLOG_PROFILE_UI;
@@ -32,7 +33,7 @@
   var SUMMARY_UI = self.BABYLOG_SUMMARY_UI;
   var BABIES_UI = self.BABYLOG_BABIES_UI;
   var GROWTH_UI = self.BABYLOG_GROWTH_UI;
-  var ALL_SCREENS = [FEED_UI, EDIT_UI, SLEEP_EDIT_UI, SLEEP_UI, PROFILE_UI, SYNC_UI, BABIES_UI, GROWTH_UI];
+  var ALL_SCREENS = [FEED_UI, EDIT_UI, NAPPY_UI, SLEEP_EDIT_UI, SLEEP_UI, PROFILE_UI, SYNC_UI, BABIES_UI, GROWTH_UI];
   var NO_BABY_NEEDED = ['babies', 'profile', 'sync'];   // the only screens that open before a baby is chosen (feature 014)
 
   // #edit/<ids>: a feed is edited on the Feed screen, a sleep on the Edit sleep screen, a measurement on its form,
@@ -63,6 +64,7 @@
       var hidden = document.querySelectorAll('.view');
       for (var h = 0; h < hidden.length; h++) hidden[h].hidden = true;
       if (screen === 'feed') FEED_UI.show();
+      else if (screen === 'nappy') NAPPY_UI.show();
       else if (screen === 'sleep') SLEEP_UI.show();
       else if (screen === 'profile') PROFILE_UI.show(nav.argFromHash(location.hash));
       else if (screen === 'sync') SYNC_UI.show();

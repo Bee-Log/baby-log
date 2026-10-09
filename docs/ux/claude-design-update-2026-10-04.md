@@ -64,7 +64,8 @@ Screenshots: `05-edit-feed-breast.png`, `06-edit-feed-delete-armed.png`, `07-edi
 These screens were not in the first designs.
 
 - **Edit feed** is the Feed screen itself: the same Breast | Bottle switch and the same controls. Breast shows minutes per side and the total. At the bottom are **Save changes** and **Delete this entry** (two taps).
-- **Edit nappy** is a small screen: the time, **Save changes** and **Delete this entry**. A "Wee + Poo" row is two entries. Changing the time moves both, and Delete removes both.
+- **Edit nappy** is a small screen: the date and time, **Save changes** and **Delete this entry**. A "Wee + Poo" row is two entries. Changing the date or time moves both, and Delete removes both. (The date was added on 2026-10-09; before that it was the time only.)
+- **Add a nappy at another time** (new 2026-10-09, not in the first designs): a link under the Wee and Poo buttons, **Wee or Poo at another time**, opens a small screen with the date and time (starting at now), a choice of Wee, Poo or both, and **Save nappy**. The two buttons still log "now" with one tap.
 
 ## 4. Sleep page and "Add a past sleep"
 

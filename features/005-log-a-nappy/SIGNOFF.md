@@ -75,3 +75,4 @@ Record a wee or a poo with one tap.
 ## Feedback
 - 2026-10-03: Tested OK on the TEST address (Wee, Poo, Undo, offline, entries kept after closing the app).
 - 2026-10-03 (owner): the **Undo** button covered other buttons, so Undo was removed for now. A wrong tap is fixed from the Today list (feature 011): open the row and tap Delete twice. See `docs/ux/feed-and-edit-experience.md`.
+- 2026-10-09 (owner): wanted a way to choose the date for a new nappy. The Wee and Poo buttons still log now with one tap. A link under them, **Wee or Poo at another time**, opens **Add a nappy** (`#nappy`): date and time (starts at now), Wee, Poo or both, Save. No change to the record format.
